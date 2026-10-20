@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daily English</title>
+<style>
+:root{--bg:#fafaf7;--card:#fff;--ink:#1a1a1a;--dim:#6b6b6b;--accent:#2d6a4f;--mark:#ffe08a;--hard:#e63946}
+*{box-sizing:border-box}body{margin:0;font-family:Georgia,"Times New Roman",serif;background:var(--bg);color:var(--ink);line-height:1.8}
+.wrap{max-width:720px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:1.4rem;margin:0 0 4px}h2{font-size:1.15rem;margin:32px 0 8px}
+.meta{color:var(--dim);font-size:.85rem;margin-bottom:16px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;align-items:center}
+button{border:1px solid var(--accent);background:var(--card);color:var(--accent);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:.9rem}
+button:hover{background:var(--accent);color:#fff}
+select{padding:6px;border-radius:6px;border:1px solid #ccc}
+.article{background:var(--card);padding:20px 24px;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);font-size:1.05rem}
+.article w{cursor:pointer;border-radius:3px;padding:0 1px}
+.article w.on{background:var(--mark);border-bottom:2px solid var(--hard)}
+.sent{transition:background .3s}.sent.active{background:#eef6f0}
+.notes{background:#eef6f0;padding:14px 18px;border-radius:8px;font-size:.95rem;margin-top:12px}
+.notes b{color:var(--accent)}
+#vocab{position:fixed;right:16px;bottom:16px;background:var(--card);border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.15);padding:12px 16px;max-width:260px;max-height:45vh;overflow:auto;font-size:.88rem}
+#vocab h3{margin:0 0 6px;font-size:.95rem}
+#vocab ul{margin:0;padding-left:18px}
+#vocab li{cursor:pointer;color:var(--hard)}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Daily English</h1>
+<div class="meta">点词标记不认识 → 收进生词本（右下角）。点击生词本里的词可取消标记。</div>
+<div id="app"></div>
+</div>
+<div id="vocab" class="hidden"><h3>生词本 <button onclick="exportVocab()" style="padding:2px 8px;font-size:.75rem">导出</button></h3><ul id="vlist"></ul></div>
+<script src="articles.js"></script>
+<script>
+const A=window.ARTICLES;
+const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let marks=store.get('vocab'),sentEls=[],sentTexts=[];
+function esc(s){return s.replace(/&/g,'&').replace(/</g,'<')}
+function render(){
+  const app=document.getElementById('app');
+  A.forEach((a,i)=>{
+    const d=document.createElement('div');
+    d.innerHTML=`<h2>${i+1}. ${esc(a.title)}</h2><div class="meta">${esc(a.date)} · ${esc(a.level)}</div>`;
+    const box=document.createElement('div');box.className='article';
+    const p=document.createElement('p');
+    a.sentences.forEach((s,j)=>{const sp=document.createElement('span');sp.className='sent';sp.dataset.i=i+'-'+j;
+      sp.innerHTML=s.split(/\s+/).map(w=>`<w data-w="${esc(w.replace(/[.,!?;:"()']/g,''))}">${esc(w)}</w>`).join(' ');
+      p.appendChild(sp);p.appendChild(document.createTextNode(' '));sentEls.push(sp);sentTexts.push(s)});
+    box.appendChild(p);
+    if(a.notes&&a.notes.length){const n=document.createElement('div');n.className='notes';n.innerHTML='<b>语法点</b><br>'+a.notes.map(x=>'· '+esc(x)).join('<br>');box.appendChild(n)}
+    d.appendChild(box);app.appendChild(d);
+  });
+  document.addEventListener('click',e=>{
+    const w=e.target.closest('w');if(!w)return;const k=w.dataset.w;
+    if(marks[k]){delete marks[k];w.classList.remove('on')}else{marks[k]=1;w.classList.add('on');speak(k,0.9)}
+    store.set('vocab',marks);renderVocab();
+  });
+  A.forEach((a,i)=>a.sentences.forEach((s,j)=>{const key=a.date+i+'-'+j;if(store.get('marks')[key]){} }));
+  renderVocab();restoreMarks();
+}
+function restoreMarks(){document.querySelectorAll('w').forEach(w=>{if(marks[w.dataset.w])w.classList.add('on')});}
+function renderVocab(){const ks=Object.keys(marks);document.getElementById('vocab').classList.toggle('hidden',!ks.length);
+  document.getElementById('vlist').innerHTML=ks.map(k=>`<li data-k="${esc(k)}">${esc(k)}</li>`).join('');
+  document.querySelectorAll('#vlist li').forEach(li=>li.onclick=()=>{delete marks[li.dataset.k];store.set('vocab',marks);
+    document.querySelectorAll('w').forEach(w=>{if(w.dataset.w===li.dataset.k)w.classList.remove('on')});renderVocab()})}
+function exportVocab(){const t=Object.keys(marks).join(', ');navigator.clipboard&&navigator.clipboard.writeText(t);alert('已复制生词：\n'+t)}
+function speak(text,rate){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||parseFloat(document.getElementById('rate').value);u.voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u)}
+function playAll(){speechSynthesis.cancel();let i=0;
+  const next=()=>{if(i>=sentTexts.length)return;sentEls.forEach(e=>e.classList.remove('active'));
+    const el=sentEls[i];el&&el.classList.add('active');el&&el.scrollIntoView({block:'center',behavior:'smooth'});
+    const u=new SpeechSynthesisUtterance(sentTexts[i]);u.lang='en-US';u.rate=parseFloat(document.getElementById('rate').value);
+    u.onend=()=>{i++;next()};speechSynthesis.speak(u)};next()}
+function stopAll(){speechSynthesis.cancel();sentEls.forEach(e=>e.classList.remove('active'))}
+render();
+</script>
+</body>
+</html>
