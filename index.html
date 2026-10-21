@@ -17,6 +17,7 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 .article{background:var(--card);padding:20px 24px;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);font-size:1.05rem}
 .article w{cursor:pointer;border-radius:3px;padding:0 1px}
 .article w.on{background:var(--mark);border-bottom:2px solid var(--hard)}
+.article w.sel{background:var(--accent);color:#fff}
 .sent{transition:background .3s}.sent.active{background:#eef6f0}
 .notes{background:#eef6f0;padding:14px 18px;border-radius:8px;font-size:.95rem;margin-top:12px}
 .notes b{color:var(--accent)}
@@ -33,12 +34,12 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 <div class="meta">点词标记不认识 → 收进生词本（右下角）。点击生词本里的词可取消标记。</div>
 <div id="app"></div>
 </div>
-<div id="vocab" class="hidden"><h3>生词本 <button onclick="exportVocab()" style="padding:2px 8px;font-size:.75rem">导出</button></h3><ul id="vlist"></ul></div>
+<div id="vocab" class="hidden"><h3>生词本 <button onclick="exportVocab()" style="padding:2px 8px;font-size:.75rem">导出</button></h3><ul id="vlist"></ul><div id="vhint" style="color:var(--dim);font-size:.78rem;margin-top:6px">点词入本 · 词组：连点多个词，再点一次确认</div></div>
 <script src="articles.js"></script>
 <script>
 const A=window.ARTICLES;
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-let marks=store.get('vocab'),sentEls=[],sentTexts=[];
+let marks=store.get('vocab'),sentEls=[],sentTexts=[],selState=null;
 function esc(s){return s.replace(/&/g,'&').replace(/</g,'<')}
 function render(){
   const app=document.getElementById('app');
@@ -55,8 +56,24 @@ function render(){
     d.appendChild(box);app.appendChild(d);
   });
   document.addEventListener('click',e=>{
-    const w=e.target.closest('w');if(!w)return;const k=w.dataset.w;
-    if(marks[k]){delete marks[k];w.classList.remove('on')}else{marks[k]=1;w.classList.add('on');speak(k,0.9)}
+    const w=e.target.closest('w');if(!w)return;
+    const k=w.dataset.w;
+    if(selState){ // 词组选择中
+      if(k===selState.key){ // 再点一次确认 → 以当前已选词拼接成词组
+        const phrase=selState.words.join(' ');
+        if(phrase&&!marks[phrase]){marks[phrase]=1;speak(phrase,0.9);store.set('vocab',marks);renderVocab();restoreMarks()}
+        else{alert('生词本已有：'+phrase)}
+        selState=null;document.querySelectorAll('w.sel').forEach(x=>x.classList.remove('sel'));return}
+      // 检查连续性：必须是已选词的紧邻后继
+      const prev=selState.words[selState.words.length-1];
+      const seq=selState.seq;const nextW=seq[selState.idx+1];
+      if(nextW&&nextW.dataset.w===k){selState.words.push(k);selState.idx++;w.classList.add('sel');speak(k,0.95);return}
+      // 点了不连续的词或重复词 → 重新开始
+      document.querySelectorAll('w.sel').forEach(x=>x.classList.remove('sel'));
+      if(k===prev){selState=null;return}
+      selState={key:k,words:[k],idx:seq.indexOf(w),seq:seq};w.classList.add('sel');speak(k,0.9);return}
+    if(marks[k]){delete marks[k];w.classList.remove('on')}
+    else{selState={key:k,words:[k],idx:[...w.closest('.sent').querySelectorAll('w')].indexOf(w),seq:[...w.closest('.sent').querySelectorAll('w')]};w.classList.add('sel');speak(k,0.9)}
     store.set('vocab',marks);renderVocab();
   });
   A.forEach((a,i)=>a.sentences.forEach((s,j)=>{const key=a.date+i+'-'+j;if(store.get('marks')[key]){} }));
