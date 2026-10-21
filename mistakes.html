@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mistake Log</title>
+<style>
+:root{--bg:#fafaf7;--card:#fff;--ink:#1a1a1a;--dim:#6b6b6b;--accent:#2d6a4f;--bad:#e63946;--good:#2d6a4f;--mark:#ffe08a}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);line-height:1.7}
+.wrap{max-width:760px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:1.4rem;margin:0 0 2px}
+.meta{color:var(--dim);font-size:.85rem;margin-bottom:20px}
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tabs button{border:1px solid #ccc;background:var(--card);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:.9rem}
+.tabs button.act{background:var(--accent);color:#fff;border-color:var(--accent)}
+.day{background:var(--card);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:16px 20px;margin-bottom:14px}
+.day h2{font-size:1.05rem;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+.tag{font-size:.72rem;background:#eef6f0;color:var(--accent);padding:2px 8px;border-radius:10px}
+.m{padding:10px 0;border-top:1px dashed #e5e5e0}
+.m:first-of-type{border-top:none}
+.m .wrong{color:var(--bad);text-decoration:line-through;font-family:Georgia,serif}
+.m .right{color:var(--good);font-family:Georgia,serif;font-weight:600}
+.m .why{color:var(--dim);font-size:.88rem;margin-top:2px}
+.streak{display:flex;gap:4px;flex-wrap:wrap;margin:8px 0 20px}
+.streak span{width:16px;height:16px;border-radius:3px;background:#e8e8e3;display:inline-block}
+.streak span.hit{background:var(--accent)}
+.review{background:#fff8e6;border:1px solid var(--mark);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:.92rem}
+.review b{color:#b8860b}
+.empty{color:var(--dim);text-align:center;padding:40px 0}
+footer{color:var(--dim);font-size:.8rem;margin-top:30px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>📋 Mistake Log</h1>
+<div class="meta">每日错误记录 · 绿色=连续学习天数 · 黄条=今日待回考</div>
+<div id="streak" class="streak"></div>
+<div id="review"></div>
+<div class="tabs">
+<button class="act" onclick="show('log',this)">错题记录</button>
+<button onclick="show('stat',this)">统计</button>
+</div>
+<div id="log"></div>
+<div id="stat" class="hidden"></div>
+</div>
+<script src="mistakes.js"></script>
+<script>
+const D=window.MISTAKES;
+const today=new Date().toISOString().slice(0,10);
+const visited=JSON.parse(localStorage.getItem('visit')||'{}');visited[today]=1;localStorage.setItem('visit',JSON.stringify(visited));
+// 连续学习热力条（最近28天）
+(function(){const el=document.getElementById('streak');let s='';
+for(let i=27;i>=0;i--){const d=new Date(Date.now()-i*86400000).toISOString().slice(0,10);
+s+=`<span class="${visited[d]||D.some(x=>x.date===d)?'hit':''}" title="${d}"></span>`}
+el.innerHTML=s})();
+// 待回考：错误出现距今>=2天且未标记 resolved
+const due=[];
+D.forEach(day=>day.items.forEach(it=>{
+  if(it.resolved)return;
+  const days=Math.floor((new Date(today)-new Date(day.date))/86400000);
+  if(days>=2)due.push({...it,day:day.date,days});
+}));
+(function(){const el=document.getElementById('review');
+if(!due.length){el.innerHTML='';return}
+el.innerHTML='<b>⏰ 今日待回考 '+due.length+' 项</b>（错后 ≥2 天，正好该复习）<ul style="margin:6px 0 0;padding-left:18px">'+
+due.map(x=>`<li><span class="wrong">${x.wrong}</span> → <span class="right">${x.right}</span></li>`).join('')+'</ul>'})();
+function esc(s){return String(s).replace(/&/g,'&').replace(/</g,'<')}
+function show(id,btn){document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('act'));btn.classList.add('act');
+document.getElementById('log').classList.toggle('hidden',id!=='log');
+document.getElementById('stat').classList.toggle('hidden',id!=='stat');if(id==='stat')renderStat()}
+function renderStat(){
+const all=[];D.forEach(d=>d.items.forEach(it=>all.push({...it,date:d.date})));
+const unresolved=all.filter(x=>!x.resolved).length;
+const kinds={};all.forEach(x=>{kinds[x.kind]=(kinds[x.kind]||0)+1});
+const kindList=Object.entries(kinds).sort((a,b)=>b[1]-a[1]);
+document.getElementById('stat').innerHTML=
+`<div class="day"><h2>总览</h2>
+<p style="margin:4px 0">累计错误 <b>${all.length}</b> 条 · 待攻克 <b style="color:var(--bad)">${unresolved}</b> 条 · 学习日 <b>${Object.keys(visited).length}</b> 天</p></div>
+<div class="day"><h2>错误类型分布</h2>
+${kindList.map(([k,n])=>`<div style="margin:6px 0"><b>${esc(k)}</b> <span style="color:var(--dim)">×${n}</span><div style="background:#eee;height:8px;border-radius:4px;margin-top:3px"><div style="background:var(--accent);height:8px;border-radius:4px;width:${n/all.length*100}%"></div></div></div>`).join('')}</div>`}
+function renderLog(){
+const el=document.getElementById('log');
+if(!D.length){el.innerHTML='<div class="empty">暂无记录</div>';return}
+el.innerHTML=D.map(day=>`<div class="day"><h2>${esc(day.date)} <span class="tag">${esc(day.scene||'')}</span></h2>
+${day.items.map(it=>`<div class="m"><div><span class="wrong">${esc(it.wrong)}</span> → <span class="right">${esc(it.right)}</span>${it.resolved?' <span style="color:var(--good);font-size:.8rem">✓ 已攻克</span>':''}</div>
+<div class="why">${esc(it.why||'')} ${it.kind?'<span class="tag">'+esc(it.kind)+'</span>':''}</div></div>`).join('')}</div>`).join('')}
+renderLog();renderStat();
+</script>
+</body>
+</html>
