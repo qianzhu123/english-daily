@@ -25,6 +25,7 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 #vocab h3{margin:0 0 6px;font-size:.95rem}
 #vocab ul{margin:0;padding-left:18px}
 #vocab li{cursor:pointer;color:var(--hard)}
+@media(max-width:600px){#vocab{left:12px;right:12px;max-width:none;bottom:12px;max-height:38vh}}
 .hidden{display:none}
 </style>
 </head>
@@ -34,7 +35,12 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 <div class="meta">点词标记不认识 → 收进生词本（右下角）。点击生词本里的词可取消标记。</div>
 <div id="app"></div>
 </div>
-<div id="vocab" class="hidden"><h3>生词本 <button onclick="exportVocab()" style="padding:2px 8px;font-size:.75rem">导出</button></h3><ul id="vlist"></ul><div id="vhint" style="color:var(--dim);font-size:.78rem;margin-top:6px">点词入本 · 词组：连点多个词，再点一次确认</div></div>
+<div id="vocab" class="hidden"><h3>生词本 <button onclick="syncNow()" id="syncBtn" style="padding:2px 8px;font-size:.75rem">同步</button> <button onclick="exportVocab()" style="padding:2px 8px;font-size:.75rem">导出</button> <button onclick="showToken()" style="padding:2px 8px;font-size:.75rem">🔑</button></h3><ul id="vlist"></ul><div id="vhint" style="color:var(--dim);font-size:.78rem;margin-top:6px">点词入本 · 词组：连点多个词，再点一次确认</div></div>
+<div id="tokbox" class="hidden" style="position:fixed;left:50%;transform:translateX(-50%);bottom:70px;background:var(--card);border-radius:10px;box-shadow:0 2px 14px rgba(0,0,0,.2);padding:14px 16px;max-width:340px;width:90%;font-size:.85rem;z-index:9">
+<b>GitHub 同步设置</b>（fine-grained token，仅授权 english-daily 仓库 Contents 读写）
+<textarea id="tokin" style="width:100%;height:60px;margin:8px 0;font-size:.75rem" placeholder="粘贴 token（github_pat_...）"></textarea>
+<div style="display:flex;gap:8px"><button onclick="saveToken()" style="flex:1">保存</button><button onclick="clearToken()" style="flex:1">清除</button><button onclick="document.getElementById('tokbox').classList.add('hidden')">关闭</button></div>
+<div id="tokstat" style="color:var(--dim);margin-top:6px;font-size:.78rem"></div></div>
 <script src="articles.js"></script>
 <script>
 const A=window.ARTICLES;
@@ -85,6 +91,53 @@ function renderVocab(){const ks=Object.keys(marks);document.getElementById('voca
   document.querySelectorAll('#vlist li').forEach(li=>li.onclick=()=>{delete marks[li.dataset.k];store.set('vocab',marks);
     document.querySelectorAll('w').forEach(w=>{if(w.dataset.w===li.dataset.k)w.classList.remove('on')});renderVocab()})}
 function exportVocab(){const t=Object.keys(marks).join(', ');navigator.clipboard&&navigator.clipboard.writeText(t);alert('已复制生词：\n'+t)}
+// ===== GitHub 同步 =====
+const REPO_OWNER='qianzhu123',REPO_NAME='english-daily',VOCAB_PATH='data/vocab.json';
+function getToken(){return localStorage.getItem('gh_token')||''}
+function saveToken(){const t=document.getElementById('tokin').value.trim();if(t)localStorage.setItem('gh_token',t);
+document.getElementById('tokstat').textContent=t?'已保存（仅存本机浏览器）':'未填写';syncNow()}
+function clearToken(){localStorage.removeItem('gh_token');document.getElementById('tokin').value='';document.getElementById('tokstat').textContent='已清除'}
+function showToken(){const b=document.getElementById('tokbox');b.classList.toggle('hidden');document.getElementById('tokin').value=getToken();
+document.getElementById('tokstat').textContent=getToken()?'已配置：保存后点同步即可上传':'未配置：无 token 时只显示本机生词'}
+async function ghGet(){ // 读云端 data/vocab.json
+  const r=await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${VOCAB_PATH}`,{cache:'no-store'});
+  if(r.status===404)return{sha:null,data:{}};
+  if(!r.ok)throw new Error('GitHub 读取失败 '+r.status);
+  const j=await r.json();
+  return{sha:j.sha,data:JSON.parse(atob(j.content.replace(/\s/g,'')))}}
+async function ghPut(obj,sha){ // 写回并保留每日备份
+  const token=getToken();if(!token)throw new Error('未配置 token');
+  const files={[VOCAB_PATH]:{content:btoa(unescape(encodeURIComponent(JSON.stringify(obj,null,2))))}};
+  const today=new Date().toISOString().slice(0,10);
+  files['backups/vocab-'+today+'.json']={content:btoa(unescape(encodeURIComponent(JSON.stringify(obj,null,2))))}; // 每日快照
+  const r=await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${VOCAB_PATH}`,{method:'PUT',
+    headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({message:'vocab sync '+today+' ('+Object.keys(obj).length+' items)',content:files[VOCAB_PATH].content,
+      ...(sha?{sha}:{})})});
+  if(!r.ok)throw new Error('GitHub 写入失败 '+r.status+' '+(await r.text()).slice(0,120));
+  return (await r.json()).content.sha}
+function mergeSets(a,b){const o={...a};for(const k in b)o[k]=(o[k]||0)+ (b[k]||0);return o} // 取并集，计数相加
+let syncing=false;
+async function syncNow(){
+  if(syncing)return;syncing=true;
+  const btn=document.getElementById('syncBtn');if(btn)btn.textContent='…';
+  try{
+    const remote=await ghGet();
+    if(getToken()){
+      const merged=mergeSets(remote.data,marks);
+      const changed=JSON.stringify(merged)!==JSON.stringify(remote.data)||JSON.stringify(merged)!==JSON.stringify(marks);
+      if(changed){const sha=await ghPut(merged,remote.sha);Object.keys(merged).forEach(k=>{});marks=merged;store.set('vocab',marks)}
+      else{marks=merged;store.set('vocab',marks)}
+      document.getElementById('tokstat').textContent='✓ 已同步 '+Object.keys(marks).length+' 条（'+today+'）';
+    }else{
+      // 无 token：只读模式，合并云端进来
+      const merged=mergeSets(remote.data,marks);marks=merged;store.set('vocab',marks);
+      document.getElementById('tokstat').textContent='只读模式：已拉取云端 '+Object.keys(remote.data).length+' 条（配置 token 可上传）';
+    }
+    document.querySelectorAll('w').forEach(w=>w.classList.remove('on'));restoreMarks();renderVocab();
+  }catch(e){document.getElementById('tokstat').textContent='✗ '+e.message}
+  syncing=false;if(btn)btn.textContent='同步'}
+render();
 function speak(text,rate){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||parseFloat(document.getElementById('rate').value);u.voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u)}
 function playAll(){speechSynthesis.cancel();let i=0;
   const next=()=>{if(i>=sentTexts.length)return;sentEls.forEach(e=>e.classList.remove('active'));
@@ -93,6 +146,8 @@ function playAll(){speechSynthesis.cancel();let i=0;
     u.onend=()=>{i++;next()};speechSynthesis.speak(u)};next()}
 function stopAll(){speechSynthesis.cancel();sentEls.forEach(e=>e.classList.remove('active'))}
 render();
+// 打开页面即自动同步（无 token 时为只读拉取）
+syncNow().catch(()=>{});
 </script>
 </body>
 </html>
