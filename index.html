@@ -29,6 +29,8 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 #vocab li .w{display:inline}
 #vocab li .tr{display:block;color:var(--dim);font-size:.78rem;margin-left:8px}
 #vocab li .tr.dim{opacity:.5}
+#revbox{display:none}
+#revbox:not(.hidden){display:flex}
 @media(max-width:600px){#vocab{left:12px;right:12px;max-width:none;bottom:12px;max-height:38vh}}
 .hidden{display:none}
 </style>
@@ -40,7 +42,7 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 <div id="app"></div>
 </div>
 <div id="vocab" class="hidden"><h3>生词本 <button onclick="startReview()" style="padding:2px 8px;font-size:.75rem">复习</button> <button onclick="syncNow()" id="syncBtn" style="padding:2px 8px;font-size:.75rem">同步</button> <button onclick="exportVocab()" style="padding:2px 8px;font-size:.75rem">导出</button> <button onclick="showToken()" style="padding:2px 8px;font-size:.75rem">🔑</button></h3><ul id="vlist"></ul><div id="vhint" style="color:var(--dim);font-size:.78rem;margin-top:6px">按文章分组 · 点词删除 · 词组连点后再点确认</div></div>
-<div id="revbox" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;display:flex;align-items:center;justify-content:center">
+<div id="revbox" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;align-items:center;justify-content:center">
 <div style="background:var(--card);border-radius:12px;padding:24px;width:90%;max-width:420px;text-align:center">
 <div id="revcnt" style="color:var(--dim);font-size:.8rem;margin-bottom:10px"></div>
 <div id="revword" style="font-family:Georgia,serif;font-size:1.6rem;margin-bottom:8px"></div>
@@ -204,11 +206,12 @@ function revShow(){
   const k=revQueue[revIdx][0];
   document.getElementById('revcnt').textContent=(revIdx+1)+' / '+revQueue.length;
   document.getElementById('revword').textContent=k;
-  document.getElementById('revtrans').textContent='· · ·';
-  const t=translate(k);t.then(x=>{if(revIdx<revQueue.length&&revQueue[revIdx][0]===k)document.getElementById('revtrans').dataset.full=x});
+  const trEl=document.getElementById('revtrans');trEl.textContent='· · ·';trEl.dataset.full='';
+  translate(k).then(x=>{trEl.dataset.full=x;if(trEl.textContent==='· · ·'&&revIdx<revQueue.length&&revQueue[revIdx][0]===k)trEl.textContent='点「看释义」显示';});
   speak(k,0.9)}
 function revShowBtn(){const el=document.getElementById('revtrans');el.textContent=el.dataset.full||'（无翻译）';}
 function revNext(good){
+  if(revIdx>=revQueue.length){finishReview();return}
   const k=revQueue[revIdx][0];const e=normEntry(marks[k]);
   if(good){e.ease=Math.min(60,(e.ease||1)*2);e.lapses=e.lapses||0}
   else{e.ease=1;e.lapses=(e.lapses||0)+1}
@@ -219,6 +222,8 @@ function finishReview(){
   document.getElementById('revbox').classList.add('hidden');
   syncNow().catch(()=>{});alert('复习完成 ✓ 进度已同步')}
 document.getElementById('revbtn1').onclick=revShowBtn;
+document.getElementById('revbtn2').onclick=()=>revNext(false);
+document.getElementById('revbtn3').onclick=()=>revNext(true);
 // 打开页面即自动同步（无 token 时为只读拉取）
 syncNow().catch(()=>{});
 </script>
