@@ -21,10 +21,14 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 .sent{transition:background .3s}.sent.active{background:#eef6f0}
 .notes{background:#eef6f0;padding:14px 18px;border-radius:8px;font-size:.95rem;margin-top:12px}
 .notes b{color:var(--accent)}
-#vocab{position:fixed;right:16px;bottom:16px;background:var(--card);border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.15);padding:12px 16px;max-width:260px;max-height:45vh;overflow:auto;font-size:.88rem}
+#vocab{position:fixed;right:16px;bottom:16px;background:var(--card);border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.15);padding:12px 16px;width:320px;max-height:55vh;overflow:auto;font-size:.88rem}
 #vocab h3{margin:0 0 6px;font-size:.95rem}
-#vocab ul{margin:0;padding-left:18px}
-#vocab li{cursor:pointer;color:var(--hard)}
+#vocab ul{margin:0;padding-left:0;list-style:none}
+#vocab li{cursor:pointer;color:var(--hard);padding:1px 0}
+#vocab li.grp{color:var(--accent);font-weight:700;border-bottom:1px solid #e5e5e0;margin-top:6px;padding-bottom:2px;cursor:default}
+#vocab li .w{display:inline}
+#vocab li .tr{display:block;color:var(--dim);font-size:.78rem;margin-left:8px}
+#vocab li .tr.dim{opacity:.5}
 @media(max-width:600px){#vocab{left:12px;right:12px;max-width:none;bottom:12px;max-height:38vh}}
 .hidden{display:none}
 </style>
@@ -35,7 +39,15 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 <div class="meta">点词标记不认识 → 收进生词本（右下角）。点击生词本里的词可取消标记。</div>
 <div id="app"></div>
 </div>
-<div id="vocab" class="hidden"><h3>生词本 <button onclick="syncNow()" id="syncBtn" style="padding:2px 8px;font-size:.75rem">同步</button> <button onclick="exportVocab()" style="padding:2px 8px;font-size:.75rem">导出</button> <button onclick="showToken()" style="padding:2px 8px;font-size:.75rem">🔑</button></h3><ul id="vlist"></ul><div id="vhint" style="color:var(--dim);font-size:.78rem;margin-top:6px">点词入本 · 词组：连点多个词，再点一次确认</div></div>
+<div id="vocab" class="hidden"><h3>生词本 <button onclick="startReview()" style="padding:2px 8px;font-size:.75rem">复习</button> <button onclick="syncNow()" id="syncBtn" style="padding:2px 8px;font-size:.75rem">同步</button> <button onclick="exportVocab()" style="padding:2px 8px;font-size:.75rem">导出</button> <button onclick="showToken()" style="padding:2px 8px;font-size:.75rem">🔑</button></h3><ul id="vlist"></ul><div id="vhint" style="color:var(--dim);font-size:.78rem;margin-top:6px">按文章分组 · 点词删除 · 词组连点后再点确认</div></div>
+<div id="revbox" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;display:flex;align-items:center;justify-content:center">
+<div style="background:var(--card);border-radius:12px;padding:24px;width:90%;max-width:420px;text-align:center">
+<div id="revcnt" style="color:var(--dim);font-size:.8rem;margin-bottom:10px"></div>
+<div id="revword" style="font-family:Georgia,serif;font-size:1.6rem;margin-bottom:8px"></div>
+<div id="revtrans" style="color:var(--dim);margin-bottom:16px"></div>
+<div style="display:flex;gap:10px;justify-content:center"><button onclick="revShow()" id="revbtn1">看释义</button><button onclick="revNext(false)" id="revbtn2">不熟</button><button onclick="revNext(true)" id="revbtn3">已掌握</button></div>
+<button onclick="document.getElementById('revbox').classList.add('hidden')" style="margin-top:14px;border:none;color:var(--dim)">退出复习</button>
+</div></div>
 <div id="tokbox" class="hidden" style="position:fixed;left:50%;transform:translateX(-50%);bottom:70px;background:var(--card);border-radius:10px;box-shadow:0 2px 14px rgba(0,0,0,.2);padding:14px 16px;max-width:340px;width:90%;font-size:.85rem;z-index:9">
 <b>GitHub 同步设置</b>（fine-grained token，仅授权 english-daily 仓库 Contents 读写）
 <textarea id="tokin" style="width:100%;height:60px;margin:8px 0;font-size:.75rem" placeholder="粘贴 token（github_pat_...）"></textarea>
@@ -49,6 +61,7 @@ let marks=store.get('vocab'),sentEls=[],sentTexts=[],selState=null;
 function esc(s){return s.replace(/&/g,'&').replace(/</g,'<')}
 function render(){
   const app=document.getElementById('app');
+  app.innerHTML='';sentEls=[];sentTexts=[]; // 幂等：重渲染前清空，杜绝文章叠加
   A.forEach((a,i)=>{
     const d=document.createElement('div');
     d.innerHTML=`<h2>${i+1}. ${esc(a.title)}</h2><div class="meta">${esc(a.date)} · ${esc(a.level)}</div>`;
@@ -61,7 +74,9 @@ function render(){
     if(a.notes&&a.notes.length){const n=document.createElement('div');n.className='notes';n.innerHTML='<b>语法点</b><br>'+a.notes.map(x=>'· '+esc(x)).join('<br>');box.appendChild(n)}
     d.appendChild(box);app.appendChild(d);
   });
-  document.addEventListener('click',e=>{
+  renderVocab();restoreMarks();
+}
+document.addEventListener('click',e=>{
     const w=e.target.closest('w');if(!w)return;
     const k=w.dataset.w;
     if(selState){ // 词组选择中
@@ -82,17 +97,42 @@ function render(){
     else{selState={key:k,words:[k],idx:[...w.closest('.sent').querySelectorAll('w')].indexOf(w),seq:[...w.closest('.sent').querySelectorAll('w')]};w.classList.add('sel');speak(k,0.9)}
     store.set('vocab',marks);renderVocab();
   });
-  A.forEach((a,i)=>a.sentences.forEach((s,j)=>{const key=a.date+i+'-'+j;if(store.get('marks')[key]){} }));
-  renderVocab();restoreMarks();
-}
 function restoreMarks(){document.querySelectorAll('w').forEach(w=>{if(marks[w.dataset.w])w.classList.add('on')});}
-function renderVocab(){const ks=Object.keys(marks);document.getElementById('vocab').classList.toggle('hidden',!ks.length);
-  document.getElementById('vlist').innerHTML=ks.map(k=>`<li data-k="${esc(k)}">${esc(k)}</li>`).join('');
-  document.querySelectorAll('#vlist li').forEach(li=>li.onclick=()=>{delete marks[li.dataset.k];store.set('vocab',marks);
-    document.querySelectorAll('w').forEach(w=>{if(w.dataset.w===li.dataset.k)w.classList.remove('on')});renderVocab()})}
+// ===== 生词归属与翻译 =====
+function wordHome(k){ // 词/词组 → 所属文章标题（按首词在文章中首次出现定位）
+  const first=k.split(' ')[0].toLowerCase();
+  for(const a of A){
+    const text=a.sentences.join(' ').toLowerCase();
+    if(new RegExp('\\b'+first.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(text))return a.title}
+  return '其他'}
+const TKEY='translations';
+function getTrans(){return store.get(TKEY)}
+async function translate(k){ // MyMemory 免费无key，结果缓存本地
+  const cache=getTrans();if(cache[k])return cache[k];
+  try{
+    const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(k)+'&langpair=en|zh-CN');
+    const j=await r.json();const t=j&&j.responseData&&j.responseData.translatedText||'';
+    if(t){const c=getTrans();c[k]=t;store.set(TKEY,c)}
+    return t||'（查不到）'}
+  catch(e){return '（翻译暂不可用）'}}
+function renderVocab(){
+  const ks=Object.keys(marks);
+  document.getElementById('vocab').classList.toggle('hidden',!ks.length);
+  // 按文章分组，文章内按标记顺序（对象键序）
+  const groups={};ks.forEach(k=>{(groups[wordHome(k)]=groups[wordHome(k)]||[]).push(k)});
+  const tc=getTrans();
+  document.getElementById('vlist').innerHTML=Object.entries(groups).map(([t,ws])=>
+    `<li class="grp">${esc(t)}</li>`+ws.map(k=>`<li data-k="${esc(k)}"><span class="w">${esc(k)}</span>${tc[k]?`<span class="tr">${esc(tc[k])}</span>`:`<span class="tr dim" data-t="${esc(k)}">查译…</span>`}</li>`).join('')).join('');
+  document.querySelectorAll('#vlist li[data-k]').forEach(li=>{
+    const k=li.dataset.k;
+    if(!getTrans()[k])translate(k).then(t=>{const sp=li.querySelector('.tr');if(sp){sp.textContent=t;sp.classList.remove('dim')}});
+    li.onclick=()=>{delete marks[k];store.set('vocab',marks);
+      document.querySelectorAll('w').forEach(w=>{if(w.dataset.w===k)w.classList.remove('on')});renderVocab()}})}
 function exportVocab(){const t=Object.keys(marks).join(', ');navigator.clipboard&&navigator.clipboard.writeText(t);alert('已复制生词：\n'+t)}
 // ===== GitHub 同步 =====
 const REPO_OWNER='qianzhu123',REPO_NAME='english-daily',VOCAB_PATH='data/vocab.json';
+// 旧数据升级：数字/1 → 复习条目对象（一次性）
+(function(){let ch=false;for(const k in marks){const v=normEntry(marks[k]);if(JSON.stringify(v)!==JSON.stringify(marks[k])){marks[k]=v;ch=true}}if(ch)store.set('vocab',marks)})();
 function getToken(){return localStorage.getItem('gh_token')||''}
 function saveToken(){const t=document.getElementById('tokin').value.trim();if(t)localStorage.setItem('gh_token',t);
 document.getElementById('tokstat').textContent=t?'已保存（仅存本机浏览器）':'未填写';syncNow()}
@@ -116,7 +156,10 @@ async function ghPut(obj,sha){ // 写回并保留每日备份
       ...(sha?{sha}:{})})});
   if(!r.ok)throw new Error('GitHub 写入失败 '+r.status+' '+(await r.text()).slice(0,120));
   return (await r.json()).content.sha}
-function mergeSets(a,b){const o={...a};for(const k in b)o[k]=(o[k]||0)+ (b[k]||0);return o} // 取并集，计数相加
+function mergeSets(a,b){const o={...a};for(const k in b){const av=o[k],bv=b[k];
+  if(typeof av==='object'&&typeof bv==='object')o[k]={...av,...bv,lapses:Math.max(av.lapses||0,bv.lapses||0)}; // 复习进度取各字段最新并集
+  else if(typeof bv==='object'||typeof av==='object')o[k]=typeof bv==='object'?bv:av;
+  else o[k]=(av||0)+(bv||0)}return o} // 取并集，防互删
 let syncing=false;
 async function syncNow(){
   if(syncing)return;syncing=true;
@@ -145,7 +188,37 @@ function playAll(){speechSynthesis.cancel();let i=0;
     const u=new SpeechSynthesisUtterance(sentTexts[i]);u.lang='en-US';u.rate=parseFloat(document.getElementById('rate').value);
     u.onend=()=>{i++;next()};speechSynthesis.speak(u)};next()}
 function stopAll(){speechSynthesis.cancel();sentEls.forEach(e=>e.classList.remove('active'))}
-render();
+// ===== 复习模式（简化 SM-2 间隔重复） =====
+// marks[k] 现为 {n:标记次数, ease:间隔天数, due:到期日ISO, lapses:忘记次数}
+// 兼容旧数据：纯数字/1 视为 {n:1,ease:1,due:today}
+function normEntry(v){return typeof v==='object'&&v?v:{n:Number(v)||1,ease:1,due:new Date().toISOString().slice(0,10),lapses:0}}
+let revQueue=[],revIdx=0;
+function startReview(){
+  const today=new Date().toISOString().slice(0,10);
+  const due=Object.entries(marks).filter(([k,v])=>normEntry(v).due<=today);
+  if(!due.length){alert('今日无到期生词 ✓（'+Object.keys(marks).length+' 条都在复习间隔中）');return}
+  revQueue=due.sort((a,b)=>normEntry(a[1]).due.localeCompare(normEntry(b[1]).due));revIdx=0;
+  document.getElementById('revbox').classList.remove('hidden');revShow()}
+function revShow(){
+  if(revIdx>=revQueue.length){finishReview();return}
+  const k=revQueue[revIdx][0];
+  document.getElementById('revcnt').textContent=(revIdx+1)+' / '+revQueue.length;
+  document.getElementById('revword').textContent=k;
+  document.getElementById('revtrans').textContent='· · ·';
+  const t=translate(k);t.then(x=>{if(revIdx<revQueue.length&&revQueue[revIdx][0]===k)document.getElementById('revtrans').dataset.full=x});
+  speak(k,0.9)}
+function revShowBtn(){const el=document.getElementById('revtrans');el.textContent=el.dataset.full||'（无翻译）';}
+function revNext(good){
+  const k=revQueue[revIdx][0];const e=normEntry(marks[k]);
+  if(good){e.ease=Math.min(60,(e.ease||1)*2);e.lapses=e.lapses||0}
+  else{e.ease=1;e.lapses=(e.lapses||0)+1}
+  e.due=new Date(Date.now()+e.ease*86400000).toISOString().slice(0,10);
+  marks[k]=e;store.set('vocab',marks);revIdx++;
+  if(revIdx<revQueue.length)revShow();else finishReview()}
+function finishReview(){
+  document.getElementById('revbox').classList.add('hidden');
+  syncNow().catch(()=>{});alert('复习完成 ✓ 进度已同步')}
+document.getElementById('revbtn1').onclick=revShowBtn;
 // 打开页面即自动同步（无 token 时为只读拉取）
 syncNow().catch(()=>{});
 </script>
