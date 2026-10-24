@@ -41,7 +41,7 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 <div class="meta">点词标记不认识 → 收进生词本（右下角）。点击生词本里的词可取消标记。</div>
 <div id="app"></div>
 </div>
-<div id="vocab" class="hidden"><h3>生词本 <button onclick="startReview()" style="padding:2px 8px;font-size:.75rem">复习</button> <button onclick="syncNow()" id="syncBtn" style="padding:2px 8px;font-size:.75rem">同步</button> <button onclick="exportVocab()" style="padding:2px 8px;font-size:.75rem">导出</button> <button onclick="showToken()" style="padding:2px 8px;font-size:.75rem">🔑</button></h3><ul id="vlist"></ul><div id="vhint" style="color:var(--dim);font-size:.78rem;margin-top:6px">按文章分组 · 点词删除 · 词组连点后再点确认</div></div>
+<div id="vocab" class="hidden"><h3>生词本 <button onclick="startReview()" style="padding:2px 8px;font-size:.75rem">复习</button> <button onclick="togglePhraseMode()" id="phraseBtn" style="padding:2px 8px;font-size:.75rem">+ 词组</button> <button onclick="syncNow()" id="syncBtn" style="padding:2px 8px;font-size:.75rem">同步</button> <button onclick="exportVocab()" style="padding:2px 8px;font-size:.75rem">导出</button> <button onclick="showToken()" style="padding:2px 8px;font-size:.75rem">🔑</button></h3><ul id="vlist"></ul><div id="vhint" style="color:var(--dim);font-size:.78rem;margin-top:6px">单击即入本 · 词组走「+ 词组」模式 · 点词条删除</div></div>
 <div id="revbox" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;align-items:center;justify-content:center">
 <div style="background:var(--card);border-radius:12px;padding:24px;width:90%;max-width:420px;text-align:center">
 <div id="revcnt" style="color:var(--dim);font-size:.8rem;margin-bottom:10px"></div>
@@ -80,42 +80,60 @@ function render(){
 }
 document.addEventListener('click',e=>{
     const w=e.target.closest('w');if(!w)return;
-    const k=w.dataset.w;
-    if(selState){ // 词组选择中
-      if(k===selState.key){ // 再点一次确认 → 以当前已选词拼接成词组
-        const phrase=selState.words.join(' ');
-        if(phrase&&!marks[phrase]){marks[phrase]=1;speak(phrase,0.9);store.set('vocab',marks);renderVocab();restoreMarks()}
-        else{alert('生词本已有：'+phrase)}
-        selState=null;document.querySelectorAll('w.sel').forEach(x=>x.classList.remove('sel'));return}
-      // 检查连续性：必须是已选词的紧邻后继
+    const k=cleanWord(w.dataset.w);
+    if(selState){ // 词组模式
+      if(selState.key==='__start__'){ // 模式刚开启，点第一个词
+        selState={key:k,words:[k],wEl:w};w.classList.add('sel');speak(k,0.9);return}
+      if(k===selState.key){confirmPhrase();return}
       const prev=selState.words[selState.words.length-1];
-      const seq=selState.seq;const nextW=seq[selState.idx+1];
-      if(nextW&&nextW.dataset.w===k){selState.words.push(k);selState.idx++;w.classList.add('sel');speak(k,0.95);return}
-      // 点了不连续的词或重复词 → 重新开始
+      const nextW=selState.wEl.nextSibling;
+      const nextClean=nextW&&nextW.nodeType===1?cleanWord(nextW.dataset.w):null;
+      if(nextClean===k){selState.words.push(k);selState.wEl=w;w.classList.add('sel');speak(k,0.95);return}
       document.querySelectorAll('w.sel').forEach(x=>x.classList.remove('sel'));
       if(k===prev){selState=null;return}
-      selState={key:k,words:[k],idx:seq.indexOf(w),seq:seq};w.classList.add('sel');speak(k,0.9);return}
+      selState={key:k,words:[k],wEl:w};w.classList.add('sel');speak(k,0.9);return}
     if(marks[k]){delete marks[k];w.classList.remove('on')}
-    else{selState={key:k,words:[k],idx:[...w.closest('.sent').querySelectorAll('w')].indexOf(w),seq:[...w.closest('.sent').querySelectorAll('w')]};w.classList.add('sel');speak(k,0.9)}
+    else{addWord(k);w.classList.add('on')}
     store.set('vocab',marks);renderVocab();
   });
+function cleanWord(s){return s.replace(/[.,!?;:"'()“”’]/g,'').toLowerCase().trim()}
+function addWord(k){if(!k)return;if(marks[k]){if(typeof marks[k]!=='object')marks[k]=normEntry(marks[k]);else marks[k].n=(marks[k].n||1)+1}
+  else{marks[k]=normEntry(1);translate(k)}
+  speak(k,0.9)}
+function confirmPhrase(){
+  const phrase=selState?selState.words.join(' '):'';
+  selState=null;document.querySelectorAll('w.sel').forEach(x=>x.classList.remove('sel'));
+  const pb=document.getElementById('phraseBtn');if(pb)pb.textContent='+ 词组';
+  if(phrase&&!marks[phrase]){marks[phrase]=normEntry(1);translate(phrase);speak(phrase,0.9);store.set('vocab',marks);renderVocab();restoreMarks()}
+  else if(phrase){alert('生词本已有：'+phrase)}}
+function togglePhraseMode(){ // 词组模式入口：开→连点单词；已选→确认入本
+  if(selState){confirmPhrase();
+    document.getElementById('phraseBtn').textContent='+ 词组';return}
+  selState={key:'__start__',words:[],wEl:null};
+  document.getElementById('phraseBtn').textContent='确认 ✓';
+  alert('词组模式已开：依次点击连续的单词（变绿），点「确认 ✓」入本')}
 function restoreMarks(){document.querySelectorAll('w').forEach(w=>{if(marks[w.dataset.w])w.classList.add('on')});}
 // ===== 生词归属与翻译 =====
-function wordHome(k){ // 词/词组 → 所属文章标题（按首词在文章中首次出现定位）
+function wordHome(k){ // 词/词组 → 所属文章（首词匹配不到时归入日期最新文章，不设"其他"组）
   const first=k.split(' ')[0].toLowerCase();
   for(const a of A){
     const text=a.sentences.join(' ').toLowerCase();
     if(new RegExp('\\b'+first.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(text))return a.title}
-  return '其他'}
+  const sorted=[...A].sort((a,b)=>b.date.localeCompare(a.date));
+  return sorted[0]?sorted[0].title:'生词'}
 const TKEY='translations';
 function getTrans(){return store.get(TKEY)}
-async function translate(k){ // MyMemory 免费无key，结果缓存本地
+async function translate(k){ // MyMemory 免费无key，结果缓存本地；查不到存占位避免反复请求
   const cache=getTrans();if(cache[k])return cache[k];
   try{
     const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(k)+'&langpair=en|zh-CN');
-    const j=await r.json();const t=j&&j.responseData&&j.responseData.translatedText||'';
-    if(t){const c=getTrans();c[k]=t;store.set(TKEY,c)}
-    return t||'（查不到）'}
+    const j=await r.json();
+    let t=j&&j.responseData&&j.responseData.translatedText||'';
+    // 过滤垃圾结果：API 查不到时常回显原文或带提示语
+    if(t&&t.toLowerCase()===k.toLowerCase())t='';
+    if(t&&/MYMEMORY WARNING|QUERY LENGTH/i.test(t))t='';
+    if(t){const c=getTrans();c[k]=t;store.set(TKEY,c);return t}
+    return '（暂无释义）'}
   catch(e){return '（翻译暂不可用）'}}
 function renderVocab(){
   const ks=Object.keys(marks);
@@ -133,8 +151,15 @@ function renderVocab(){
 function exportVocab(){const t=Object.keys(marks).join(', ');navigator.clipboard&&navigator.clipboard.writeText(t);alert('已复制生词：\n'+t)}
 // ===== GitHub 同步 =====
 const REPO_OWNER='qianzhu123',REPO_NAME='english-daily',VOCAB_PATH='data/vocab.json';
-// 旧数据升级：数字/1 → 复习条目对象（一次性）
-(function(){let ch=false;for(const k in marks){const v=normEntry(marks[k]);if(JSON.stringify(v)!==JSON.stringify(marks[k])){marks[k]=v;ch=true}}if(ch)store.set('vocab',marks)})();
+// 旧数据升级：数字/1 → 复习条目对象（一次性）；并清洗带标点/大写的旧词条
+(function(){let ch=false;const cleaned={};
+for(const k in marks){
+  const ck=cleanWord(k)||k;
+  const v=normEntry(marks[k]);
+  if(cleaned[ck]){const old=cleaned[ck];old.lapses=Math.max(old.lapses||0,v.lapses||0)}
+  else cleaned[ck]=v;
+  if(ck!==k||typeof marks[k]!=='object')ch=true}
+if(ch){marks=cleaned;store.set('vocab',marks)}})();
 function getToken(){return localStorage.getItem('gh_token')||''}
 function saveToken(){const t=document.getElementById('tokin').value.trim();if(t)localStorage.setItem('gh_token',t);
 document.getElementById('tokstat').textContent=t?'已保存（仅存本机浏览器）':'未填写';syncNow()}
