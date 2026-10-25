@@ -32,8 +32,6 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 #vocab li .w{display:inline}
 #vocab li .tr{display:block;color:var(--dim);font-size:.78rem;margin-left:8px}
 #vocab li .tr.dim{opacity:.5}
-#revbox{display:none}
-#revbox:not(.hidden){display:flex}
 @media(max-width:600px){#vocab{left:12px;right:12px;max-width:none;bottom:12px;max-height:38vh}}
 .hidden{display:none}
 </style>
@@ -44,15 +42,7 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 <div class="meta">点词标记不认识 → 收进生词本（右下角）。点击生词本里的词可取消标记。</div>
 <div id="app"></div>
 </div>
-<div id="vocab" class="hidden"><h3>生词本（今日） <button onclick="startReview()" id="reviewBtn" style="padding:2px 8px;font-size:.75rem">复习</button> <button onclick="togglePhraseMode()" id="phraseBtn" style="padding:2px 8px;font-size:.75rem">+ 词组</button> <button onclick="syncNow()" id="syncBtn" style="padding:2px 8px;font-size:.75rem">同步</button> <button onclick="exportVocab()" style="padding:2px 8px;font-size:.75rem">导出</button> <button onclick="showToken()" style="padding:2px 8px;font-size:.75rem">🔑</button></h3><ul id="vlist"></ul><div id="vhint" style="color:var(--dim);font-size:.78rem;margin-top:6px">单击即入本 · 点词条朗读 · × 删除 · 历史词进「复习」</div></div>
-<div id="revbox" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;align-items:center;justify-content:center">
-<div style="background:var(--card);border-radius:12px;padding:24px;width:90%;max-width:420px;text-align:center">
-<div id="revcnt" style="color:var(--dim);font-size:.8rem;margin-bottom:10px"></div>
-<div id="revword" style="font-family:Georgia,serif;font-size:1.6rem;margin-bottom:8px"></div>
-<div id="revtrans" style="color:var(--dim);margin-bottom:16px"></div>
-<div style="display:flex;gap:10px;justify-content:center"><button onclick="revShow()" id="revbtn1">看释义</button><button onclick="revNext(false)" id="revbtn2">不熟</button><button onclick="revNext(true)" id="revbtn3">已掌握</button></div>
-<button onclick="document.getElementById('revbox').classList.add('hidden')" style="margin-top:14px;border:none;color:var(--dim)">退出复习</button>
-</div></div>
+<div id="vocab" class="hidden"><h3>生词本（今日） <button onclick="location.href='review.html'" id="reviewBtn" style="padding:2px 8px;font-size:.75rem">复习</button> <button onclick="togglePhraseMode()" id="phraseBtn" style="padding:2px 8px;font-size:.75rem">+ 词组</button> <button onclick="syncNow()" id="syncBtn" style="padding:2px 8px;font-size:.75rem">同步</button> <button onclick="exportVocab()" style="padding:2px 8px;font-size:.75rem">导出</button> <button onclick="showToken()" style="padding:2px 8px;font-size:.75rem">🔑</button></h3><ul id="vlist"></ul><div id="vhint" style="color:var(--dim);font-size:.78rem;margin-top:6px">单击即入本 · 点词条朗读 · × 删除 · 点「复习」进复习页</div></div>
 <div id="tokbox" class="hidden" style="position:fixed;left:50%;transform:translateX(-50%);bottom:70px;background:var(--card);border-radius:10px;box-shadow:0 2px 14px rgba(0,0,0,.2);padding:14px 16px;max-width:340px;width:90%;font-size:.85rem;z-index:9">
 <b>GitHub 同步设置</b>（fine-grained token，仅授权 english-daily 仓库 Contents 读写）
 <textarea id="tokin" style="width:100%;height:60px;margin:8px 0;font-size:.75rem" placeholder="粘贴 token（github_pat_...）"></textarea>
@@ -73,7 +63,11 @@ function render(){
     const box=document.createElement('div');box.className='article';
     const p=document.createElement('p');
     a.sentences.forEach((s,j)=>{const sp=document.createElement('span');sp.className='sent';sp.dataset.i=i+'-'+j;
-      sp.innerHTML=s.split(/\s+/).map(w=>`<w data-w="${esc(w.replace(/[.,!?;:"()']/g,''))}">${esc(w)}</w>`).join(' ');
+      // 标点放 <w> 外：点击高亮只盖住词本身，不带标点
+      const tokHtml=t=>{const m=t.match(/^([^A-Za-z0-9]*)([A-Za-z0-9'’-]+)([\s\S]*)$/);
+        if(!m)return esc(t);
+        return esc(m[1])+`<w data-w="${esc(m[2].toLowerCase())}">${esc(m[2])}</w>`+esc(m[3])};
+      sp.innerHTML=s.split(/\s+/).map(tokHtml).join(' ');
       p.appendChild(sp);p.appendChild(document.createTextNode(' '));sentEls.push(sp);sentTexts.push(s)});
     box.appendChild(p);
     if(a.notes&&a.notes.length){const n=document.createElement('div');n.className='notes';n.innerHTML='<b>语法点</b><br>'+a.notes.map(x=>'· '+esc(x)).join('<br>');box.appendChild(n)}
@@ -235,36 +229,7 @@ function stopAll(){speechSynthesis.cancel();sentEls.forEach(e=>e.classList.remov
 // marks[k] 现为 {n:标记次数, ease:间隔天数, due:到期日ISO, lapses:忘记次数}
 // 兼容旧数据：纯数字/1 视为 {n:1,ease:1,due:today}
 function normEntry(v){return typeof v==='object'&&v?v:{n:Number(v)||1,ease:1,due:new Date().toISOString().slice(0,10),lapses:0}}
-let revQueue=[],revIdx=0;
-function startReview(){
-  const today=new Date().toISOString().slice(0,10);
-  const due=Object.entries(marks).filter(([k,v])=>normEntry(v).due<=today);
-  if(!due.length){alert('今日无到期生词 ✓（'+Object.keys(marks).length+' 条都在复习间隔中）');return}
-  revQueue=due.sort((a,b)=>normEntry(a[1]).due.localeCompare(normEntry(b[1]).due));revIdx=0;
-  document.getElementById('revbox').classList.remove('hidden');revShow()}
-function revShow(){
-  if(revIdx>=revQueue.length){finishReview();return}
-  const k=revQueue[revIdx][0];
-  document.getElementById('revcnt').textContent=(revIdx+1)+' / '+revQueue.length;
-  document.getElementById('revword').textContent=k;
-  const trEl=document.getElementById('revtrans');trEl.textContent='· · ·';trEl.dataset.full='';
-  translate(k).then(x=>{trEl.dataset.full=x;if(trEl.textContent==='· · ·'&&revIdx<revQueue.length&&revQueue[revIdx][0]===k)trEl.textContent='点「看释义」显示';});
-  speak(k,0.9)}
-function revShowBtn(){const el=document.getElementById('revtrans');el.textContent=el.dataset.full||'（无翻译）';}
-function revNext(good){
-  if(revIdx>=revQueue.length){finishReview();return}
-  const k=revQueue[revIdx][0];const e=normEntry(marks[k]);
-  if(good){e.ease=Math.min(60,(e.ease||1)*2);e.lapses=e.lapses||0}
-  else{e.ease=1;e.lapses=(e.lapses||0)+1}
-  e.due=new Date(Date.now()+e.ease*86400000).toISOString().slice(0,10);
-  marks[k]=e;store.set('vocab',marks);revIdx++;
-  if(revIdx<revQueue.length)revShow();else finishReview()}
-function finishReview(){
-  document.getElementById('revbox').classList.add('hidden');
-  syncNow().catch(()=>{});alert('复习完成 ✓ 进度已同步')}
-document.getElementById('revbtn1').onclick=revShowBtn;
-document.getElementById('revbtn2').onclick=()=>revNext(false);
-document.getElementById('revbtn3').onclick=()=>revNext(true);
+// 复习已迁移至 review.html（独立页面），此处不再有弹窗复习逻辑
 // 打开页面即自动同步（无 token 时为只读拉取）
 syncNow().catch(()=>{});
 </script>

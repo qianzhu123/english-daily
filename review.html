@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review · Daily English</title>
+<style>
+:root{--bg:#fafaf7;--card:#fff;--ink:#1a1a1a;--dim:#6b6b6b;--accent:#2d6a4f;--bad:#e63946;--mark:#ffe08a}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);line-height:1.7}
+.wrap{max-width:760px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:1.4rem;margin:0 0 2px}
+.meta{color:var(--dim);font-size:.85rem;margin-bottom:16px}
+a.back{color:var(--accent);text-decoration:none;font-size:.9rem}
+.dayh{font-size:1.05rem;font-weight:700;margin:26px 0 8px;display:flex;align-items:center;gap:10px}
+.dayh .tag{font-size:.72rem;background:#eef6f0;color:var(--accent);padding:2px 8px;border-radius:10px;font-weight:400}
+.dayh .due-tag{font-size:.72rem;background:var(--mark);color:#b8860b;padding:2px 8px;border-radius:10px;font-weight:400}
+.wl{background:var(--card);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:4px 18px}
+.wrow{display:flex;align-items:baseline;gap:10px;padding:9px 0;border-top:1px dashed #e5e5e0;flex-wrap:wrap}
+.wrow:first-child{border-top:none}
+.wrow .w{font-family:Georgia,serif;font-weight:600;color:var(--bad);cursor:pointer;min-width:110px}
+.wrow .tr{color:var(--ink);font-size:.92rem;flex:1;min-width:180px}
+.wrow .st{font-size:.75rem;color:var(--dim);white-space:nowrap}
+.wrow .del{color:#bbb;cursor:pointer;padding:0 4px}
+.wrow .del:hover{color:var(--bad)}
+.wrow.today .w{color:var(--ink)}
+/* 复习卡片区 */
+#revcard{background:var(--card);border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);padding:28px 24px;text-align:center;margin:10px 0 6px}
+#revcard .cnt{color:var(--dim);font-size:.82rem;margin-bottom:12px}
+#revcard .word{font-family:Georgia,serif;font-size:1.9rem;margin-bottom:10px;cursor:pointer}
+#revcard .trans{color:var(--dim);min-height:1.6em;margin-bottom:18px}
+#revcard .btns{display:flex;gap:10px;justify-content:center}
+button{border:1px solid var(--accent);background:var(--card);color:var(--accent);padding:7px 18px;border-radius:6px;cursor:pointer;font-size:.9rem}
+button:hover{background:var(--accent);color:#fff}
+button.warn{border-color:var(--bad);color:var(--bad)}
+button.warn:hover{background:var(--bad);color:#fff}
+.alldone{background:#eef6f0;border-radius:12px;padding:24px;text-align:center;color:var(--accent)}
+.empty{color:var(--dim);text-align:center;padding:30px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>复习 <a class="back" href="index.html">← 返回阅读</a></h1>
+<div class="meta">上方卡片=今天到期的词（回忆先看释义）· 下方=全部生词按标记日期陈列 · 点词朗读 · × 删除</div>
+<div id="revarea"></div>
+<h2 style="font-size:1.1rem;margin-top:30px">生词历史</h2>
+<div id="history"></div>
+</div>
+<script>
+const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let marks=store.get('vocab');
+function esc(s){return String(s).replace(/&/g,'&').replace(/</g,'<')}
+function cleanWord(s){return s.replace(/[.,!?;:"'()\u201c\u201d\u2019]/g,'').toLowerCase().trim()}
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function normEntry(v){return typeof v==='object'&&v?v:{n:Number(v)||1,ease:1,due:todayStr(),lapses:0,day:todayStr()}}
+// 旧数据升级
+(function(){let ch=false;const c={};const today=todayStr();
+for(const k in marks){const ck=cleanWord(k)||k;const v=normEntry(marks[k]);
+if(!v.day){v.day=/^\d{4}-\d{2}-\d{2}/.test(k)?k.slice(0,10):today;ch=true}
+if(c[ck]){c[ck].lapses=Math.max(c[ck].lapses||0,v.lapses||0)}else c[ck]=v;
+if(ck!==k||typeof marks[k]!=='object')ch=true}
+if(ch){marks=c;store.set('vocab',marks)}})();
+function speak(text,rate){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||0.9;u.voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u)}
+// ===== 翻译（与主页一致：gtx 主源 + MyMemory 兜底） =====
+const TKEY='translations',TVER='v2';
+function getTrans(){return store.get(TKEY+TVER)}
+async function translate(k){const cache=getTrans();if(cache[k])return cache[k];let t='';
+try{const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&dt=bd&dj=1&q='+encodeURIComponent(k));
+if(r.ok){const j=await r.json();
+if(j.dict&&j.dict.length)t=j.dict.map(d=>d.pos+'：'+d.terms.slice(0,3).join('、')).join('；');
+else if(j.sentences&&j.sentences[0])t=j.sentences[0].trans}}catch(e){}
+if(!t){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(k)+'&langpair=en|zh-CN');
+const j=await r.json();let m=j&&j.responseData&&j.responseData.translatedText||'';
+if(m&&(m.toLowerCase()===k.toLowerCase()||/MYMEMORY WARNING|QUERY LENGTH|%s/.test(m)))m='';t=m}catch(e){}}
+if(t){const c=getTrans();c[k]=t;store.set(TKEY+TVER,c);return t}
+return '（暂无释义）'}
+// ===== 复习卡片 =====
+let queue=[],qi=0;
+function startRev(){
+  const today=todayStr();
+  queue=Object.entries(marks).filter(([k,v])=>normEntry(v).due<=today)
+    .sort((a,b)=>normEntry(a[1]).due.localeCompare(normEntry(b[1]).due));qi=0;
+  renderRev()}
+function renderRev(){
+  const el=document.getElementById('revarea');
+  if(qi>=queue.length){
+    if(!queue.length){el.innerHTML='<div class="alldone">今日无到期生词 ✓<div style="font-size:.85rem;color:var(--dim);margin-top:6px">到期的词会自动出现在这里（间隔：1→2→4→8…天）</div></div>'}
+    else{el.innerHTML='<div class="alldone">本轮复习完成 ✓ 共 '+queue.length+' 词<div style="font-size:.85rem;color:var(--dim);margin-top:6px">「不熟」的词明天会回来</div></div>';saveAndRefresh()}
+    return}
+  const k=queue[qi][0];
+  el.innerHTML=`<div id="revcard"><div class="cnt">${qi+1} / ${queue.length}</div>
+  <div class="word" onclick="speak('${esc(k).replace(/'/g,"\\'")}')">${esc(k)}</div>
+  <div class="trans" id="rvtr">先回忆，再点「看释义」</div>
+  <div class="btns"><button onclick="showTr()">看释义</button><button class="warn" onclick="grade(false)">不熟</button><button onclick="grade(true)">已掌握</button></div></div>`;
+  translate(k)}
+function showTr(){const k=queue[qi][0];const el=document.getElementById('rvtr');
+  getTrans()[k]?el.textContent=getTrans()[k]:translate(k).then(t=>el.textContent=t)}
+function grade(good){const k=queue[qi][0];const e=normEntry(marks[k]);
+  if(good){e.ease=Math.min(60,(e.ease||1)*2)}else{e.ease=1;e.lapses=(e.lapses||0)+1}
+  e.due=new Date(Date.now()+e.ease*86400000).toISOString().slice(0,10);
+  marks[k]=e;store.set('vocab',marks);qi++;renderRev()}
+function saveAndRefresh(){renderHistory()}
+// ===== 历史（按标记日期分组） =====
+function renderHistory(){
+  const byday={};Object.keys(marks).forEach(k=>{const d=normEntry(marks[k]).day||todayStr();(byday[d]=byday[d]||[]).push(k)});
+  const days=Object.keys(byday).sort((a,b)=>b.localeCompare(a)); // 新日期在上
+  const today=todayStr();
+  document.getElementById('history').innerHTML=days.length?days.map(d=>{
+    const ws=byday[d];
+    return `<div class="dayh">${d===today?'今天':d} <span class="tag">${ws.length} 词</span>${ws.some(k=>normEntry(marks[k]).due<=today)?'<span class="due-tag">有到期</span>':''}</div>
+    <div class="wl">${ws.map(k=>{const e=normEntry(marks[k]);const tc=getTrans()[k];
+      return `<div class="wrow ${d===today?'today':''}"><span class="w" onclick="speak('${esc(k).replace(/'/g,"\\'")}')">${esc(k)}</span>
+      <span class="tr">${tc?esc(tc):'<i style=color:#bbb>查译中…</i>'}</span>
+      <span class="st">间隔${e.ease}天 · ${e.due<=today?'<b style=color:#b8860b>今日到期</b>':'到期 '+e.due}</span>
+      <span class="del" onclick="delWord('${esc(k).replace(/'/g,"\\'")}')">×</span></div>`}).join('')}</div>`}).join('')
+  :'<div class="empty">还没有生词。去阅读页点词加入。</div>';
+  // 补翻译
+  Object.keys(marks).forEach(k=>{if(!getTrans()[k])translate(k).then(()=>renderHistoryQuiet())})}
+let hTimer=null;function renderHistoryQuiet(){clearTimeout(hTimer);hTimer=setTimeout(renderHistory,400)}
+function delWord(k){if(!confirm('删除生词「'+k+'」？'))return;delete marks[k];store.set('vocab',marks);
+  queue=queue.filter(([x])=>x!==k);renderRev();renderHistory()}
+startRev();renderHistory();
+</script>
+</body>
+</html>
