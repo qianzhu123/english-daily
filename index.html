@@ -18,9 +18,10 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 .article w{cursor:pointer;border-radius:3px;padding:0 1px}
 .article w.on{background:var(--mark);border-bottom:2px solid var(--hard)}
 .article w.sel{background:var(--accent);color:#fff}
-/* 每篇文章独立的浮动生词本窗口 */
-.vpanel{position:absolute;right:0;width:300px;max-height:42vh;overflow:auto;background:var(--card);border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.15);padding:10px 14px;font-size:.85rem;z-index:5}
+/* 每篇文章独立的浮动生词本窗口：宽屏驻留右侧空白区，窄屏退回吸附 */
+.vpanel{position:fixed;right:12px;width:280px;max-height:56vh;overflow:auto;background:var(--card);border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.15);padding:10px 14px;font-size:.85rem;z-index:5;top:20vh}
 .vpanel h4{margin:0 0 4px;font-size:.9rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.vpanel h4 .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px}
 .vpanel ul{margin:0;padding-left:0;list-style:none}
 .vpanel li{padding:1px 0;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;cursor:pointer}
 .vpanel li .w{color:var(--hard);font-family:Georgia,serif}
@@ -29,7 +30,7 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 .vpanel li .del:hover{color:var(--hard)}
 .vpanel .btns{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
 .vpanel .btns button{padding:2px 8px;font-size:.72rem}
-@media(max-width:600px){.vpanel{width:min(92vw,300px)}}
+@media(max-width:900px){.vpanel{width:min(70vw,280px)}} /* 平板/窄屏：部分遮挡但限宽 */
 .hidden{display:none}
 .sent{transition:background .3s}.sent.active{background:#eef6f0}
 .notes{background:#eef6f0;padding:14px 18px;border-radius:8px;font-size:.95rem;margin-top:12px}
@@ -93,19 +94,33 @@ function render(){
   window.addEventListener('scroll',positionPanels,{passive:true});
   window.addEventListener('resize',positionPanels);
 }
-function positionPanels(){ // 每个生词本吸附在所属文章的可见区间内（不越过文章底边）
+function positionPanels(){ // 生词本驻留右侧空白、垂直居中；活动区间仍锁定所属文章（不越文章底边）
+  const vh=window.innerHeight;
+  const wrapEl=document.querySelector('.wrap');
+  const contentRight=wrapEl?wrapEl.getBoundingClientRect().right:0;
+  const hasGutter=(window.innerWidth-contentRight)>320; // 右侧空白够宽才外挂，否则贴回文章内
   A.forEach((a,i)=>{
     const wrap=document.querySelectorAll('.art-wrap')[i];const vp=document.getElementById('vpanel-'+i);
     if(!wrap||!vp)return;
     const wr=wrap.getBoundingClientRect();
-    const vh=window.innerHeight;
-    // 目标：视口 70px 处开始；若文章底部高于该点+面板高，则贴文章底
-    let top=70;
-    const panelH=vp.offsetHeight||120;
-    if(wr.bottom<top+panelH)top=wr.bottom-panelH-10; // 文章快滚出屏，贴底
-    if(wr.top>top)top=Math.max(wr.top+40,top); // 文章还没滚到，跟随文章顶
-    vp.style.top=Math.max(top,0)+'px';
     vp.style.display=(wr.bottom<0||wr.top>vh)?'none':''; // 文章完全出屏则隐藏
+    if(wr.bottom<0||wr.top>vh)return;
+    if(hasGutter){
+      // 外挂模式：固定在右空白区，垂直取文章可视区间与视口居中的交集
+      const ideal=vh/2-(vp.offsetHeight||160)/2;              // 视口垂直居中
+      const lo=Math.max(wr.top,0)+8;                          // 不得高于文章可视顶
+      const hi=Math.min(wr.bottom,vh)-(vp.offsetHeight||160)-8; // 不得低于文章可视底
+      const top=hi<lo?lo:Math.min(Math.max(ideal,lo),hi);
+      vp.style.right=Math.max(12,window.innerWidth-contentRight+12)+'px'; // 骑在空白区贴正文边
+      vp.style.top=Math.max(top,0)+'px';
+    }else{
+      // 窄屏回退：原吸附规则
+      let top=70;const panelH=vp.offsetHeight||120;
+      if(wr.bottom<top+panelH)top=wr.bottom-panelH-10;
+      if(wr.top>top)top=Math.max(wr.top+40,top);
+      vp.style.right='12px';
+      vp.style.top=Math.max(top,0)+'px';
+    }
   })}
 document.addEventListener('click',e=>{
     const w=e.target.closest('w');if(!w)return;
