@@ -18,6 +18,19 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 .article w{cursor:pointer;border-radius:3px;padding:0 1px}
 .article w.on{background:var(--mark);border-bottom:2px solid var(--hard)}
 .article w.sel{background:var(--accent);color:#fff}
+/* 每篇文章独立的浮动生词本窗口 */
+.vpanel{position:absolute;right:0;width:300px;max-height:42vh;overflow:auto;background:var(--card);border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.15);padding:10px 14px;font-size:.85rem;z-index:5}
+.vpanel h4{margin:0 0 4px;font-size:.9rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.vpanel ul{margin:0;padding-left:0;list-style:none}
+.vpanel li{padding:1px 0;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;cursor:pointer}
+.vpanel li .w{color:var(--hard);font-family:Georgia,serif}
+.vpanel li .tr{color:var(--dim);font-size:.76rem;flex-basis:100%;padding-left:8px;white-space:pre-line}
+.vpanel li .del{color:#bbb;padding:0 4px}
+.vpanel li .del:hover{color:var(--hard)}
+.vpanel .btns{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.vpanel .btns button{padding:2px 8px;font-size:.72rem}
+@media(max-width:600px){.vpanel{width:min(92vw,300px)}}
+.hidden{display:none}
 .sent{transition:background .3s}.sent.active{background:#eef6f0}
 .notes{background:#eef6f0;padding:14px 18px;border-radius:8px;font-size:.95rem;margin-top:12px}
 .notes b{color:var(--accent)}
@@ -39,10 +52,9 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 <body>
 <div class="wrap">
 <h1>Daily English</h1>
-<div class="meta">点词标记不认识 → 收进生词本（右下角）。点击生词本里的词可取消标记。</div>
+<div class="meta">点词标记 → 收进该文章的生词本（右侧跟随浮动）· 单击即入本 · 点词条朗读 · × 删除 · <button onclick="location.href='review.html'" id="reviewBtn" style="padding:2px 8px;font-size:.78rem">复习</button> <button onclick="togglePhraseMode()" id="phraseBtn" style="padding:2px 8px;font-size:.78rem">+ 词组</button> <button onclick="syncNow()" id="syncBtn" style="padding:2px 8px;font-size:.78rem">同步</button> <button onclick="exportVocab()" style="padding:2px 8px;font-size:.78rem">导出</button> <button onclick="showToken()" style="padding:2px 8px;font-size:.78rem">🔑</button></div>
 <div id="app"></div>
 </div>
-<div id="vocab" class="hidden"><h3>生词本（今日） <button onclick="location.href='review.html'" id="reviewBtn" style="padding:2px 8px;font-size:.75rem">复习</button> <button onclick="togglePhraseMode()" id="phraseBtn" style="padding:2px 8px;font-size:.75rem">+ 词组</button> <button onclick="syncNow()" id="syncBtn" style="padding:2px 8px;font-size:.75rem">同步</button> <button onclick="exportVocab()" style="padding:2px 8px;font-size:.75rem">导出</button> <button onclick="showToken()" style="padding:2px 8px;font-size:.75rem">🔑</button></h3><ul id="vlist"></ul><div id="vhint" style="color:var(--dim);font-size:.78rem;margin-top:6px">单击即入本 · 点词条朗读 · × 删除 · 点「复习」进复习页</div></div>
 <div id="tokbox" class="hidden" style="position:fixed;left:50%;transform:translateX(-50%);bottom:70px;background:var(--card);border-radius:10px;box-shadow:0 2px 14px rgba(0,0,0,.2);padding:14px 16px;max-width:340px;width:90%;font-size:.85rem;z-index:9">
 <b>GitHub 同步设置</b>（fine-grained token，仅授权 english-daily 仓库 Contents 读写）
 <textarea id="tokin" style="width:100%;height:60px;margin:8px 0;font-size:.75rem" placeholder="粘贴 token（github_pat_...）"></textarea>
@@ -59,6 +71,7 @@ function render(){
   app.innerHTML='';sentEls=[];sentTexts=[]; // 幂等：重渲染前清空，杜绝文章叠加
   A.forEach((a,i)=>{
     const d=document.createElement('div');
+    d.className='art-wrap';d.style.position='relative';
     d.innerHTML=`<h2>${i+1}. ${esc(a.title)}</h2><div class="meta">${esc(a.date)} · ${esc(a.level)}</div>`;
     const box=document.createElement('div');box.className='article';
     const p=document.createElement('p');
@@ -66,15 +79,34 @@ function render(){
       // 标点放 <w> 外：点击高亮只盖住词本身，不带标点
       const tokHtml=t=>{const m=t.match(/^([^A-Za-z0-9]*)([A-Za-z0-9'’-]+)([\s\S]*)$/);
         if(!m)return esc(t);
-        return esc(m[1])+`<w data-w="${esc(m[2].toLowerCase())}">${esc(m[2])}</w>`+esc(m[3])};
+        return esc(m[1])+`<w data-w="${esc(m[2].toLowerCase())}" data-a="${i}">${esc(m[2])}</w>`+esc(m[3])};
       sp.innerHTML=s.split(/\s+/).map(tokHtml).join(' ');
       p.appendChild(sp);p.appendChild(document.createTextNode(' '));sentEls.push(sp);sentTexts.push(s)});
     box.appendChild(p);
     if(a.notes&&a.notes.length){const n=document.createElement('div');n.className='notes';n.innerHTML='<b>语法点</b><br>'+a.notes.map(x=>'· '+esc(x)).join('<br>');box.appendChild(n)}
-    d.appendChild(box);app.appendChild(d);
+    // 本文的浮动生词本（跟随文章区间滚动）
+    const vp=document.createElement('div');vp.className='vpanel';vp.id='vpanel-'+i;
+    vp.innerHTML=`<h4>生词本·${esc(a.title)} <button onclick="location.href='review.html'" style="padding:1px 6px;font-size:.7rem">复习</button><button onclick="togglePhraseMode(${i})" style="padding:1px 6px;font-size:.7rem">+ 词组</button></h4><ul></ul><div style="color:var(--dim);font-size:.75rem;margin-top:4px">本文章今日生词，按标记顺序</div>`;
+    d.appendChild(box);d.appendChild(vp);app.appendChild(d);
   });
-  renderVocab();restoreMarks();
+  renderVocab();restoreMarks();positionPanels();
+  window.addEventListener('scroll',positionPanels,{passive:true});
+  window.addEventListener('resize',positionPanels);
 }
+function positionPanels(){ // 每个生词本吸附在所属文章的可见区间内（不越过文章底边）
+  A.forEach((a,i)=>{
+    const wrap=document.querySelectorAll('.art-wrap')[i];const vp=document.getElementById('vpanel-'+i);
+    if(!wrap||!vp)return;
+    const wr=wrap.getBoundingClientRect();
+    const vh=window.innerHeight;
+    // 目标：视口 70px 处开始；若文章底部高于该点+面板高，则贴文章底
+    let top=70;
+    const panelH=vp.offsetHeight||120;
+    if(wr.bottom<top+panelH)top=wr.bottom-panelH-10; // 文章快滚出屏，贴底
+    if(wr.top>top)top=Math.max(wr.top+40,top); // 文章还没滚到，跟随文章顶
+    vp.style.top=Math.max(top,0)+'px';
+    vp.style.display=(wr.bottom<0||wr.top>vh)?'none':''; // 文章完全出屏则隐藏
+  })}
 document.addEventListener('click',e=>{
     const w=e.target.closest('w');if(!w)return;
     const k=cleanWord(w.dataset.w);
@@ -90,39 +122,46 @@ document.addEventListener('click',e=>{
       if(k===prev){selState=null;return}
       selState={key:k,words:[k],wEl:w};w.classList.add('sel');speak(k,0.9);return}
     if(marks[k]){delete marks[k];w.classList.remove('on')}
-    else{addWord(k);w.classList.add('on')}
+    else{addWord(k,w.closest('.sent')?w.closest('.sent').textContent:null);w.classList.add('on')}
     store.set('vocab',marks);renderVocab();
   });
 function cleanWord(s){return s.replace(/[.,!?;:"'()“”’]/g,'').toLowerCase().trim()}
 function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-function addWord(k){if(!k)return;
+function addWord(k,ctx){if(!k)return;
   if(marks[k]){const e=normEntry(marks[k]);e.n=(e.n||1)+1;if(!e.day)e.day=todayStr();marks[k]=e}
-  else{const e=normEntry(1);e.day=todayStr();marks[k]=e;translate(k)}
+  else{const e=normEntry(1);e.day=todayStr();marks[k]=e;translate(k,ctx)}
   speak(k,0.9)}
 function confirmPhrase(){
   const phrase=selState?selState.words.join(' '):'';
+  const artIdx=selState?wordHomeIdx(selState.words[0]):null;
   selState=null;document.querySelectorAll('w.sel').forEach(x=>x.classList.remove('sel'));
   const pb=document.getElementById('phraseBtn');if(pb)pb.textContent='+ 词组';
-  if(phrase&&!marks[phrase]){const en=normEntry(1);en.day=todayStr();marks[phrase]=en;translate(phrase);speak(phrase,0.9);store.set('vocab',marks);renderVocab();restoreMarks()}
+  if(phrase&&!marks[phrase]){const en=normEntry(1);en.day=todayStr();if(artIdx!=null)en.art=artIdx;marks[phrase]=en;translate(phrase);speak(phrase,0.9);store.set('vocab',marks);renderVocab();restoreMarks()}
   else if(phrase){alert('生词本已有：'+phrase)}}
 function togglePhraseMode(){ // 词组模式入口：开→连点单词；已选→确认入本
   if(selState){confirmPhrase();
-    document.getElementById('phraseBtn').textContent='+ 词组';return}
+    document.querySelectorAll('.vpanel button').forEach(b=>{if(b.textContent==='确认 ✓')b.textContent='+ 词组'});return}
   selState={key:'__start__',words:[],wEl:null};
-  document.getElementById('phraseBtn').textContent='确认 ✓';
-  alert('词组模式已开：依次点击连续的单词（变绿），点「确认 ✓」入本')}
+  document.querySelectorAll('.vpanel button').forEach(b=>{if(b.textContent==='+ 词组')b.textContent='确认 ✓'});
+  alert('词组模式已开：依次点击连续的单词（变绿），再点「确认 ✓」入本')}
 function restoreMarks(){document.querySelectorAll('w').forEach(w=>{if(marks[cleanWord(w.dataset.w)])w.classList.add('on')});}
 // ===== 生词归属与翻译 =====
-const TKEY='translations',TVER='v2'; // 换版本作废旧垃圾缓存
+const TKEY='translations',TVER='v3'; // v3：带语境翻译，作废 v2 缓存（runway→河床事故）
 function getTrans(){return store.get(TKEY+TVER)}
-async function translate(k){ // 主源 gtx（谷歌免费接口，质量高），兜底 MyMemory；缓存本地
+async function translate(k,ctx){ // 主源 gtx；ctx=所在句子时先取整句译文做语境义，词典义项全列兜底
   const cache=getTrans();if(cache[k])return cache[k];
   let t='';
-  try{ // gtx: 单词返回 "word","/phonetic/","释义",[...] 结构，取第三段（简明释义）
+  if(ctx){try{ // 语境优先：整句翻译，用户看到的第一个释义来自真实上下文
+    const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&q='+encodeURIComponent(ctx));
+    if(r.ok){const j=await r.json();
+      if(j.sentences&&j.sentences[0]&&j.sentences[0].trans){t='〔语境〕'+j.sentences[0].trans}}}
+  catch(e){}}
+  try{ // 词典义项（不截断，多义词如 runway 全部列出）
     const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&dt=bd&dj=1&q='+encodeURIComponent(k));
     if(r.ok){const j=await r.json();
-      if(j.dict&&j.dict.length){t=j.dict.map(d=>d.pos+'：'+d.terms.slice(0,3).join('、')).join('；')} // 词性+多义项
-      else if(j.sentences&&j.sentences[0])t=j.sentences[0].trans}}
+      if(j.dict&&j.dict.length){const d=j.dict.map(x=>x.pos+'：'+x.terms.join('、')).join('；');
+        t=t?t+'\n〔词典〕'+d:(cache[k]||d)} // 有语境则词典附后；无语境直接用
+      else if(!t&&j.sentences&&j.sentences[0])t=j.sentences[0].trans}}
   catch(e){}
   if(!t){try{ // 兜底 MyMemory，过滤垃圾
     const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(k)+'&langpair=en|zh-CN');
@@ -131,27 +170,40 @@ async function translate(k){ // 主源 gtx（谷歌免费接口，质量高）�
     t=m}catch(e){}}
   if(t){const c=getTrans();c[k]=t;store.set(TKEY+TVER,c);return t}
   return '（暂无释义）'}
+function wordHomeIdx(k){ // 词/词组 → 文章索引：词条自带 art 字段优先，否则按首词匹配正文；匹配不到归最后一篇
+  const e=marks[k];
+  if(e&&typeof e==='object'&&typeof e.art==='number'&&e.art<A.length)return e.art;
+  const first=k.split(' ')[0].toLowerCase();
+  for(let i=0;i<A.length;i++){
+    const text=A[i].sentences.join(' ').toLowerCase();
+    if(new RegExp('\\b'+first.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(text))return i}
+  return A.length-1}
 function renderVocab(){
   const ks=Object.keys(marks);
-  document.getElementById('vocab').classList.toggle('hidden',!ks.length);
   const tc=getTrans();
-  // 生词本只展示今天标的，按标记先后（对象键序=点击顺序）；历史词仅供复习
   const today=todayStr();
-  const todays=ks.filter(k=>normEntry(marks[k]).day===today);
-  document.getElementById('vlist').innerHTML=todays.map(k=>
-    `<li data-k="${esc(k)}"><span class="w">${esc(k)}</span><span class="del" data-del="${esc(k)}">×</span>${tc[k]?`<span class="tr">${esc(tc[k])}</span>`:`<span class="tr dim" data-t="${esc(k)}">查译…</span>`}</li>`).join('')
-    +(todays.length?'':'<li class="dim-empty" style="color:var(--dim);cursor:default">今天还没标生词（历史词在复习里）</li>');
-  // 复习按钮显示到期数并高亮
+  // 按文章分窗口，窗口内只展示该文章今日词，按标记先后（对象键序）
+  const byArt={};ks.forEach(k=>{const e=normEntry(marks[k]);
+    if(e.day!==today)return; // 只展示今天的
+    const i=wordHomeIdx(k);(byArt[i]=byArt[i]||[]).push(k)});
+  A.forEach((a,i)=>{
+    const ul=document.querySelector('#vpanel-'+i+' ul');if(!ul)return;
+    const ws=byArt[i]||[];
+    ul.innerHTML=ws.map(k=>
+      `<li data-k="${esc(k)}"><span class="w">${esc(k)}</span><span class="del" data-del="${esc(k)}">×</span>${tc[k]?`<span class="tr">${esc(tc[k])}</span>`:`<span class="tr dim">查译…</span>`}</li>`).join('')
+      +(ws.length?'':'<li style="color:var(--dim);cursor:default;font-size:.78rem">今天本文还没标生词</li>');
+    ul.querySelectorAll('li[data-k]').forEach(li=>{
+      const k=li.dataset.k;
+      if(!getTrans()[k])translate(k).then(t=>{const sp=li.querySelector('.tr');if(sp&&li.dataset.k===k){sp.textContent=t;sp.classList.remove('dim')}});
+      li.onclick=e=>{ // 点词条=朗读；删除只走 × 按钮
+        if(e.target.classList.contains('del')){delete marks[k];store.set('vocab',marks);
+          document.querySelectorAll('w').forEach(w=>{if(cleanWord(w.dataset.w)===k)w.classList.remove('on')});renderVocab();return}
+        speak(k,0.9)}})});
+  // 复习按钮到期数
   const due=ks.filter(k=>normEntry(marks[k]).due<=today).length;
   const rb=document.getElementById('reviewBtn');
   rb.textContent=due?('复习 '+due):'复习';rb.classList.toggle('due',due>0);
-  document.querySelectorAll('#vlist li[data-k]').forEach(li=>{
-    const k=li.dataset.k;
-    if(!getTrans()[k])translate(k).then(t=>{const sp=li.querySelector('.tr');if(sp&&li.dataset.k===k){sp.textContent=t;sp.classList.remove('dim')}});
-    li.onclick=e=>{ // 点词条=朗读；删除只走 × 按钮
-      if(e.target.classList.contains('del')){delete marks[k];store.set('vocab',marks);
-        document.querySelectorAll('w').forEach(w=>{if(cleanWord(w.dataset.w)===k)w.classList.remove('on')});renderVocab();return}
-      speak(k,0.9)}})}
+  positionPanels()}
 function exportVocab(){const t=Object.keys(marks).join(', ');navigator.clipboard&&navigator.clipboard.writeText(t);alert('已复制生词：\n'+t)}
 // ===== GitHub 同步 =====
 const REPO_OWNER='qianzhu123',REPO_NAME='english-daily',VOCAB_PATH='data/vocab.json';

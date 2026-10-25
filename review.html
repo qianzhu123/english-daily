@@ -61,12 +61,12 @@ if(ck!==k||typeof marks[k]!=='object')ch=true}
 if(ch){marks=c;store.set('vocab',marks)}})();
 function speak(text,rate){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||0.9;u.voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u)}
 // ===== 翻译（与主页一致：gtx 主源 + MyMemory 兜底） =====
-const TKEY='translations',TVER='v2';
+const TKEY='translations',TVER='v3';
 function getTrans(){return store.get(TKEY+TVER)}
 async function translate(k){const cache=getTrans();if(cache[k])return cache[k];let t='';
 try{const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&dt=bd&dj=1&q='+encodeURIComponent(k));
 if(r.ok){const j=await r.json();
-if(j.dict&&j.dict.length)t=j.dict.map(d=>d.pos+'：'+d.terms.slice(0,3).join('、')).join('；');
+if(j.dict&&j.dict.length)t=j.dict.map(d=>d.pos+'：'+d.terms.join('、')).join('；'); // 全义项
 else if(j.sentences&&j.sentences[0])t=j.sentences[0].trans}}catch(e){}
 if(!t){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(k)+'&langpair=en|zh-CN');
 const j=await r.json();let m=j&&j.responseData&&j.responseData.translatedText||'';
