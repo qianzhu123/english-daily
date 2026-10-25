@@ -94,30 +94,33 @@ function render(){
   window.addEventListener('scroll',positionPanels,{passive:true});
   window.addEventListener('resize',positionPanels);
 }
-function positionPanels(){ // 生词本驻留右侧空白、垂直居中；活动区间仍锁定所属文章（不越文章底边）
+function positionPanels(){ // 面板驻右空白垂直居中；活动区间锁定所属文章；顶到浏览器顶部即消失（防重叠）
   const vh=window.innerHeight;
   const wrapEl=document.querySelector('.wrap');
   const contentRight=wrapEl?wrapEl.getBoundingClientRect().right:0;
-  const hasGutter=(window.innerWidth-contentRight)>320; // 右侧空白够宽才外挂，否则贴回文章内
+  const gutter=window.innerWidth-contentRight;
+  const hasGutter=gutter>320; // 右侧空白够宽才外挂，否则贴回文章内（窄屏回退）
   A.forEach((a,i)=>{
     const wrap=document.querySelectorAll('.art-wrap')[i];const vp=document.getElementById('vpanel-'+i);
     if(!wrap||!vp)return;
     const wr=wrap.getBoundingClientRect();
-    vp.style.display=(wr.bottom<0||wr.top>vh)?'none':''; // 文章完全出屏则隐藏
-    if(wr.bottom<0||wr.top>vh)return;
     if(hasGutter){
-      // 外挂模式：固定在右空白区，垂直取文章可视区间与视口居中的交集
-      const ideal=vh/2-(vp.offsetHeight||160)/2;              // 视口垂直居中
-      const lo=Math.max(wr.top,0)+8;                          // 不得高于文章可视顶
-      const hi=Math.min(wr.bottom,vh)-(vp.offsetHeight||160)-8; // 不得低于文章可视底
-      const top=hi<lo?lo:Math.min(Math.max(ideal,lo),hi);
-      vp.style.right=Math.max(12,window.innerWidth-contentRight+12)+'px'; // 骑在空白区贴正文边
-      vp.style.top=Math.max(top,0)+'px';
+      const panelH=vp.offsetHeight||160;
+      const ideal=vh/2-panelH/2;                     // 目标：垂直居中
+      const lo=Math.max(wr.top,0);                   // 不高于文章可视顶
+      const hi=Math.min(wr.bottom,vh)-panelH;        // 不低于文章可视底
+      if(hi<=0||hi<lo){vp.style.display='none';return} // 顶到浏览器上部/区间过小 → 消失
+      vp.style.display='';
+      vp.style.right='12px';                         // 贴窗口最右（空白区内）
+      vp.style.top=Math.min(Math.max(ideal,lo),hi)+'px';
     }else{
       // 窄屏回退：原吸附规则
+      const wrTop=wr.top,wrBottom=wr.bottom;
+      if(wrBottom<0||wrTop>vh){vp.style.display='none';return}
       let top=70;const panelH=vp.offsetHeight||120;
-      if(wr.bottom<top+panelH)top=wr.bottom-panelH-10;
-      if(wr.top>top)top=Math.max(wr.top+40,top);
+      if(wrBottom<top+panelH)top=wrBottom-panelH-10;
+      if(wrTop>top)top=Math.max(wrTop+40,top);
+      vp.style.display='';
       vp.style.right='12px';
       vp.style.top=Math.max(top,0)+'px';
     }
