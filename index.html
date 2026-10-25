@@ -19,7 +19,7 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 .article w.on{background:var(--mark);border-bottom:2px solid var(--hard)}
 .article w.sel{background:var(--accent);color:#fff}
 /* 每篇文章独立的浮动生词本窗口：宽屏驻留右侧空白区，窄屏退回吸附 */
-.vpanel{position:fixed;right:12px;width:280px;max-height:56vh;overflow:auto;background:var(--card);border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.15);padding:10px 14px;font-size:.85rem;z-index:5;top:20vh}
+.vpanel{position:fixed;right:12px;width:280px;height:340px;overflow:auto;background:var(--card);border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.15);padding:10px 14px;font-size:.85rem;z-index:5;top:20vh;will-change:top}
 .vpanel h4{margin:0 0 4px;font-size:.9rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .vpanel h4 .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px}
 .vpanel ul{margin:0;padding-left:0;list-style:none}
@@ -91,10 +91,12 @@ function render(){
     d.appendChild(box);d.appendChild(vp);app.appendChild(d);
   });
   renderVocab();restoreMarks();positionPanels();
-  window.addEventListener('scroll',positionPanels,{passive:true});
-  window.addEventListener('resize',positionPanels);
+  let raf=null; // 滚动节流：rAF 合帧，杜绝高频重算导致的闪动
+  const onScroll=()=>{if(raf)return;raf=requestAnimationFrame(()=>{raf=null;positionPanels()})};
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll);
 }
-function positionPanels(){ // 面板驻右空白垂直居中；活动区间锁定所属文章；顶到浏览器顶部即消失（防重叠）
+function positionPanels(){ // 面板驻右空白垂直居中；活动区间锁定所属文章；顶到浏览器上部即消失（防重叠）
   const vh=window.innerHeight;
   const wrapEl=document.querySelector('.wrap');
   const contentRight=wrapEl?wrapEl.getBoundingClientRect().right:0;
@@ -104,27 +106,28 @@ function positionPanels(){ // 面板驻右空白垂直居中；活动区间锁�
     const wrap=document.querySelectorAll('.art-wrap')[i];const vp=document.getElementById('vpanel-'+i);
     if(!wrap||!vp)return;
     const wr=wrap.getBoundingClientRect();
+    const panelH=vp.offsetHeight||160;
+    // 消失规则（用户原话）：面板最上面顶到浏览器上部 → 隐藏。两篇文章同时满足可见条件的重叠由此杜绝
     if(hasGutter){
-      const panelH=vp.offsetHeight||160;
       const ideal=vh/2-panelH/2;                     // 目标：垂直居中
       const lo=Math.max(wr.top,0);                   // 不高于文章可视顶
       const hi=Math.min(wr.bottom,vh)-panelH;        // 不低于文章可视底
-      if(hi<=0||hi<lo){vp.style.display='none';return} // 顶到浏览器上部/区间过小 → 消失
+      if(wr.top<MIN_TOP||hi<MIN_TOP||hi<lo){vp.style.display='none';return}
       vp.style.display='';
       vp.style.right='12px';                         // 贴窗口最右（空白区内）
       vp.style.top=Math.min(Math.max(ideal,lo),hi)+'px';
     }else{
-      // 窄屏回退：原吸附规则
-      const wrTop=wr.top,wrBottom=wr.bottom;
-      if(wrBottom<0||wrTop>vh){vp.style.display='none';return}
-      let top=70;const panelH=vp.offsetHeight||120;
-      if(wrBottom<top+panelH)top=wrBottom-panelH-10;
-      if(wrTop>top)top=Math.max(wrTop+40,top);
+      // 窄屏回退：吸附规则，同样顶到上部即消失
+      if(wr.bottom<MIN_TOP+panelH||wr.top>vh){vp.style.display='none';return}
+      let top=70;
+      if(wr.bottom<top+panelH)top=wr.bottom-panelH-10;
+      if(wr.top>top)top=Math.max(wr.top+40,top);
       vp.style.display='';
       vp.style.right='12px';
       vp.style.top=Math.max(top,0)+'px';
     }
   })}
+const MIN_TOP=10; // 面板顶不允许高于此线
 document.addEventListener('click',e=>{
     const w=e.target.closest('w');if(!w)return;
     const k=cleanWord(w.dataset.w);
