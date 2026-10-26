@@ -75,7 +75,7 @@ function esc(s){return s.replace(/&/g,'&').replace(/</g,'<')}
 function render(){
   const app=document.getElementById('app');
   app.innerHTML='';sentEls=[];sentTexts=[]; // 幂等：重渲染前清空，杜绝文章叠加
-  const list=A.map((a,i)=>({a,i})).filter(x=>showOld||x.a.date===viewDay);
+  const list=A.map((a,i)=>({a,i})).filter(x=>!x.a.draft&&(showOld||x.a.date===viewDay));
   if(!list.length)app.innerHTML='<div style="color:var(--dim);padding:40px 0;text-align:center">今天（'+viewDay+'）的文章还没更新。点「看往期」可复习旧文章。</div>';
   list.forEach(({a},n)=>{const i=n; // i=A原索引仍用于 data-a；显示编号 n+1
     const d=document.createElement('div');

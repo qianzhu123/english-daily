@@ -24,6 +24,11 @@ a.back{color:var(--accent);text-decoration:none;font-size:.9rem}
 .wrow .del{color:#bbb;cursor:pointer;padding:0 4px;font-size:1rem}
 .wrow .del:hover{color:var(--bad)}
 .empty{color:var(--dim);text-align:center;padding:30px 0}
+/* 日期选择条 */
+.days{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.days button{border:1px solid #ccc;background:var(--card);color:var(--ink);padding:4px 12px;border-radius:16px;font-size:.82rem}
+.days button.act{background:var(--accent);color:#fff;border-color:var(--accent)}
+.days button .n{color:inherit;opacity:.6;font-size:.75rem;margin-left:3px}
 /* 页面内 toast：替代原生 alert/confirm（长期规则） */
 #toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:#333;color:#fff;
 padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99;max-width:80vw}
@@ -33,7 +38,8 @@ padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:no
 <body>
 <div class="wrap">
 <h1>复习 <a class="back" href="index.html">← 返回阅读</a></h1>
-<div class="meta">自由复习：全部生词按标记日期陈列（新日期在上）· 点词朗读 · 每个词点「看释义」盖住中文自测，再点显示对答案 · 会了点 × 直接删除</div>
+<div class="meta">自由复习：全部生词按标记日期陈列 · 点词朗读 · 每个词点「盖住」自测回忆，再点「显示」对答案 · 会了点 × 直接删除</div>
+<div class="days" id="days"></div>
 <div id="history"></div>
 </div>
 <div id="toast"></div>
@@ -72,12 +78,19 @@ if(validTrans(m,k))t=m}catch(e){}}
 if(validTrans(t,k)){const c=getTrans();c[k]=t;store.set(TKEY+TVER,c);return t}
 return '（暂无释义）'}
 // ===== 陈列与交互 =====
+let dayFilter=null; // null=全部；否则只显示该日期
 function render(){
   const byday={};
   Object.keys(marks).forEach(k=>{const d=(marks[k]&&marks[k].day)||todayStr();(byday[d]=byday[d]||[]).push(k)});
   const days=Object.keys(byday).sort((a,b)=>b.localeCompare(a)); // 新日期在上
   const today=todayStr();
-  document.getElementById('history').innerHTML=days.length?days.map(d=>{
+  if(dayFilter&&!byday[dayFilter])dayFilter=null; // 选中的日期删空后回落到全部
+  // 日期选择条
+  document.getElementById('days').innerHTML=
+    `<button class="${dayFilter===null?'act':''}" onclick="setDay(null)">全部</button>`+
+    days.map(d=>`<button class="${dayFilter===d?'act':''}" onclick="setDay('${d}')">${d===today?'今天':d}<span class="n">${byday[d].length}</span></button>`).join('');
+  const showDays=dayFilter?[dayFilter]:days;
+  document.getElementById('history').innerHTML=showDays.length?showDays.map(d=>{
     const ws=byday[d];
     return `<div class="dayh">${d===today?'今天':d} <span class="tag">${ws.length} 词</span></div>
     <div class="wl">${ws.map(k=>`
@@ -88,6 +101,7 @@ function render(){
   :'<div class="empty">还没有生词。去阅读页点词加入。</div>';
   // 补翻译
   Object.keys(marks).forEach(k=>{if(!getTrans()[k])translate(k).then(()=>renderQuiet())})}
+function setDay(d){dayFilter=d;render()}
 let hTimer=null;function renderQuiet(){clearTimeout(hTimer);hTimer=setTimeout(render,400)}
 // 单词级自测：盖住/显示该词自己的翻译，反复切换
 function peek(k){
