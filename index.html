@@ -169,13 +169,18 @@ function confirmPhrase(){
   selState=null;document.querySelectorAll('w.sel').forEach(x=>x.classList.remove('sel'));
   const pb=document.getElementById('phraseBtn');if(pb)pb.textContent='+ 词组';
   if(phrase&&!marks[phrase]){const en=normEntry(1);en.day=todayStr();if(artIdx!=null)en.art=artIdx;marks[phrase]=en;translate(phrase);speak(phrase,0.9);store.set('vocab',marks);renderVocab();restoreMarks()}
-  else if(phrase){alert('生词本已有：'+phrase)}}
+  else if(phrase){toastMsg('生词本已有：'+phrase)}}
+let toastTimer=null;
+function toastMsg(m){let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';
+  t.style.cssText='position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99;max-width:80vw';
+  document.body.appendChild(t)}
+  t.textContent=m;t.style.opacity='.95';clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.style.opacity='0',2200)}
 function togglePhraseMode(){ // 词组模式入口：开→连点单词；已选→确认入本
   if(selState){confirmPhrase();
     document.querySelectorAll('.vpanel button').forEach(b=>{if(b.textContent==='确认 ✓')b.textContent='+ 词组'});return}
   selState={key:'__start__',words:[],wEl:null};
   document.querySelectorAll('.vpanel button').forEach(b=>{if(b.textContent==='+ 词组')b.textContent='确认 ✓'});
-  alert('词组模式已开：依次点击连续的单词（变绿），再点「确认 ✓」入本')}
+  toastMsg('词组模式已开：依次点击连续的单词（变绿），再点「确认 ✓」入本')}
 function restoreMarks(){document.querySelectorAll('w').forEach(w=>{if(marks[cleanWord(w.dataset.w)])w.classList.add('on')});}
 // ===== 生词归属与翻译 =====
 const TKEY='translations',TVER='v4'; // v4：作废 v3 缓存（clearance→"。"事故：接口异常返回纯标点被当正常结果缓存）
@@ -252,7 +257,7 @@ function renderVocab(){
   const rb=document.getElementById('reviewBtn');
   rb.textContent=due?('复习 '+due):'复习';rb.classList.toggle('due',due>0);
   positionPanels()}
-function exportVocab(){const t=Object.keys(marks).join(', ');navigator.clipboard&&navigator.clipboard.writeText(t);alert('已复制生词：\n'+t)}
+function exportVocab(){const t=Object.keys(marks).join(', ');navigator.clipboard&&navigator.clipboard.writeText(t);toastMsg('已复制生词：\n'+t)}
 // ===== GitHub 同步 =====
 const REPO_OWNER='qianzhu123',REPO_NAME='english-daily',VOCAB_PATH='data/vocab.json';
 // 旧数据升级：数字/1 → 复习条目对象（一次性）；并清洗带标点/大写的旧词条
