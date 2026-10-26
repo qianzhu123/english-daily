@@ -53,7 +53,7 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 <body>
 <div class="wrap">
 <h1>Daily English</h1>
-<div class="meta">点词标记 → 收进该文章的生词本（右侧跟随浮动）· 单击即入本 · 点词条朗读 · × 删除 · <button onclick="location.href='review.html'" id="reviewBtn" style="padding:2px 8px;font-size:.78rem">复习</button> <button onclick="togglePhraseMode()" id="phraseBtn" style="padding:2px 8px;font-size:.78rem">+ 词组</button> <button onclick="syncNow()" id="syncBtn" style="padding:2px 8px;font-size:.78rem">同步</button> <button onclick="exportVocab()" style="padding:2px 8px;font-size:.78rem">导出</button> <button onclick="showToken()" style="padding:2px 8px;font-size:.78rem">🔑</button></div>
+<div class="meta">点词标记 → 收进该文章的生词本（右侧跟随浮动）· 单击即入本 · 点词条朗读 · × 删除 · <button onclick="location.href='review.html'" id="reviewBtn" style="padding:2px 8px;font-size:.78rem">复习</button> <button onclick="togglePhraseMode()" id="phraseBtn" style="padding:2px 8px;font-size:.78rem">+ 词组</button> <button onclick="syncNow()" id="syncBtn" style="padding:2px 8px;font-size:.78rem">同步</button> <button onclick="exportVocab()" style="padding:2px 8px;font-size:.78rem">导出</button> <button onclick="toggleOld()" id="oldBtn" style="padding:2px 8px;font-size:.78rem">看往期</button> <button onclick="showToken()" style="padding:2px 8px;font-size:.78rem">🔑</button></div>
 <div id="app"></div>
 </div>
 <div id="tokbox" class="hidden" style="position:fixed;left:50%;transform:translateX(-50%);bottom:70px;background:var(--card);border-radius:10px;box-shadow:0 2px 14px rgba(0,0,0,.2);padding:14px 16px;max-width:340px;width:90%;font-size:.85rem;z-index:9">
@@ -66,15 +66,21 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 const A=window.ARTICLES;
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 let marks=store.get('vocab'),sentEls=[],sentTexts=[],selState=null;
+// ===== 当日文章过滤：默认只显示今天的文章；?d=MM-DD 可看指定日期；「看往期」切换 =====
+const qs=new URLSearchParams(location.search);
+const viewDay=qs.get('d')||todayStr();
+let showOld=(qs.get('d')!==null)||localStorage.getItem('showOld')==='1';
+function toggleOld(){showOld=!showOld;localStorage.setItem('showOld',showOld?'1':'0');location.reload()}
 function esc(s){return s.replace(/&/g,'&').replace(/</g,'<')}
 function render(){
   const app=document.getElementById('app');
   app.innerHTML='';sentEls=[];sentTexts=[]; // 幂等：重渲染前清空，杜绝文章叠加
-  A.forEach((a,i)=>{
+  const list=A.map((a,i)=>({a,i})).filter(x=>showOld||x.a.date===viewDay);
+  if(!list.length)app.innerHTML='<div style="color:var(--dim);padding:40px 0;text-align:center">今天（'+viewDay+'）的文章还没更新。点「看往期」可复习旧文章。</div>';
+  list.forEach(({a},n)=>{const i=n; // i=A原索引仍用于 data-a；显示编号 n+1
     const d=document.createElement('div');
     d.className='art-wrap';d.style.position='relative';
-    d.innerHTML=`<h2>${i+1}. ${esc(a.title)}</h2><div class="meta">${esc(a.date)} · ${esc(a.level)}</div>`;
-    const box=document.createElement('div');box.className='article';
+    d.innerHTML=`<h2>${n+1}. ${esc(a.title)}</h2><div class="meta">${esc(a.date)} · ${esc(a.level)}</div>`;    const box=document.createElement('div');box.className='article';
     const p=document.createElement('p');
     a.sentences.forEach((s,j)=>{const sp=document.createElement('span');sp.className='sent';sp.dataset.i=i+'-'+j;
       // 标点放 <w> 外：点击高亮只盖住词本身，不带标点
@@ -96,29 +102,33 @@ function render(){
   window.addEventListener('scroll',onScroll,{passive:true});
   window.addEventListener('resize',onScroll);
 }
-function positionPanels(){ // 面板驻右空白垂直居中；活动区间锁定所属文章；顶到浏览器上部即消失（防重叠）
+function positionPanels(){ // 面板驻右空白垂直居中；活动区间锁定所属文章；仅当文章完全滑出屏幕才消失
   const vh=window.innerHeight;
   const wrapEl=document.querySelector('.wrap');
   const contentRight=wrapEl?wrapEl.getBoundingClientRect().right:0;
   const gutter=window.innerWidth-contentRight;
   const hasGutter=gutter>320; // 右侧空白够宽才外挂，否则贴回文章内（窄屏回退）
+  const visIdx=[]; // 先收集本屏可见的文章
   A.forEach((a,i)=>{
     const wrap=document.querySelectorAll('.art-wrap')[i];const vp=document.getElementById('vpanel-'+i);
     if(!wrap||!vp)return;
     const wr=wrap.getBoundingClientRect();
     const panelH=vp.offsetHeight||160;
-    // 消失规则（用户原话）：面板最上面顶到浏览器上部 → 隐藏。两篇文章同时满足可见条件的重叠由此杜绝
+    // 文章完全滑出屏幕（底在上边之上 / 顶在下边之下）→ 面板消失；其余一律显示
+    if(wr.bottom<=0||wr.top>=vh){vp.style.display='none';return}
+    visIdx.push({i,vp,wr,panelH});
+  });
+  // 同屏多篇：上篇底部与下篇顶部把可用区切成两段，各面板在自己文章的可见段内垂直居中，重叠即被段边界顶开
+  visIdx.forEach(({vp,wr,panelH})=>{
     if(hasGutter){
       const ideal=vh/2-panelH/2;                     // 目标：垂直居中
       const lo=Math.max(wr.top,0);                   // 不高于文章可视顶
       const hi=Math.min(wr.bottom,vh)-panelH;        // 不低于文章可视底
-      if(wr.top<MIN_TOP||hi<MIN_TOP||hi<lo){vp.style.display='none';return}
+      const top=hi<lo?lo:Math.min(Math.max(ideal,lo),hi); // 放不下时贴文章可视顶，不消失
       vp.style.display='';
       vp.style.right='12px';                         // 贴窗口最右（空白区内）
-      vp.style.top=Math.min(Math.max(ideal,lo),hi)+'px';
+      vp.style.top=Math.max(top,0)+'px';
     }else{
-      // 窄屏回退：吸附规则，同样顶到上部即消失
-      if(wr.bottom<MIN_TOP+panelH||wr.top>vh){vp.style.display='none';return}
       let top=70;
       if(wr.bottom<top+panelH)top=wr.bottom-panelH-10;
       if(wr.top>top)top=Math.max(wr.top+40,top);
@@ -143,7 +153,7 @@ document.addEventListener('click',e=>{
       if(k===prev){selState=null;return}
       selState={key:k,words:[k],wEl:w};w.classList.add('sel');speak(k,0.9);return}
     if(marks[k]){delete marks[k];w.classList.remove('on')}
-    else{addWord(k,w.closest('.sent')?w.closest('.sent').textContent:null);w.classList.add('on')}
+    else{addWord(k,w.closest('.sent')?w.closest('.sent').textContent:null,Number(w.dataset.a));w.classList.add('on')}
     store.set('vocab',marks);renderVocab();
   });
 function cleanWord(s){return s.replace(/[.,!?;:"'()“”’]/g,'').toLowerCase().trim()}
@@ -154,7 +164,8 @@ function addWord(k,ctx){if(!k)return;
   speak(k,0.9)}
 function confirmPhrase(){
   const phrase=selState?selState.words.join(' '):'';
-  const artIdx=selState?wordHomeIdx(selState.words[0]):null;
+  const startW=selState?selState.wEl:null;
+  const artIdx=startW&&startW.dataset&&startW.dataset.a?Number(startW.dataset.a):wordHomeIdx(phrase);
   selState=null;document.querySelectorAll('w.sel').forEach(x=>x.classList.remove('sel'));
   const pb=document.getElementById('phraseBtn');if(pb)pb.textContent='+ 词组';
   if(phrase&&!marks[phrase]){const en=normEntry(1);en.day=todayStr();if(artIdx!=null)en.art=artIdx;marks[phrase]=en;translate(phrase);speak(phrase,0.9);store.set('vocab',marks);renderVocab();restoreMarks()}
@@ -167,29 +178,36 @@ function togglePhraseMode(){ // 词组模式入口：开→连点单词；已选
   alert('词组模式已开：依次点击连续的单词（变绿），再点「确认 ✓」入本')}
 function restoreMarks(){document.querySelectorAll('w').forEach(w=>{if(marks[cleanWord(w.dataset.w)])w.classList.add('on')});}
 // ===== 生词归属与翻译 =====
-const TKEY='translations',TVER='v3'; // v3：带语境翻译，作废 v2 缓存（runway→河床事故）
+const TKEY='translations',TVER='v4'; // v4：作废 v3 缓存（clearance→"。"事故：接口异常返回纯标点被当正常结果缓存）
 function getTrans(){return store.get(TKEY+TVER)}
+function validTrans(t,k){ // 翻译结果有效性：空/纯标点符号/回显原文/已知垃圾模式都算无效
+  if(!t)return false;
+  if(!/[一-鿿A-Za-z0-9]/.test(t))return false; // 必须含汉字/字母/数字（滤掉"。"、"…"等）
+  if(t.toLowerCase()===k.toLowerCase())return false;
+  if(/MYMEMORY WARNING|QUERY LENGTH|%s/.test(t))return false;
+  return true}
 async function translate(k,ctx){ // 主源 gtx；ctx=所在句子时先取整句译文做语境义，词典义项全列兜底
   const cache=getTrans();if(cache[k])return cache[k];
   let t='';
   if(ctx){try{ // 语境优先：整句翻译，用户看到的第一个释义来自真实上下文
     const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&q='+encodeURIComponent(ctx));
     if(r.ok){const j=await r.json();
-      if(j.sentences&&j.sentences[0]&&j.sentences[0].trans){t='〔语境〕'+j.sentences[0].trans}}}
+      if(j.sentences&&j.sentences[0]&&j.sentences[0].trans){const s=j.sentences[0].trans;
+        if(validTrans(s,ctx))t='〔语境〕'+s}}} // 语境结果同样过有效性检查
   catch(e){}}
   try{ // 词典义项（不截断，多义词如 runway 全部列出）
     const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&dt=bd&dj=1&q='+encodeURIComponent(k));
     if(r.ok){const j=await r.json();
       if(j.dict&&j.dict.length){const d=j.dict.map(x=>x.pos+'：'+x.terms.join('、')).join('；');
-        t=t?t+'\n〔词典〕'+d:(cache[k]||d)} // 有语境则词典附后；无语境直接用
-      else if(!t&&j.sentences&&j.sentences[0])t=j.sentences[0].trans}}
+        if(validTrans(d,k))t=t?t+'\n〔词典〕'+d:d} // 词典结果也过有效性检查
+      else if(!t&&j.sentences&&j.sentences[0]&&validTrans(j.sentences[0].trans,k))t=j.sentences[0].trans}}
   catch(e){}
   if(!t){try{ // 兜底 MyMemory，过滤垃圾
     const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(k)+'&langpair=en|zh-CN');
     const j=await r.json();let m=j&&j.responseData&&j.responseData.translatedText||'';
     if(m&&(m.toLowerCase()===k.toLowerCase()||/MYMEMORY WARNING|QUERY LENGTH|%s/.test(m)))m='';
     t=m}catch(e){}}
-  if(t){const c=getTrans();c[k]=t;store.set(TKEY+TVER,c);return t}
+  if(validTrans(t,k)){const c=getTrans();c[k]=t;store.set(TKEY+TVER,c);return t}
   return '（暂无释义）'}
 function wordHomeIdx(k){ // 词/词组 → 文章索引：词条自带 art 字段优先，否则按首词匹配正文；匹配不到归最后一篇
   const e=marks[k];
@@ -199,14 +217,23 @@ function wordHomeIdx(k){ // 词/词组 → 文章索引：词条自带 art 字�
     const text=A[i].sentences.join(' ').toLowerCase();
     if(new RegExp('\\b'+first.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(text))return i}
   return A.length-1}
+function addWord(k,ctx,artIdx){if(!k)return;
+  if(marks[k]){const e=normEntry(marks[k]);e.n=(e.n||1)+1;if(!e.day)e.day=todayStr();if(typeof artIdx==='number')e.art=artIdx;marks[k]=e}
+  else{const e=normEntry(1);e.day=todayStr();if(typeof artIdx==='number')e.art=artIdx;marks[k]=e;translate(k,ctx)}
+  speak(k,0.9)}
 function renderVocab(){
   const ks=Object.keys(marks);
   const tc=getTrans();
   const today=todayStr();
-  // 按文章分窗口，窗口内只展示该文章今日词，按标记先后（对象键序）
+  // 按文章分窗口，窗口内只展示该文章今日词，按标记先后（marks 插入顺序，不重排）
   const byArt={};ks.forEach(k=>{const e=normEntry(marks[k]);
     if(e.day!==today)return; // 只展示今天的
     const i=wordHomeIdx(k);(byArt[i]=byArt[i]||[]).push(k)});
+  // wordHomeIdx 兜底归"最后一篇"会打乱顺序：改为用词条 art 字段精确归属，无 art 再兜底
+  ks.forEach(k=>{const e=normEntry(marks[k]);
+    if(e.day!==today)return;
+    if(typeof e.art!=='number'){ // 无 art 字段：按首词匹配正文定归属，并回写
+      e.art=wordHomeIdx(k);marks[k]=e;store.set('vocab',marks)}});
   A.forEach((a,i)=>{
     const ul=document.querySelector('#vpanel-'+i+' ul');if(!ul)return;
     const ws=byArt[i]||[];
