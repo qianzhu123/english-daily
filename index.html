@@ -30,7 +30,7 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 .vpanel li .del:hover{color:var(--hard)}
 .vpanel .btns{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
 .vpanel .btns button{padding:2px 8px;font-size:.72rem}
-@media(max-width:900px){.vpanel{width:min(70vw,280px)}} /* 平板/窄屏：部分遮挡但限宽 */
+@media(max-width:900px){.vpanel{width:min(70vw,280px);height:300px;bottom:16px;top:auto!important}} /* 手机端：固定右下角，内容随文章切换 */
 .hidden{display:none}
 .sent{transition:background .3s}.sent.active{background:#eef6f0}
 .notes{background:#eef6f0;padding:14px 18px;border-radius:8px;font-size:.95rem;margin-top:12px}
@@ -57,7 +57,7 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 <body>
 <div class="wrap">
 <h1>Daily English</h1>
-<div class="meta">点词标记 → 收进该文章的生词本（右侧跟随浮动）· 单击即入本 · 点词条朗读 · × 删除 · <button onclick="location.href='review.html'" id="reviewBtn" style="padding:2px 8px;font-size:.78rem">复习</button> <button onclick="togglePhraseMode()" id="phraseBtn" style="padding:2px 8px;font-size:.78rem">+ 词组</button> <button onclick="syncNow()" id="syncBtn" style="padding:2px 8px;font-size:.78rem">同步</button> <button onclick="exportVocab()" style="padding:2px 8px;font-size:.78rem">导出</button> <button onclick="toggleOld()" id="oldBtn" style="padding:2px 8px;font-size:.78rem">看往期</button> <button onclick="showToken()" style="padding:2px 8px;font-size:.78rem">🔑</button></div><div id="app"></div>
+<div class="meta">点词标记 → 收进该文章的生词本（右侧跟随浮动）· 单击即入本 · 点词条朗读 · × 删除 · <button onclick="location.href='review.html'" id="reviewBtn" style="padding:2px 8px;font-size:.78rem">复习</button> <button onclick="togglePhraseMode()" id="phraseBtn" style="padding:2px 8px;font-size:.78rem">+ 词组</button> <button onclick="syncNow()" id="syncBtn" style="padding:2px 8px;font-size:.78rem">同步</button> <button onclick="exportVocab()" style="padding:2px 8px;font-size:.78rem">导出</button> <button onclick="drawScene()" id="sceneBtn" style="padding:2px 8px;font-size:.78rem">🎲 场景</button> <button onclick="toggleOld()" id="oldBtn" style="padding:2px 8px;font-size:.78rem">看往期</button> <button onclick="showToken()" style="padding:2px 8px;font-size:.78rem">🔑</button></div><div id="app"></div>
 </div>
 <div id="tokbox" class="hidden" style="position:fixed;left:50%;transform:translateX(-50%);bottom:70px;background:var(--card);border-radius:10px;box-shadow:0 2px 14px rgba(0,0,0,.2);padding:14px 16px;max-width:340px;width:90%;font-size:.85rem;z-index:9">
 <b>GitHub 同步设置</b>（fine-grained token，仅授权 english-daily 仓库 Contents 读写）
@@ -65,6 +65,7 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 <div style="display:flex;gap:8px"><button onclick="saveToken()" style="flex:1">保存</button><button onclick="clearToken()" style="flex:1">清除</button><button onclick="document.getElementById('tokbox').classList.add('hidden')">关闭</button></div>
 <div id="tokstat" style="color:var(--dim);margin-top:6px;font-size:.78rem"></div></div>
 <script src="articles.js"></script>
+<script src="scenes.js"></script>
 <script>
 const A=window.ARTICLES;
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -91,7 +92,7 @@ function render(){
   list.forEach(({a},n)=>{const i=n; // i=A原索引仍用于 data-a；显示编号 n+1
     const d=document.createElement('div');
     d.className='art-wrap';d.style.position='relative';
-    d.innerHTML=`<h2>${n+1}. ${esc(a.title)}</h2><div class="meta">${esc(a.date)} · ${esc(a.level)}</div>`;    const box=document.createElement('div');box.className='article';
+    d.innerHTML=`<h2>${n+1}. ${esc(a.title)}</h2><div class="meta">${esc(a.date)} · ${esc(a.level)} <button onclick="playArticle(${i},this)" style="padding:1px 8px;font-size:.72rem;margin-left:6px">▶ 整篇朗读</button><button onclick="toggleArticleTr(${i},this)" style="padding:1px 8px;font-size:.72rem">整篇翻译</button></div>`;    const box=document.createElement('div');box.className='article';
     const p=document.createElement('p');
     a.sentences.forEach((s,j)=>{const sp=document.createElement('span');sp.className='sent';sp.dataset.i=i+'-'+j;
       // 标点放 <w> 外：点击高亮只盖住词本身，不带标点
@@ -145,14 +146,20 @@ function positionPanels(){ // 面板驻右空白垂直居中；活动区间锁�
       vp.style.right='12px';                         // 贴窗口最右（空白区内）
       vp.style.top=Math.max(top,0)+'px';
     }else{
-      let top=70;
-      if(wr.bottom<top+panelH)top=wr.bottom-panelH-10;
-      if(wr.top>top)top=Math.max(wr.top+40,top);
+      // 手机端（窄屏）：面板固定右下角，内容=当前屏内最靠上的可见文章；文章滑出自动切下一篇
       vp.style.display='';
       vp.style.right='12px';
-      vp.style.top=Math.max(top,0)+'px';
+      vp.style.top='';vp.style.bottom='16px';
+      vp.style.left='';vp.style.width='min(70vw,280px)';
+      // 显示控制交给下面的 exclusive 逻辑统一处理
     }
-  })}
+  });
+  // 手机端互斥：右下角只挂一个面板——屏内可见文章中"最靠下"的那个（你正在读的），其余全隐藏
+  if(!hasGutter){
+    for(let j=0;j<visIdx.length;j++){
+      visIdx[j].vp.style.display=(j===visIdx.length-1)?'':'none'}
+  }
+}
 const MIN_TOP=10; // 面板顶不允许高于此线
 document.addEventListener('click',e=>{
     const w=e.target.closest('w');if(!w)return;
@@ -276,6 +283,62 @@ function renderVocab(){
   rb.textContent=due?('复习 '+due):'复习';rb.classList.toggle('due',due>0);
   positionPanels()}
 function exportVocab(){const t=Object.keys(marks).join(', ');navigator.clipboard&&navigator.clipboard.writeText(t);toastMsg('已复制生词：\n'+t)}
+// ===== 场景池：随机抽场景（不重复，抽完一轮重洗） =====
+let sceneBag=[];
+function drawScene(){
+  const S=window.SCENES||[];
+  if(!S.length)return;
+  if(!sceneBag.length){sceneBag=S.map((_,i)=>i).sort(()=>Math.random()-0.5)} // 洗牌抽签，保证一轮内不重复
+  const s=S[sceneBag.pop()];
+  let box=document.getElementById('scenebox');
+  if(!box){box=document.createElement('div');box.id='scenebox';box.style.cssText=
+    'position:fixed;left:50%;top:70px;transform:translateX(-50%);background:var(--card);border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.25);padding:16px 20px;max-width:420px;width:88%;font-size:.9rem;z-index:99;line-height:1.6';
+    document.body.appendChild(box)}
+  box.innerHTML=`<b style="color:var(--accent)">🎲 场景：${esc(s.name)}</b>
+    <button onclick="this.parentNode.remove()" style="float:right;padding:0 8px;font-size:.75rem">关闭</button>
+    <div style="margin-top:6px">${esc(s.brief)}</div>
+    <div style="margin-top:8px;color:var(--dim);font-size:.82rem">要点：${esc(s.goals.join(' / '))}</div>
+    <div style="margin-top:4px;color:var(--dim);font-size:.82rem">场景词汇：${esc(s.vocab.join(' · '))}</div>`;
+}
+// ===== 整篇朗读：本篇文章句子连播（与全局 playAll 不同：只播本文，且 sentEls 含所有文章需过滤） =====
+function playArticle(artIdx,btn){
+  speechSynthesis.cancel();
+  const sentEls=[...document.querySelectorAll('.sent')].filter(sp=>sp.dataset.i.startsWith(artIdx+'-'));
+  let i=0;
+  const next=()=>{if(i>=sentEls.length){sentEls.forEach(e=>e.classList.remove('active'));if(btn)btn.textContent='▶ 整篇朗读';return}
+    sentEls.forEach(e=>e.classList.remove('active'));
+    sentEls[i].classList.add('active');sentEls[i].scrollIntoView({block:'center',behavior:'smooth'});
+    const u=new SpeechSynthesisUtterance(sentEls[i].textContent);u.lang='en-US';u.rate=0.9;
+    u.onend=()=>{i++;next()};speechSynthesis.speak(u)};
+  btn.textContent='⏹ 停止';
+  btn.onclick=()=>{speechSynthesis.cancel();sentEls.forEach(e=>e.classList.remove('active'));btn.textContent='▶ 整篇朗读';btn.onclick=()=>playArticle(artIdx,btn)};
+  next()}
+// ===== 整篇翻译：显示/隐藏本文全文译文（gtx 整篇一次性请求） =====
+const atrTKEY='arttr';
+async function toggleArticleTr(artIdx,btn){
+  const wrap=document.querySelectorAll('.art-wrap')[artIdx].closest?document.querySelectorAll('.art-wrap')[artIdx]:null;
+  // 找到本文的 .article 容器（render 时 vpanel 与 box 同属 d）
+  const artBox=document.getElementById('vpanel-'+artIdx).parentNode.querySelector('.article');
+  let tr=artBox.parentNode.querySelector('.arttr');
+  if(tr){tr.remove();btn.textContent='整篇翻译';return} // 再点收起
+  btn.textContent='翻译中…';
+  const cache=store.get(atrTKEY);
+  const key='a'+artIdx;
+  let full=cache[key];
+  if(!full){
+    const text=window.ARTICLES[artIdx].sentences.join('\n');
+    try{
+      const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&q='+encodeURIComponent(text));
+      if(r.ok){const j=await r.json();
+        full=j.sentences?j.sentences.map(s=>s.trans||'').join(''):''}
+    }catch(e){}
+    if(full){cache[key]=full;store.set(atrTKEY,cache)}
+  }
+  if(!full){btn.textContent='整篇翻译';toastMsg('翻译失败，稍后再试');return}
+  const div=document.createElement('div');div.className='arttr notes';div.style.background='#f4f8f4';
+  div.innerHTML='<b>全文翻译</b>（中英并非逐句对齐，理解为主）<br>'+esc(full).replace(/\n/g,'<br>');
+  artBox.after(div);btn.textContent='收起翻译'}
+
 // ===== GitHub 同步 =====
 const REPO_OWNER='qianzhu123',REPO_NAME='english-daily',VOCAB_PATH='data/vocab.json';
 // 旧数据升级：数字/1 → 复习条目对象（一次性）；并清洗带标点/大写的旧词条
