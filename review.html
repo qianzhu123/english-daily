@@ -29,6 +29,13 @@ a.back{color:var(--accent);text-decoration:none;font-size:.9rem}
 .days button{border:1px solid #ccc;background:var(--card);color:var(--ink);padding:4px 12px;border-radius:16px;font-size:.82rem}
 .days button.act{background:var(--accent);color:#fff;border-color:var(--accent)}
 .days button .n{color:inherit;opacity:.6;font-size:.75rem;margin-left:3px}
+/* 语法点收藏区 */
+#gramsec{margin-bottom:10px}
+#gramsec .ghead{font-size:1.05rem;font-weight:700;margin:20px 0 8px;display:flex;align-items:center;gap:10px}
+#gramsec .gl{background:var(--card);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:10px 16px;margin-bottom:8px;font-size:.95rem}
+#gramsec .gl .src{color:var(--dim);font-size:.78rem;margin-top:4px}
+#gramsec .gl .rm{color:#bbb;cursor:pointer;float:right;padding:0 4px}
+#gramsec .gl .rm:hover{color:var(--bad)}
 /* 页面内 toast：替代原生 alert/confirm（长期规则） */
 #toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:#333;color:#fff;
 padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99;max-width:80vw}
@@ -40,6 +47,7 @@ padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:no
 <h1>复习 <a class="back" href="index.html">← 返回阅读</a></h1>
 <div class="meta">自由复习：全部生词按标记日期陈列 · 点词朗读 · 每个词点「盖住」自测回忆，再点「显示」对答案 · 会了点 × 直接删除</div>
 <div class="days" id="days"></div>
+<div id="gramsec"></div>
 <div id="history"></div>
 </div>
 <div id="toast"></div>
@@ -102,6 +110,15 @@ function render(){
   // 补翻译
   Object.keys(marks).forEach(k=>{if(!getTrans()[k])translate(k).then(()=>renderQuiet())})}
 function setDay(d){dayFilter=d;render()}
+// ===== 语法点收藏区 =====
+function gramDB(){return store.get('grammar')}
+function renderGram(){
+  const db=gramDB();const ks=Object.keys(db);
+  const el=document.getElementById('gramsec');
+  if(!ks.length){el.innerHTML='';return}
+  el.innerHTML='<div class="ghead">⭐ 收藏的语法点 <span class="tag" style="font-size:.72rem;background:#eef6f0;color:var(--accent);padding:2px 8px;border-radius:10px;font-weight:400">'+ks.length+' 条</span></div>'+
+    ks.map(gid=>`<div class="gl"><span class="rm" data-gid="${esc(gid)}" title="取消收藏">×</span>${esc(db[gid].text||gid)}<div class="src">来自：${esc(db[gid].title||'')} · ${esc(db[gid].date||'')}</div></div>`).join('');
+  el.querySelectorAll('.rm').forEach(b=>b.onclick=()=>{const db2=gramDB();delete db2[b.dataset.gid];store.set('grammar',db2);renderGram()})}
 let hTimer=null;function renderQuiet(){clearTimeout(hTimer);hTimer=setTimeout(render,400)}
 // 单词级自测：盖住/显示该词自己的翻译，反复切换
 function peek(k){
@@ -118,6 +135,7 @@ function peek(k){
 function delWord(k){ // 自由复习：会了直接删，无确认弹窗（禁原生弹窗规则）
   delete marks[k];store.set('vocab',marks);render();toast('已删除「'+k+'」')}
 render();
+renderGram();
 </script>
 </body>
 </html>

@@ -35,6 +35,10 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 .sent{transition:background .3s}.sent.active{background:#eef6f0}
 .notes{background:#eef6f0;padding:14px 18px;border-radius:8px;font-size:.95rem;margin-top:12px}
 .notes b{color:var(--accent)}
+.notes .gline{display:flex;gap:6px;align-items:baseline}
+.notes .gstar{cursor:pointer;color:#bbb;font-size:1rem;flex-shrink:0}
+.notes .gstar.on{color:#e6a817}
+.notes .gstar:hover{color:#e6a817}
 #vocab{position:fixed;right:16px;bottom:16px;background:var(--card);border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.15);padding:12px 16px;width:320px;max-height:55vh;overflow:auto;font-size:.88rem}
 #vocab h3{margin:0 0 6px;font-size:.95rem}
 #vocab ul{margin:0;padding-left:0;list-style:none}
@@ -53,8 +57,7 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 <body>
 <div class="wrap">
 <h1>Daily English</h1>
-<div class="meta">点词标记 → 收进该文章的生词本（右侧跟随浮动）· 单击即入本 · 点词条朗读 · × 删除 · <button onclick="location.href='review.html'" id="reviewBtn" style="padding:2px 8px;font-size:.78rem">复习</button> <button onclick="togglePhraseMode()" id="phraseBtn" style="padding:2px 8px;font-size:.78rem">+ 词组</button> <button onclick="syncNow()" id="syncBtn" style="padding:2px 8px;font-size:.78rem">同步</button> <button onclick="exportVocab()" style="padding:2px 8px;font-size:.78rem">导出</button> <button onclick="toggleOld()" id="oldBtn" style="padding:2px 8px;font-size:.78rem">看往期</button> <button onclick="showToken()" style="padding:2px 8px;font-size:.78rem">🔑</button></div>
-<div id="app"></div>
+<div class="meta">点词标记 → 收进该文章的生词本（右侧跟随浮动）· 单击即入本 · 点词条朗读 · × 删除 · <button onclick="location.href='review.html'" id="reviewBtn" style="padding:2px 8px;font-size:.78rem">复习</button> <button onclick="togglePhraseMode()" id="phraseBtn" style="padding:2px 8px;font-size:.78rem">+ 词组</button> <button onclick="syncNow()" id="syncBtn" style="padding:2px 8px;font-size:.78rem">同步</button> <button onclick="exportVocab()" style="padding:2px 8px;font-size:.78rem">导出</button> <button onclick="toggleOld()" id="oldBtn" style="padding:2px 8px;font-size:.78rem">看往期</button> <button onclick="showToken()" style="padding:2px 8px;font-size:.78rem">🔑</button></div><div id="app"></div>
 </div>
 <div id="tokbox" class="hidden" style="position:fixed;left:50%;transform:translateX(-50%);bottom:70px;background:var(--card);border-radius:10px;box-shadow:0 2px 14px rgba(0,0,0,.2);padding:14px 16px;max-width:340px;width:90%;font-size:.85rem;z-index:9">
 <b>GitHub 同步设置</b>（fine-grained token，仅授权 english-daily 仓库 Contents 读写）
@@ -66,17 +69,25 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 const A=window.ARTICLES;
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 let marks=store.get('vocab'),sentEls=[],sentTexts=[],selState=null;
-// ===== 当日文章过滤：默认只显示今天的文章；?d=MM-DD 可看指定日期；「看往期」切换 =====
-const qs=new URLSearchParams(location.search);
-const viewDay=qs.get('d')||todayStr();
-let showOld=(qs.get('d')!==null)||localStorage.getItem('showOld')==='1';
+// ===== 批次发布制：显示所有已发布文章；新增文章等我发布（无日期过滤）。「看往期」=收起/展开旧批次 =====
+let showOld=localStorage.getItem('showOld')==='1';
 function toggleOld(){showOld=!showOld;localStorage.setItem('showOld',showOld?'1':'0');location.reload()}
 function esc(s){return s.replace(/&/g,'&').replace(/</g,'<')}
+// ===== 语法点收藏 =====
+function gramDB(){return store.get('grammar')}
+function isGram(gid){return !!gramDB()[gid]}
+function toggleGram(st){const gid=st.dataset.gid;const db=gramDB();
+  if(db[gid]){delete db[gid];st.textContent='☆';st.classList.remove('on');toastMsg('已取消收藏')}
+  else{ // 收藏时把语法点全文一起存，复习页不依赖 articles 原文
+    const [t,j]=gid.split('#');const art=A.find(a=>a.title===t);
+    db[gid]={text:art&&art.notes?art.notes[Number(j)]:'',date:todayStr(),title:t};
+    st.textContent='★';st.classList.add('on');toastMsg('已收藏，复习页可回看')}
+  store.set('grammar',db)}
 function render(){
   const app=document.getElementById('app');
   app.innerHTML='';sentEls=[];sentTexts=[]; // 幂等：重渲染前清空，杜绝文章叠加
-  const list=A.map((a,i)=>({a,i})).filter(x=>!x.a.draft&&(showOld||x.a.date===viewDay));
-  if(!list.length)app.innerHTML='<div style="color:var(--dim);padding:40px 0;text-align:center">今天（'+viewDay+'）的文章还没更新。点「看往期」可复习旧文章。</div>';
+  const list=A.map((a,i)=>({a,i})).filter(x=>!x.a.draft&&(showOld||!x.a.archived));
+  if(!list.length)app.innerHTML='<div style="color:var(--dim);padding:40px 0;text-align:center">暂无文章。点「看往期」可复习旧文章。</div>';
   list.forEach(({a},n)=>{const i=n; // i=A原索引仍用于 data-a；显示编号 n+1
     const d=document.createElement('div');
     d.className='art-wrap';d.style.position='relative';
@@ -90,7 +101,12 @@ function render(){
       sp.innerHTML=s.split(/\s+/).map(tokHtml).join(' ');
       p.appendChild(sp);p.appendChild(document.createTextNode(' '));sentEls.push(sp);sentTexts.push(s)});
     box.appendChild(p);
-    if(a.notes&&a.notes.length){const n=document.createElement('div');n.className='notes';n.innerHTML='<b>语法点</b><br>'+a.notes.map(x=>'· '+esc(x)).join('<br>');box.appendChild(n)}
+    if(a.notes&&a.notes.length){const n=document.createElement('div');n.className='notes';
+      n.innerHTML='<b>语法点</b>（点 ☆ 收藏，复习页回看）<br>'+a.notes.map((x,j)=>{
+        const gid=a.title+'#'+j;
+        return `<div class="gline"><span class="gstar ${isGram(gid)?'on':''}" data-gid="${esc(gid)}" title="收藏语法点">${isGram(gid)?'★':'☆'}</span>· ${esc(x)}</div>`}).join('');
+      n.querySelectorAll('.gstar').forEach(st=>st.onclick=()=>toggleGram(st));
+      box.appendChild(n)}
     // 本文的浮动生词本（跟随文章区间滚动）
     const vp=document.createElement('div');vp.className='vpanel';vp.id='vpanel-'+i;
     vp.innerHTML=`<h4>生词本·${esc(a.title)} <button onclick="location.href='review.html'" style="padding:1px 6px;font-size:.7rem">复习</button><button onclick="togglePhraseMode(${i})" style="padding:1px 6px;font-size:.7rem">+ 词组</button></h4><ul></ul><div style="color:var(--dim);font-size:.75rem;margin-top:4px">本文章今日生词，按标记顺序</div>`;
@@ -168,7 +184,9 @@ function confirmPhrase(){
   const artIdx=startW&&startW.dataset&&startW.dataset.a?Number(startW.dataset.a):wordHomeIdx(phrase);
   selState=null;document.querySelectorAll('w.sel').forEach(x=>x.classList.remove('sel'));
   const pb=document.getElementById('phraseBtn');if(pb)pb.textContent='+ 词组';
-  if(phrase&&!marks[phrase]){const en=normEntry(1);en.day=todayStr();if(artIdx!=null)en.art=artIdx;marks[phrase]=en;translate(phrase);speak(phrase,0.9);store.set('vocab',marks);renderVocab();restoreMarks()}
+  if(phrase&&!marks[phrase]){const en=normEntry(1);en.day=todayStr();if(artIdx!=null)en.art=artIdx;
+    en.seq=(store.get('seq')||0)+1;store.set('seq',en.seq);
+    marks[phrase]=en;translate(phrase);speak(phrase,0.9);store.set('vocab',marks);renderVocab();restoreMarks()}
   else if(phrase){toastMsg('生词本已有：'+phrase)}}
 let toastTimer=null;
 function toastMsg(m){let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';
@@ -224,21 +242,21 @@ function wordHomeIdx(k){ // 词/词组 → 文章索引：词条自带 art 字�
   return A.length-1}
 function addWord(k,ctx,artIdx){if(!k)return;
   if(marks[k]){const e=normEntry(marks[k]);e.n=(e.n||1)+1;if(!e.day)e.day=todayStr();if(typeof artIdx==='number')e.art=artIdx;marks[k]=e}
-  else{const e=normEntry(1);e.day=todayStr();if(typeof artIdx==='number')e.art=artIdx;marks[k]=e;translate(k,ctx)}
+  else{const e=normEntry(1);e.day=todayStr();if(typeof artIdx==='number')e.art=artIdx;
+    e.seq=(store.get('seq')||0)+1;store.set('seq',e.seq); // 显式序号：生词本顺序的唯一定据，合并/刷新都不乱
+    marks[k]=e;translate(k,ctx)}
   speak(k,0.9)}
 function renderVocab(){
   const ks=Object.keys(marks);
   const tc=getTrans();
   const today=todayStr();
-  // 按文章分窗口，窗口内只展示该文章今日词，按标记先后（marks 插入顺序，不重排）
+  // 按文章分窗口，窗口内只展示该文章今日词，按标记先后（seq 显式序号，合并/刷新不乱）
   const byArt={};ks.forEach(k=>{const e=normEntry(marks[k]);
     if(e.day!==today)return; // 只展示今天的
-    const i=wordHomeIdx(k);(byArt[i]=byArt[i]||[]).push(k)});
-  // wordHomeIdx 兜底归"最后一篇"会打乱顺序：改为用词条 art 字段精确归属，无 art 再兜底
-  ks.forEach(k=>{const e=normEntry(marks[k]);
-    if(e.day!==today)return;
-    if(typeof e.art!=='number'){ // 无 art 字段：按首词匹配正文定归属，并回写
-      e.art=wordHomeIdx(k);marks[k]=e;store.set('vocab',marks)}});
+    if(typeof e.seq!=='number'){e.seq=1e9-ks.indexOf(k);marks[k]=e;store.set('vocab',marks)} // 旧词条无seq：键序兜底
+    if(typeof e.art!=='number'){e.art=wordHomeIdx(k);marks[k]=e;store.set('vocab',marks)}
+    (byArt[e.art]=byArt[e.art]||[]).push(k)});
+  for(const i in byArt)byArt[i].sort((a,b)=>(normEntry(marks[a]).seq||0)-(normEntry(marks[b]).seq||0));
   A.forEach((a,i)=>{
     const ul=document.querySelector('#vpanel-'+i+' ul');if(!ul)return;
     const ws=byArt[i]||[];
@@ -297,8 +315,8 @@ function mergeSets(a,b){const o={};
   function put(k,v){k=cleanWord(k)||k; // 键清洗：云端旧脏键（带标点/大写）归并成干净键
     if(!o[k]){o[k]=v;return}
     const av=o[k],bv=v;
-    if(typeof av==='object'&&typeof bv==='object')o[k]={...av,...bv,n:Math.max(av.n||1,bv.n||1),lapses:Math.max(av.lapses||0,bv.lapses||0)};
-    else o[k]=typeof av==='object'?av:bv}
+    if(typeof av==='object'&&typeof bv==='object')o[k]={...av,...bv,n:Math.max(av.n||1,bv.n||1),lapses:Math.max(av.lapses||0,bv.lapses||0),seq:Math.min(av.seq??1e12,bv.seq??1e12)};
+    else o[k]=typeof av==='object'?av:bv} // seq 取较小者=保留最早标记顺序
   for(const k in a)put(k,typeof a[k]==='object'?a[k]:normEntry(a[k]));
   for(const k in b)put(k,typeof b[k]==='object'?b[k]:normEntry(b[k]));
   return o} // 取并集，防互删

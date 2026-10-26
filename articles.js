@@ -2,6 +2,7 @@ window.ARTICLES = [
   {
     title: "The Delayed Flight (B1)",
     date: "2026-10-22",
+    archived: true,
     level: "B1 · 旅行/机场",
     sentences: [
       "The flight had already been delayed twice by the time we boarded, so nobody on the plane was in a good mood.",
@@ -23,6 +24,7 @@ window.ARTICLES = [
   {
     title: "Why I Stopped Multitasking (B1)",
     date: "2026-10-22",
+    archived: true,
     level: "B1 · 工作/观点",
     sentences: [
       "For years, I prided myself on being able to juggle several tasks at once — answering emails while debugging code and attending meetings, all simultaneously.",
@@ -45,7 +47,6 @@ window.ARTICLES = [
   {
     title: "Asking the Way Downtown (B1)",
     date: "2026-10-26",
-    draft: true,
     level: "B1 · 问路/出行",
     sentences: [
       "On my first morning in the city, I stopped a passer-by and asked whether there was a pharmacy nearby, since I had left my allergy pills at home.",
@@ -68,7 +69,6 @@ window.ARTICLES = [
   {
     title: "The Job Interview Surprise (B1)",
     date: "2026-10-26",
-    draft: true,
     level: "B1 · 工作/面试",
     sentences: [
       "Last spring, I applied for a summer internship at a small software company, hardly expecting to hear back from them at all.",
@@ -91,7 +91,6 @@ window.ARTICLES = [
   {
     title: "A Week Without My Phone (B1)",
     date: "2026-10-26",
-    draft: true,
     level: "B1 · 生活/观点",
     sentences: [
       "When my phone screen cracked beyond repair last month, I decided not to replace it for one full week as an experiment.",
