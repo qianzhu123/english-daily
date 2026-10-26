@@ -185,7 +185,7 @@ function confirmPhrase(){
   selState=null;document.querySelectorAll('w.sel').forEach(x=>x.classList.remove('sel'));
   const pb=document.getElementById('phraseBtn');if(pb)pb.textContent='+ 词组';
   if(phrase&&!marks[phrase]){const en=normEntry(1);en.day=todayStr();if(artIdx!=null)en.art=artIdx;
-    en.seq=(store.get('seq')||0)+1;store.set('seq',en.seq);
+    en.seq=(Number(store.get('seq'))||0)+1;store.set('seq',en.seq);
     marks[phrase]=en;translate(phrase);speak(phrase,0.9);store.set('vocab',marks);renderVocab();restoreMarks()}
   else if(phrase){toastMsg('生词本已有：'+phrase)}}
 let toastTimer=null;
@@ -243,7 +243,7 @@ function wordHomeIdx(k){ // 词/词组 → 文章索引：词条自带 art 字�
 function addWord(k,ctx,artIdx){if(!k)return;
   if(marks[k]){const e=normEntry(marks[k]);e.n=(e.n||1)+1;if(!e.day)e.day=todayStr();if(typeof artIdx==='number')e.art=artIdx;marks[k]=e}
   else{const e=normEntry(1);e.day=todayStr();if(typeof artIdx==='number')e.art=artIdx;
-    e.seq=(store.get('seq')||0)+1;store.set('seq',e.seq); // 显式序号：生词本顺序的唯一定据，合并/刷新都不乱
+    e.seq=(Number(store.get('seq'))||0)+1;store.set('seq',e.seq); // 显式序号：生词本顺序的唯一定据，合并/刷新都不乱
     marks[k]=e;translate(k,ctx)}
   speak(k,0.9)}
 function renderVocab(){
