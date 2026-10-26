@@ -11,56 +11,52 @@
 h1{font-size:1.4rem;margin:0 0 2px}
 .meta{color:var(--dim);font-size:.85rem;margin-bottom:16px}
 a.back{color:var(--accent);text-decoration:none;font-size:.9rem}
-.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-button{border:1px solid var(--accent);background:var(--card);color:var(--accent);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:.9rem}
-button:hover{background:var(--accent);color:#fff}
-button.warn{border-color:var(--bad);color:var(--bad)}
-button.warn:hover{background:var(--bad);color:#fff}
-button.off{opacity:.55;border-color:#ccc;color:var(--dim)}
 .dayh{font-size:1.05rem;font-weight:700;margin:26px 0 8px;display:flex;align-items:center;gap:10px}
 .dayh .tag{font-size:.72rem;background:#eef6f0;color:var(--accent);padding:2px 8px;border-radius:10px;font-weight:400}
-.dayh .due-tag{font-size:.72rem;background:var(--mark);color:#b8860b;padding:2px 8px;border-radius:10px;font-weight:400}
 .wl{background:var(--card);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:4px 18px}
 .wrow{display:flex;align-items:baseline;gap:10px;padding:9px 0;border-top:1px dashed #e5e5e0;flex-wrap:wrap}
 .wrow:first-child{border-top:none}
 .wrow .w{font-family:Georgia,serif;font-weight:600;color:var(--bad);cursor:pointer;min-width:110px}
-.wrow .tr{color:var(--ink);font-size:.92rem;flex:1;min-width:180px}
-.wrow .st{font-size:.75rem;color:var(--dim);white-space:nowrap}
-.wrow .del{color:#bbb;cursor:pointer;padding:0 4px}
+.wrow .w.today{color:var(--ink)}
+.wrow .tr{color:var(--ink);font-size:.92rem;flex:1;min-width:160px}
+.wrow .tr.blank{color:#ccc;font-size:.85rem}
+.wrow .peek{font-size:.72rem;padding:1px 8px;white-space:nowrap}
+.wrow .del{color:#bbb;cursor:pointer;padding:0 4px;font-size:1rem}
 .wrow .del:hover{color:var(--bad)}
-.wrow.today .w{color:var(--ink)}
-.wrow .ok{font-size:.72rem;border-color:#ccc;color:var(--dim);padding:1px 8px}
-.wrow .ok:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 .empty{color:var(--dim);text-align:center;padding:30px 0}
+/* 页面内 toast：替代原生 alert/confirm（长期规则） */
+#toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:#333;color:#fff;
+padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99;max-width:80vw}
+#toast.show{opacity:.95}
 </style>
 </head>
 <body>
 <div class="wrap">
 <h1>复习 <a class="back" href="index.html">← 返回阅读</a></h1>
-<div class="meta">全部生词按标记日期陈列（新日期在上）· 点词朗读 · 「看释义」开关控制翻译列 · 「已掌握」把词移出列表（记录保留，下次标它还会回来）· × 彻底删除</div>
-<div class="bar">
-<button id="trBtn" onclick="toggleTr()">看释义：开</button>
-<button onclick="hideMastered(this)">隐藏已掌握 (<span id="mCnt">0</span>)</button>
-<button onclick="unmasterAll()">全部恢复</button>
-</div>
+<div class="meta">自由复习：全部生词按标记日期陈列（新日期在上）· 点词朗读 · 每个词点「看释义」盖住中文自测，再点显示对答案 · 会了点 × 直接删除</div>
 <div id="history"></div>
 </div>
+<div id="toast"></div>
 <script>
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 let marks=store.get('vocab');
 function esc(s){return String(s).replace(/&/g,'&').replace(/</g,'<')}
 function cleanWord(s){return s.replace(/[.,!?;:"'()“”’]/g,'').toLowerCase().trim()}
 function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-function normEntry(v){return typeof v==='object'&&v?v:{n:Number(v)||1,ease:1,due:todayStr(),lapses:0,day:todayStr()}}
-// 旧数据升级
+// 旧数据兼容（无 day 字段的旧词条补日期）
 (function(){let ch=false;const c={};const today=todayStr();
-for(const k in marks){const ck=cleanWord(k)||k;const v=normEntry(marks[k]);
+for(const k in marks){const ck=cleanWord(k)||k;let v=marks[k];
+if(typeof v!=='object'||!v)v={n:Number(v)||1,day:/^\d{4}-\d{2}-\d{2}/.test(k)?k.slice(0,10):today};
 if(!v.day){v.day=/^\d{4}-\d{2}-\d{2}/.test(k)?k.slice(0,10):today;ch=true}
-if(c[ck]){c[ck].lapses=Math.max(c[ck].lapses||0,v.lapses||0)}else c[ck]=v;
-if(ck!==k||typeof marks[k]!=='object')ch=true}
+if(c[ck])c[ck].n=Math.max(c[ck].n||1,v.n||1);else c[ck]=v;
+if(ck!==k)ch=true}
 if(ch){marks=c;store.set('vocab',marks)}})();
+// ===== toast（禁原生弹窗长期规则） =====
+let toastTimer=null;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200)}
 function speak(text,rate){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||0.9;u.voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u)}
-// ===== 翻译（gtx 主源 + MyMemory 兜底，有效性过滤） =====
+// ===== 翻译（gtx 主源 + MyMemory 兜底 + 有效性过滤） =====
 const TKEY='translations',TVER='v4';
 function getTrans(){return store.get(TKEY+TVER)}
 function validTrans(t,k){if(!t)return false;if(!/[\u4e00-\u9fffA-Za-z0-9]/.test(t))return false;
@@ -75,40 +71,38 @@ const j=await r.json();let m=j&&j.responseData&&j.responseData.translatedText||'
 if(validTrans(m,k))t=m}catch(e){}}
 if(validTrans(t,k)){const c=getTrans();c[k]=t;store.set(TKEY+TVER,c);return t}
 return '（暂无释义）'}
-// ===== 陈列状态 =====
-let showTr=localStorage.getItem('revShowTr')!=='0'; // 默认开
-let hideM=localStorage.getItem('revHideM')==='1';   // 隐藏已掌握
-function masteredList(){return store.get('mastered')}
-function isMastered(k){return !!masteredList()[k]}
-function toggleTr(){showTr=!showTr;localStorage.setItem('revShowTr',showTr?'1':'0');
-document.getElementById('trBtn').textContent='看释义：'+(showTr?'开':'关');render()}
-function hideMastered(btn){hideM=!hideM;localStorage.setItem('revHideM',hideM?'1':'0');
-btn.textContent=(hideM?'显示已掌握':'隐藏已掌握')+' ('+document.getElementById('mCnt').textContent+')';render()}
-function unmasterAll(){if(!confirm('恢复全部已掌握的词到列表？'))return;store.set('mastered',{});render()}
-function masterWord(k){ // 移出列表（记录保留，复习统计仍算）
-  const m=masteredList();m[k]=todayStr();store.set('mastered',m);render()}
+// ===== 陈列与交互 =====
 function render(){
-  const byday={};let mCnt=0;
-  Object.keys(marks).forEach(k=>{if(isMastered(k)){mCnt++;return}
-    const d=normEntry(marks[k]).day||todayStr();(byday[d]=byday[d]||[]).push(k)});
-  document.getElementById('mCnt').textContent=mCnt;
+  const byday={};
+  Object.keys(marks).forEach(k=>{const d=(marks[k]&&marks[k].day)||todayStr();(byday[d]=byday[d]||[]).push(k)});
   const days=Object.keys(byday).sort((a,b)=>b.localeCompare(a)); // 新日期在上
   const today=todayStr();
   document.getElementById('history').innerHTML=days.length?days.map(d=>{
     const ws=byday[d];
-    return `<div class="dayh">${d===today?'今天':d} <span class="tag">${ws.length} 词</span>${ws.some(k=>normEntry(marks[k]).due<=today)?'<span class="due-tag">有到期</span>':''}</div>
-    <div class="wl">${ws.map(k=>{const e=normEntry(marks[k]);const tc=showTr?getTrans()[k]:null;
-      return `<div class="wrow ${d===today?'today':''}"><span class="w" onclick="speak('${esc(k).replace(/'/g,"\\'")}')">${esc(k)}</span>
-      <span class="tr">${tc?esc(tc):(showTr?'<i style=color:#bbb>查译中…</i>':'<i style=color:#ccc>释义已隐藏</i>')}</span>
-      <span class="st">间隔${e.ease}天 · ${e.due<=today?'<b style=color:#b8860b>今日到期</b>':'到期 '+e.due}</span>
-      <button class="ok" onclick="masterWord('${esc(k).replace(/'/g,"\\'")}')">已掌握</button>
-      <span class="del" onclick="delWord('${esc(k).replace(/'/g,"\\'")}')">×</span></div>`}).join('')}</div>`}).join('')
-  :'<div class="empty">'+(mCnt?'列表已清空（'+mCnt+' 个已掌握的词被隐藏）':'还没有生词。去阅读页点词加入。')+'</div>';
-  document.getElementById('trBtn').textContent='看释义：'+(showTr?'开':'关');
-  // 补翻译（仅开启时）
-  if(showTr)Object.keys(marks).forEach(k=>{if(isMastered(k))return;if(!getTrans()[k])translate(k).then(()=>renderQuiet())})}
+    return `<div class="dayh">${d===today?'今天':d} <span class="tag">${ws.length} 词</span></div>
+    <div class="wl">${ws.map(k=>`
+      <div class="wrow"><span class="w ${d===today?'today':''}" onclick="speak('${esc(k).replace(/'/g,"\\'")}')">${esc(k)}</span>
+      <span class="tr" id="tr-${esc(k).replace(/[^a-z0-9]/gi,'_')}">${getTrans()[k]?esc(getTrans()[k]):'<i style=color:#bbb>查译中…</i>'}</span>
+      <button class="peek" data-peek="${esc(k)}" onclick="peek('${esc(k).replace(/'/g,"\\'")}')">盖住</button>
+      <span class="del" onclick="delWord('${esc(k).replace(/'/g,"\\'")}')" title="会了，删除">×</span></div>`).join('')}</div>`}).join('')
+  :'<div class="empty">还没有生词。去阅读页点词加入。</div>';
+  // 补翻译
+  Object.keys(marks).forEach(k=>{if(!getTrans()[k])translate(k).then(()=>renderQuiet())})}
 let hTimer=null;function renderQuiet(){clearTimeout(hTimer);hTimer=setTimeout(render,400)}
-function delWord(k){if(!confirm('彻底删除生词「'+k+'」？'))return;delete marks[k];store.set('vocab',marks);render()}
+// 单词级自测：盖住/显示该词自己的翻译，反复切换
+function peek(k){
+  const id='tr-'+k.replace(/[^a-z0-9]/gi,'_');const el=document.getElementById(id);if(!el)return;
+  const btn=document.querySelector(`button[data-peek="${CSS.escape(k)}"]`);
+  const covered=el.dataset.covered==='1';
+  if(covered){ // 当前盖着 → 显示答案
+    el.textContent=getTrans()[k]||'（暂无释义）';el.classList.remove('blank');el.dataset.covered='';
+    if(btn)btn.textContent='盖住';
+  }else{ // 显示着 → 盖住（自测回忆）
+    el.textContent='· · ·';el.classList.add('blank');el.dataset.covered='1';
+    if(btn)btn.textContent='显示';
+    speak(k,0.9)}}
+function delWord(k){ // 自由复习：会了直接删，无确认弹窗（禁原生弹窗规则）
+  delete marks[k];store.set('vocab',marks);render();toast('已删除「'+k+'」')}
 render();
 </script>
 </body>
