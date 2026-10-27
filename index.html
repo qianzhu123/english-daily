@@ -71,8 +71,16 @@ const A=window.ARTICLES;
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 let marks=store.get('vocab'),sentEls=[],sentTexts=[],selState=null;
 // ===== 批次发布制：显示所有已发布文章；新增文章等我发布（无日期过滤）。「看往期」=收起/展开旧批次 =====
-let showOld=localStorage.getItem('showOld')==='1';
-function toggleOld(){showOld=!showOld;localStorage.setItem('showOld',showOld?'1':'0');location.reload()}
+let showOld=false; // 「看往期」改为临时视图：仅本次生效，刷新回落（不再持久化——旧文章"赖着不走"的根因）
+// ===== 已读管理：次数计数 + 「读完了」收进往期 =====
+function doneDB(){return store.get('doneread')}
+function readCount(title){return (doneDB()[title]&&doneDB()[title].count)||0}
+function isDone(title){return !!doneDB()[title]}
+function markDone(title){const db=doneDB();
+  db[title]={count:(db[title]&&db[title].count||0)+1,date:todayStr()};
+  store.set('doneread',db);toastMsg('已读完《'+title+'》第 '+db[title].count+' 遍，收进往期（看往期可随时回看）');
+  render()}
+function toggleOld(){showOld=!showOld;render()}
 function esc(s){return s.replace(/&/g,'&').replace(/</g,'<')}
 // ===== 语法点收藏 =====
 function gramDB(){return store.get('grammar')}
@@ -87,16 +95,16 @@ function toggleGram(st){const gid=st.dataset.gid;const db=gramDB();
 function render(){
   const app=document.getElementById('app');
   app.innerHTML='';sentEls=[];sentTexts=[]; // 幂等：重渲染前清空，杜绝文章叠加
-  const list=A.map((a,i)=>({a,i})).filter(x=>!x.a.draft&&(showOld||!x.a.archived));
-  if(!list.length)app.innerHTML='<div style="color:var(--dim);padding:40px 0;text-align:center">暂无文章。点「看往期」可复习旧文章。</div>';
+  const list=A.map((a,i)=>({a,i})).filter(x=>!x.a.draft&&(showOld||!x.a.archived&&!isDone(x.a.title)));
+  if(!list.length)app.innerHTML='<div style="color:var(--dim);padding:40px 0;text-align:center">当前批次已读完 ✓ 点「看往期」回看，或等新文章发布。</div>';
   list.forEach(({a},n)=>{const i=n; // i=A原索引仍用于 data-a；显示编号 n+1
     const d=document.createElement('div');
     d.className='art-wrap';d.style.position='relative';
-    d.innerHTML=`<h2>${n+1}. ${esc(a.title)}</h2><div class="meta">${esc(a.date)} · ${esc(a.level)} <button onclick="playArticle(${i},this)" style="padding:1px 8px;font-size:.72rem;margin-left:6px">▶ 整篇朗读</button><button onclick="toggleArticleTr(${i},this)" style="padding:1px 8px;font-size:.72rem">整篇翻译</button></div>`;    const box=document.createElement('div');box.className='article';
+    d.innerHTML=`<h2>${n+1}. ${esc(a.title)}</h2><div class="meta">${esc(a.date)} · 第 ${readCount(a.title)} 遍 · ${esc(a.level)} <button onclick="markDone('${esc(a.title).replace(/'/g,"\\'")}',this)" style="padding:1px 8px;font-size:.72rem;margin-left:6px">✓ 读完了</button><button onclick="playArticle(${i},this)" style="padding:1px 8px;font-size:.72rem">▶ 整篇朗读</button><button onclick="toggleArticleTr(${i},this)" style="padding:1px 8px;font-size:.72rem">整篇翻译</button></div>`;    const box=document.createElement('div');box.className='article';
     const p=document.createElement('p');
     a.sentences.forEach((s,j)=>{const sp=document.createElement('span');sp.className='sent';sp.dataset.i=i+'-'+j;
-      // 标点放 <w> 外：点击高亮只盖住词本身，不带标点
-      const tokHtml=t=>{const m=t.match(/^([^A-Za-z0-9]*)([A-Za-z0-9'’-]+)([\s\S]*)$/);
+      // 标点放 <w> 外：点击高亮只盖住词本身，不带标点（À-ɏ=带变音符字母，résumé 可点）
+      const tokHtml=t=>{const m=t.match(/^([^A-Za-z0-9À-ɏ]*)([A-Za-z0-9À-ɏ'’-]+)([\s\S]*)$/);
         if(!m)return esc(t);
         return esc(m[1])+`<w data-w="${esc(m[2].toLowerCase())}" data-a="${i}">${esc(m[2])}</w>`+esc(m[3])};
       sp.innerHTML=s.split(/\s+/).map(tokHtml).join(' ');
@@ -169,9 +177,10 @@ document.addEventListener('click',e=>{
         selState={key:k,words:[k],wEl:w};w.classList.add('sel');speak(k,0.9);return}
       if(k===selState.key){confirmPhrase();return}
       const prev=selState.words[selState.words.length-1];
-      const nextW=selState.wEl.nextSibling;
-      const nextClean=nextW&&nextW.nodeType===1?cleanWord(nextW.dataset.w):null;
-      if(nextClean===k){selState.words.push(k);selState.wEl=w;w.classList.add('sel');speak(k,0.95);return}
+      // 取下一个元素节点（跳过词与词之间的空格文本节点——词组连不上的根因）
+      let nx=selState.wEl.nextSibling;while(nx&&nx.nodeType!==1)nx=nx.nextSibling;
+      const nextClean=nx?cleanWord(nx.dataset.w||''):null;
+      if(nextClean===k){selState.words.push(k);selState.wEl=nx;w.classList.add('sel');speak(k,0.95);return}
       document.querySelectorAll('w.sel').forEach(x=>x.classList.remove('sel'));
       if(k===prev){selState=null;return}
       selState={key:k,words:[k],wEl:w};w.classList.add('sel');speak(k,0.9);return}
@@ -316,8 +325,6 @@ function playArticle(artIdx,btn){
 // ===== 整篇翻译：显示/隐藏本文全文译文（gtx 整篇一次性请求） =====
 const atrTKEY='arttr';
 async function toggleArticleTr(artIdx,btn){
-  const wrap=document.querySelectorAll('.art-wrap')[artIdx].closest?document.querySelectorAll('.art-wrap')[artIdx]:null;
-  // 找到本文的 .article 容器（render 时 vpanel 与 box 同属 d）
   const artBox=document.getElementById('vpanel-'+artIdx).parentNode.querySelector('.article');
   let tr=artBox.parentNode.querySelector('.arttr');
   if(tr){tr.remove();btn.textContent='整篇翻译';return} // 再点收起
