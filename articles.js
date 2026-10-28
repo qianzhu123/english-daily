@@ -47,6 +47,7 @@ window.ARTICLES = [
   {
     title: "Asking the Way Downtown (B1)",
     date: "2026-10-26",
+    archived: true,
     level: "B1 · 问路/出行",
     sentences: [
       "On my first morning in the city, I stopped a passer-by and asked whether there was a pharmacy nearby, since I had left my allergy pills at home.",
@@ -69,6 +70,7 @@ window.ARTICLES = [
   {
     title: "The Job Interview Surprise (B1)",
     date: "2026-10-26",
+    archived: true,
     level: "B1 · 工作/面试",
     sentences: [
       "Last spring, I applied for a summer internship at a small software company, hardly expecting to hear back from them at all.",
@@ -91,6 +93,7 @@ window.ARTICLES = [
   {
     title: "A Week Without My Phone (B1)",
     date: "2026-10-26",
+    archived: true,
     level: "B1 · 生活/观点",
     sentences: [
       "When my phone screen cracked beyond repair last month, I decided not to replace it for one full week as an experiment.",
@@ -108,6 +111,73 @@ window.ARTICLES = [
       "how quickly the anxiety faded：感叹词序 how + 副词 + 主谓（不是 how quickly did）",
       "a wonderful tool, but a terrible master（好工具坏主人）—— 对仗句，写作背下来直接用",
       "I had to borrow a stranger's phone —— 检查：borrow 用对了吗？哪句是情态动词+原形？"
+    ]
+  },
+  {
+    title: "The Wrong Train (B1)",
+    date: "2026-10-28",
+    level: "B1 · 出行/突发",
+    sentences: [
+      "Last Saturday, I rushed into the station with only two minutes to spare and jumped onto the first train that was about to leave.",
+      "It was only after the doors closed that I looked up and realized I was on the wrong line — the train was heading north, but my meeting was in a town to the south.",
+      "At first, I panicked and blamed myself for not checking the departure board more carefully.",
+      "Then I remembered what my grandfather used to say: an accident is only a disaster if you refuse to deal with it.",
+      "I walked up to the conductor, an old man with a tired but friendly face, and explained my situation honestly.",
+      "He didn't scold me at all; instead, he told me to get off at the next stop, cross the platform, and catch the southbound train, which would cost me only fifteen extra minutes.",
+      "While we waited, he told me about the thirty years he had spent working on the railway, and how many forgetful passengers he had met in that time.",
+      "I arrived at my meeting only ten minutes late — and I have checked the departure board twice ever since."
+    ],
+    notes: [
+      "with only two minutes to spare（只差两分钟）—— to spare = 有富余，上篇学过复习",
+      "It was only after... that...（直到...才...）：强调句，跟 It wasn't until... that... 换个马甲",
+      "an accident is only a disaster if you refuse to deal with it —— 谚语式对仗，口语写作两用",
+      "get off（下车）/ cross the platform（去对面站台）/ southbound（向南的）—— 火车出行三件套",
+      "blamed myself for not checking（怪自己没检查）：blame sb. for (not) doing",
+      "have checked... ever since：ever since + 现在完成时，从过去持续到现在（上上篇考点，再看一眼）"
+    ]
+  },
+  {
+    title: "A Complaint at the Hotel (B1)",
+    date: "2026-10-28",
+    level: "B1 · 酒店/投诉",
+    sentences: [
+      "The room looked perfect in the photos: a wide bed, a sea view, and a modern bathroom with a rain shower.",
+      "Reality was different. The air conditioner made a noise like an old motorcycle, and the 'sea view' was a narrow slice of grey water between two buildings.",
+      "After a sleepless night, I decided I would not simply endure it; I went down to the front desk and asked to speak to the manager.",
+      "I kept my voice calm and my sentences short: the air conditioner was broken, the view was not as described, and I had paid for a room I could not use properly.",
+      "To my surprise, the manager apologized immediately and moved me to a better room on the top floor, with a real sea view and no extra charge.",
+      "She even sent up a fruit plate with a handwritten note that said, 'Sorry for the noisy night.'",
+      "The experience taught me something useful: a polite complaint works far better than an angry one, and silence never fixes anything.",
+      "Since then, whenever something is wrong at a hotel, I speak up early — calmly, clearly, and with the receipt in my hand."
+    ],
+    notes: [
+      "投诉三句式（背下来直接用）：The air conditioner is broken. / This is not as described. / I'd like to speak to the manager.",
+      "kept my voice calm and my sentences short：keep + 宾语 + 形容词（保持某种状态）",
+      "with no extra charge（不额外收费）/ send up（把东西送上楼）—— 酒店高频",
+      "a polite complaint works far better than an angry one：比较级 + far（远胜于），写作加分",
+      "speak up（说出来/发声）；endure（忍受）—— silence never fixes anything 也是金句"
+    ]
+  },
+  {
+    title: "The an/a Test Day (B1)",
+    date: "2026-10-28",
+    level: "B1 · 校园/观点",
+    sentences: [
+      "My English teacher once gave us an unusual test: for an entire day, we were not allowed to say a single sentence without using an article correctly.",
+      "Every time a student forgot an 'a', an 'an', or a 'the', she made a small mark on the board, and an hour later the board was full of marks.",
+      "It was an embarrassing exercise, but an honest one: I discovered that I made an article mistake nearly once per sentence.",
+      "The rule she gave us was simple: use 'a' before a consonant sound, 'an' before a vowel sound, and 'the' when both of you know exactly which thing you mean.",
+      "She also pointed out an important detail — we say 'an hour' because the 'h' is silent, but 'a university' because 'university' starts with a 'you' sound.",
+      "An interesting language, English: the sound matters, not the letter.",
+      "By the end of that day, the marks on the board had grown fewer and fewer, and the habit has stayed with me ever since.",
+      "Now, whenever I am unsure, I ask myself one question: does my listener already know which one I mean? If yes, use 'the'."
+    ],
+    notes: [
+      "本篇是为你定制的冠词专篇：数一数里面有多少个 a / an / the，注意 an + 元音音素（an hour 的 h 不发音 / a university 的 u 读 you）",
+      "an entire day / an honest one / an unusual test：an 看的是**读音**不是字母（honest 的 h 不发音）",
+      "the rule / the board / the end of that day：双方都知道指哪个 → 用 the",
+      "not A but B 结构：not the letter（不是字母）—— 转折强调",
+      "grow fewer and fewer（越来越少）：fewer + 可数，less + 不可数"
     ]
   }
 ];
