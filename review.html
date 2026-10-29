@@ -71,14 +71,20 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200)}
 function speak(text,rate){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||0.9;u.voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u)}
 // ===== 翻译（gtx 主源 + MyMemory 兜底 + 有效性过滤） =====
-const TKEY='translations',TVER='v4';
+const TKEY='translations',TVER='v5';
 function getTrans(){return store.get(TKEY+TVER)}
-function validTrans(t,k){if(!t)return false;if(!/[\u4e00-\u9fffA-Za-z0-9]/.test(t))return false;
+const MANUAL={article:'名词：冠词（语法）、文章、物品（an article of clothing 一件衣物）\n〔语境提示〕语法课上 article=a/an/the',properly:'副词：正确地、适当地、得体地（=correctly, in a proper way）'};
+function validTrans(t,k){if(!t)return false;if(!/[一-鿿A-Za-z0-9]/.test(t))return false;
 if(t.toLowerCase()===k.toLowerCase())return false;if(/MYMEMORY WARNING|QUERY LENGTH|%s/.test(t))return false;return true}
-async function translate(k){const cache=getTrans();if(cache[k])return cache[k];let t='';
+function cleanSense(d){return d.split('；').map(g=>{const [pos,terms]=g.split('：');if(!terms)return g;
+const keep=terms.split('、').filter(t=>t.length>=2||['他','她','它','在','有','的','了'].includes(t));
+return keep.length?pos+'：'+keep.join('、'):''}).filter(Boolean).join('；')}
+async function translate(k){const cache=getTrans();if(cache[k])return cache[k];
+if(MANUAL[k]){const c=getTrans();c[k]=MANUAL[k];store.set(TKEY+TVER,c);return MANUAL[k]}
+let t='';
 try{const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&dt=bd&dj=1&q='+encodeURIComponent(k));
 if(r.ok){const j=await r.json();
-if(j.dict&&j.dict.length){const d=j.dict.map(d=>d.pos+'：'+d.terms.join('、')).join('；');if(validTrans(d,k))t=d}
+if(j.dict&&j.dict.length){const d=cleanSense(j.dict.map(d=>d.pos+'：'+d.terms.join('、')).join('；'));if(validTrans(d,k))t=d}
 else if(j.sentences&&j.sentences[0]&&validTrans(j.sentences[0].trans,k))t=j.sentences[0].trans}}catch(e){}
 if(!validTrans(t,k)){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(k)+'&langpair=en|zh-CN');
 const j=await r.json();let m=j&&j.responseData&&j.responseData.translatedText||'';

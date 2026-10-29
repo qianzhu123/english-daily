@@ -30,7 +30,7 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 .vpanel li .del:hover{color:var(--hard)}
 .vpanel .btns{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
 .vpanel .btns button{padding:2px 8px;font-size:.72rem}
-@media(max-width:900px){.vpanel{width:min(70vw,280px);height:300px;bottom:16px;top:auto!important}} /* 手机端：固定右下角，内容随文章切换 */
+@media(max-width:900px){.vpanel{width:min(70vw,280px);height:300px;bottom:16px;top:auto!important}.vpanel.folded{height:auto;max-height:36px;overflow:hidden}} /* 手机端：固定右下角，可折叠不挡正文 */
 .hidden{display:none}
 .sent{transition:background .3s}.sent.active{background:#eef6f0}
 .notes{background:#eef6f0;padding:14px 18px;border-radius:8px;font-size:.95rem;margin-top:12px}
@@ -118,10 +118,13 @@ function render(){
       box.appendChild(n)}
     // 本文的浮动生词本（跟随文章区间滚动）
     const vp=document.createElement('div');vp.className='vpanel';vp.id='vpanel-'+i;
-    vp.innerHTML=`<h4>生词本·${esc(a.title)} <button onclick="location.href='review.html'" style="padding:1px 6px;font-size:.7rem">复习</button><button onclick="togglePhraseMode(${i})" style="padding:1px 6px;font-size:.7rem">+ 词组</button></h4><ul></ul><div style="color:var(--dim);font-size:.75rem;margin-top:4px">本文章今日生词，按标记顺序</div>`;
+    vp.innerHTML=`<h4><span class="fold" onclick="toggleFold(${i})" style="cursor:pointer">▾</span> 生词本·${esc(a.title)} <button onclick="location.href='review.html'" style="padding:1px 6px;font-size:.7rem">复习</button><button onclick="togglePhraseMode(${i})" style="padding:1px 6px;font-size:.7rem">+ 词组</button></h4><ul></ul><div style="color:var(--dim);font-size:.75rem;margin-top:4px">本文全部生词，按标记顺序；跨天不消失，复习页可删</div>`;
     d.appendChild(box);d.appendChild(vp);app.appendChild(d);
   });
   renderVocab();restoreMarks();positionPanels();
+  // 手机端默认折叠：面板只露标题条，点 ▸ 展开，不再挡正文点击（folded 状态记忆）
+  if(isMobilePanel()&&store.get('vfold')!=='0'){document.querySelectorAll('.vpanel').forEach(vp=>{
+    vp.classList.add('folded');const f=vp.querySelector('.fold');if(f)f.textContent='▸'})}
   let raf=null; // 滚动节流：rAF 合帧，杜绝高频重算导致的闪动
   const onScroll=()=>{if(raf)return;raf=requestAnimationFrame(()=>{raf=null;positionPanels()})};
   window.addEventListener('scroll',onScroll,{passive:true});
@@ -215,18 +218,37 @@ function togglePhraseMode(){ // 词组模式入口：开→连点单词；已选
   selState={key:'__start__',words:[],wEl:null};
   document.querySelectorAll('.vpanel button').forEach(b=>{if(b.textContent==='+ 词组')b.textContent='确认 ✓'});
   toastMsg('词组模式已开：依次点击连续的单词（变绿），再点「确认 ✓」入本')}
+function isMobilePanel(){ // 与 positionPanels 同判据：右侧空白不够 = 手机端面板
+  const wrapEl=document.querySelector('.wrap');if(!wrapEl)return window.innerWidth<=900;
+  return window.innerWidth-wrapEl.getBoundingClientRect().right<=320}
+function toggleFold(i){ // 手机端折叠：默认收起（只露标题条），不挡正文点击；桌面端也可用
+  const vp=document.getElementById('vpanel-'+i);if(!vp)return;
+  const folded=vp.classList.toggle('folded');
+  const f=vp.querySelector('.fold');if(f)f.textContent=folded?'▸':'▾';
+  store.set('vfold',folded?'1':'0');
+  positionPanels()}
 function restoreMarks(){document.querySelectorAll('w').forEach(w=>{if(marks[cleanWord(w.dataset.w)])w.classList.add('on')});}
 // ===== 生词归属与翻译 =====
-const TKEY='translations',TVER='v4'; // v4：作废 v3 缓存（clearance→"。"事故：接口异常返回纯标点被当正常结果缓存）
+const TKEY='translations',TVER='v5'; // v5：冷僻单字义项过滤+常用词人工补义，作废 v4（properly→"韪"事故）
 function getTrans(){return store.get(TKEY+TVER)}
+// 人工优先义项：gtx 词典会把高频词的核心义埋在一堆冷僻义里（article 缺"冠词"）
+const MANUAL={article:'名词：冠词（语法）、文章、物品（an article of clothing 一件衣物）\n〔语境提示〕语法课上 article=a/an/the',
+  properly:'副词：正确地、适当地、得体地（=correctly, in a proper way）'};
 function validTrans(t,k){ // 翻译结果有效性：空/纯标点符号/回显原文/已知垃圾模式都算无效
   if(!t)return false;
   if(!/[一-鿿A-Za-z0-9]/.test(t))return false; // 必须含汉字/字母/数字（滤掉"。"、"…"等）
   if(t.toLowerCase()===k.toLowerCase())return false;
   if(/MYMEMORY WARNING|QUERY LENGTH|%s/.test(t))return false;
   return true}
+function cleanSense(d){ // 词典义项清洗：去冷僻单字项（properly→"韪"事故）
+  return d.split('；').map(g=>g.replace(/、/g,'、').replace(/、[^、]{1}$/,'').replace(/、(?=[^、]{1}、)/g,'、'))
+    .map(g=>{ // 组内过滤单字冷僻项（除核心代词/名词外）
+      const [pos,terms]=g.split('：');if(!terms)return g;
+      const keep=terms.split('、').filter(t=>t.length>=2||['他','她','它','在','有','的','了'].includes(t));
+      return keep.length?pos+'：'+keep.join('、'):''}).filter(Boolean).join('；')}
 async function translate(k,ctx){ // 主源 gtx；ctx=所在句子时先取整句译文做语境义，词典义项全列兜底
   const cache=getTrans();if(cache[k])return cache[k];
+  if(MANUAL[k]){const c=getTrans();c[k]=MANUAL[k];store.set(TKEY+TVER,c);return MANUAL[k]} // 人工义优先
   let t='';
   if(ctx){try{ // 语境优先：整句翻译，用户看到的第一个释义来自真实上下文
     const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&q='+encodeURIComponent(ctx));
@@ -234,10 +256,10 @@ async function translate(k,ctx){ // 主源 gtx；ctx=所在句子时先取整句
       if(j.sentences&&j.sentences[0]&&j.sentences[0].trans){const s=j.sentences[0].trans;
         if(validTrans(s,ctx))t='〔语境〕'+s}}} // 语境结果同样过有效性检查
   catch(e){}}
-  try{ // 词典义项（不截断，多义词如 runway 全部列出）
+  try{ // 词典义项（不截断，多义词如 runway 全部列出；单字冷僻项过滤）
     const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&dt=bd&dj=1&q='+encodeURIComponent(k));
     if(r.ok){const j=await r.json();
-      if(j.dict&&j.dict.length){const d=j.dict.map(x=>x.pos+'：'+x.terms.join('、')).join('；');
+      if(j.dict&&j.dict.length){const d=cleanSense(j.dict.map(x=>x.pos+'：'+x.terms.join('、')).join('；'));
         if(validTrans(d,k))t=t?t+'\n〔词典〕'+d:d} // 词典结果也过有效性检查
       else if(!t&&j.sentences&&j.sentences[0]&&validTrans(j.sentences[0].trans,k))t=j.sentences[0].trans}}
   catch(e){}
@@ -265,10 +287,8 @@ function addWord(k,ctx,artIdx){if(!k)return;
 function renderVocab(){
   const ks=Object.keys(marks);
   const tc=getTrans();
-  const today=todayStr();
-  // 按文章分窗口，窗口内只展示该文章今日词，按标记先后（seq 显式序号，合并/刷新不乱）
+  // 按文章分窗口：显示**全部未删除词条**（不再按 day 过滤——跨天/熬夜标记"消失"的根因），按 seq 排
   const byArt={};ks.forEach(k=>{const e=normEntry(marks[k]);
-    if(e.day!==today)return; // 只展示今天的
     if(typeof e.seq!=='number'){e.seq=1e9-ks.indexOf(k);marks[k]=e;store.set('vocab',marks)} // 旧词条无seq：键序兜底
     if(typeof e.art!=='number'){e.art=wordHomeIdx(k);marks[k]=e;store.set('vocab',marks)}
     (byArt[e.art]=byArt[e.art]||[]).push(k)});
@@ -276,9 +296,9 @@ function renderVocab(){
   A.forEach((a,i)=>{
     const ul=document.querySelector('#vpanel-'+i+' ul');if(!ul)return;
     const ws=byArt[i]||[];
-    ul.innerHTML=ws.map(k=>
-      `<li data-k="${esc(k)}"><span class="w">${esc(k)}</span><span class="del" data-del="${esc(k)}">×</span>${tc[k]?`<span class="tr">${esc(tc[k])}</span>`:`<span class="tr dim">查译…</span>`}</li>`).join('')
-      +(ws.length?'':'<li style="color:var(--dim);cursor:default;font-size:.78rem">今天本文还没标生词</li>');
+    ul.innerHTML=ws.map(k=>{const e=normEntry(marks[k]);const dtag=e.day===todayStr()?'':'<span style="color:#bbb;font-size:.68rem">'+(e.day||'').slice(5)+' </span>';
+      return `<li data-k="${esc(k)}"><span class="w">${esc(k)}</span><span class="del" data-del="${esc(k)}">×</span>${tc[k]?`<span class="tr">${esc(tc[k])}</span>`:`<span class="tr dim">查译…</span>`}</li>`}).join('')
+      +(ws.length?'':'<li style="color:var(--dim);cursor:default;font-size:.78rem">本文还没标生词</li>');
     ul.querySelectorAll('li[data-k]').forEach(li=>{
       const k=li.dataset.k;
       if(!getTrans()[k])translate(k).then(t=>{const sp=li.querySelector('.tr');if(sp&&li.dataset.k===k){sp.textContent=t;sp.classList.remove('dim')}});
@@ -286,10 +306,6 @@ function renderVocab(){
         if(e.target.classList.contains('del')){delete marks[k];store.set('vocab',marks);
           document.querySelectorAll('w').forEach(w=>{if(cleanWord(w.dataset.w)===k)w.classList.remove('on')});renderVocab();return}
         speak(k,0.9)}})});
-  // 复习按钮到期数
-  const due=ks.filter(k=>normEntry(marks[k]).due<=today).length;
-  const rb=document.getElementById('reviewBtn');
-  rb.textContent=due?('复习 '+due):'复习';rb.classList.toggle('due',due>0);
   positionPanels()}
 function exportVocab(){const t=Object.keys(marks).join(', ');navigator.clipboard&&navigator.clipboard.writeText(t);toastMsg('已复制生词：\n'+t)}
 // ===== 场景池：随机抽场景（不重复，抽完一轮重洗） =====
