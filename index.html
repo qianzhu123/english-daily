@@ -98,7 +98,7 @@ function render(){
   app.innerHTML='';sentEls=[];sentTexts=[]; // 幂等：重渲染前清空，杜绝文章叠加
   const list=A.map((a,i)=>({a,i})).filter(x=>!x.a.draft&&(showOld||!x.a.archived&&!isDone(x.a.title)));
   if(!list.length)app.innerHTML='<div style="color:var(--dim);padding:40px 0;text-align:center">当前批次已读完 ✓ 点「看往期」回看，或等新文章发布。</div>';
-  list.forEach(({a},n)=>{const i=n; // i=A原索引仍用于 data-a；显示编号 n+1
+  list.forEach(({a,i},n)=>{ // i=A 原索引（data-a/面板 id 用它——稳定不随批次漂移）；n+1 仅作显示编号
     const d=document.createElement('div');
     d.className='art-wrap';d.style.position='relative';
     d.innerHTML=`<h2>${n+1}. ${esc(a.title)}</h2><div class="meta">${esc(a.date)} · 第 ${readCount(a.title)} 遍 · ${esc(a.level)} <button onclick="markDone('${esc(a.title).replace(/'/g,"\\'")}',this)" style="padding:1px 8px;font-size:.72rem;margin-left:6px">✓ 读完了</button><button onclick="playArticle(${i},this)" style="padding:1px 8px;font-size:.72rem">▶ 整篇朗读</button><button onclick="toggleArticleTr(${i},this)" style="padding:1px 8px;font-size:.72rem">整篇翻译</button></div>`;    const box=document.createElement('div');box.className='article';
@@ -137,9 +137,10 @@ function positionPanels(){ // 面板驻右空白垂直居中；活动区间锁�
   const contentRight=wrapEl?wrapEl.getBoundingClientRect().right:0;
   const gutter=window.innerWidth-contentRight;
   const hasGutter=gutter>320; // 右侧空白够宽才外挂，否则贴回文章内（窄屏回退）
-  const visIdx=[]; // 先收集本屏可见的文章
+  const visIdx=[]; // 先收集本屏可见的文章（artWrapEl[i]=A 原索引 i 对应的 DOM 节点，显示序≠原索引）
+  const artWrapEl=document.querySelectorAll('.art-wrap');
   A.forEach((a,i)=>{
-    const wrap=document.querySelectorAll('.art-wrap')[i];const vp=document.getElementById('vpanel-'+i);
+    const wrap=artWrapEl[i];const vp=document.getElementById('vpanel-'+i);
     if(!wrap||!vp)return;
     const wr=wrap.getBoundingClientRect();
     const panelH=vp.offsetHeight||160;
@@ -228,13 +229,16 @@ function toggleFold(i){ // 手机端折叠：默认收起（只露标题条）�
   const f=vp.querySelector('.fold');if(f)f.textContent=folded?'▸':'▾';
   store.set('vfold',folded?'1':'0');
   positionPanels()}
-function restoreMarks(){ // 已标词高亮：单词条直接匹配；词组词条（含空格）逐词匹配正文标下划线
+function restoreMarks(){ // 已标词高亮：只亮词所属文章（data-a=art）里的出现处——幻影标记根因：旧版全文章亮
+  const home={}; // 词 → 所属文章（wordHomeIdx 结果缓存）
+  Object.keys(marks).forEach(k=>{home[k]=wordHomeIdx(k)});
   document.querySelectorAll('w').forEach(w=>{
     const cw=cleanWord(w.dataset.w);
-    if(marks[cw]){w.classList.add('on');return}
-    // 词组高亮：该词是某词组词条的成员（rushed into 里的 rushed/into）→ 加词组下划线样式
-    const inPhrase=Object.keys(marks).some(k=>k.includes(' ')&&k.split(' ').includes(cw));
-    if(inPhrase)w.classList.add('inphrase')});}
+    const wArt=Number(w.dataset.a);
+    if(marks[cw]){if(home[cw]===wArt)w.classList.add('on');return}
+    // 词组成员下划线：词组归属文章里的出现处才标
+    const phrase=Object.keys(marks).find(k=>k.includes(' ')&&k.split(' ').includes(cw));
+    if(phrase&&home[phrase]===wArt)w.classList.add('inphrase')});}
 // ===== 生词归属与翻译 =====
 const TKEY='translations',TVER='v6'; // v6：人工义优先于缓存（旧坏翻译已被缓存挡住 MANUAL），作废 v5
 function getTrans(){return store.get(TKEY+TVER)}
@@ -282,14 +286,26 @@ async function translate(k,ctx){ // 主源 gtx；ctx=所在句子时先取整句
     t=m}catch(e){}}
   if(validTrans(t,k)){const c=getTrans();c[k]=t;store.set(TKEY+TVER,c);return t}
   return '（暂无释义）'}
-function wordHomeIdx(k){ // 词/词组 → 文章索引：词条自带 art 字段优先，否则按首词匹配正文；匹配不到归最后一篇
+function wordHomeIdx(k){ // 词/词组 → 文章索引（A 原索引，稳定不随批次漂移）
   const e=marks[k];
-  if(e&&typeof e==='object'&&typeof e.art==='number'&&e.art<A.length)return e.art;
   const first=k.split(' ')[0].toLowerCase();
+  const cands=[]; // 含该词的全部候选文章
   for(let i=0;i<A.length;i++){
     const text=A[i].sentences.join(' ').toLowerCase();
-    if(new RegExp('\\b'+first.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(text))return i}
-  return A.length-1}
+    let p=text.indexOf(first);
+    while(p>=0){
+      const b=p===0?true:/[^a-z0-9]/.test(text[p-1]);
+      const a2=p+first.length>=text.length?true:/[^a-z0-9]/.test(text[p+first.length]);
+      if(b&&a2){cands.push(i);break}
+      p=text.indexOf(first,p+1)}}
+  if(!cands.length)return A.length-1;
+  if(cands.length===1)return cands[0];
+  // 多篇命中：按标记日期消歧——date<=标记日 里最新一篇（标记时它才存在）；art 坏值（显示序漂移）不可信，不采信
+  const day=e&&typeof e==='object'?e.day:null;
+  if(day){
+    const dated=cands.map(i=>({i,date:A[i].date})).filter(x=>x.date<=day).sort((x,y)=>y.date.localeCompare(x.date));
+    if(dated.length)return dated[0].i}
+  return cands[0]}
 function addWord(k,ctx,artIdx){if(!k)return;
   if(marks[k]){const e=normEntry(marks[k]);e.n=(e.n||1)+1;if(!e.day)e.day=todayStr();if(typeof artIdx==='number')e.art=artIdx;marks[k]=e}
   else{const e=normEntry(1);e.day=todayStr();if(typeof artIdx==='number')e.art=artIdx;
@@ -386,6 +402,15 @@ for(const k in marks){
   else cleaned[ck]=v;
   if(ck!==k||typeof marks[k]!=='object')ch=true}
 if(ch){marks=cleaned;store.set('vocab',marks)}})();
+// art 字段语义修复（2026-10-31）：旧数据存的是"当屏显示序号"，批次轮换后序号漂移导致词挂错文章。
+// 现在统一改存 A 原索引；旧值若挂错文章（首词在该文章正文匹配不到），按首词回扫正文重定位。
+(function(){let ch=false;
+for(const k in marks){const e=marks[k];if(!e||typeof e!=='object'||typeof e.art!=='number')continue;
+  if(e.art>=A.length){e.art=wordHomeIdx(k);ch=true;continue} // 越界直接重定位
+  const first=k.split(' ')[0].toLowerCase();
+  const text=A[e.art].sentences.join(' ').toLowerCase();
+  if(!new RegExp('\\b'+first.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(text)){e.art=wordHomeIdx(k);ch=true}}
+if(ch)store.set('vocab',marks)})();
 function getToken(){return localStorage.getItem('gh_token')||''}
 function saveToken(){const t=document.getElementById('tokin').value.trim();if(t)localStorage.setItem('gh_token',t);
 document.getElementById('tokstat').textContent=t?'已保存（仅存本机浏览器）':'未填写';syncNow()}

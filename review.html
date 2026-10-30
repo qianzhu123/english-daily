@@ -97,14 +97,26 @@ if(validTrans(t,k)){const c=getTrans();c[k]=t;store.set(TKEY+TVER,c);return t}
 return '（暂无释义）'}
 // ===== 陈列与交互：按文章分组（词条自带 art 字段；无 art 的按首词回扫 articles.js 定位） =====
 let dayFilter=null; // 保留变量兼容旧调用；null=全部
-function wordHomeIdx(k){ // 与 index.html 同规则：art 字段优先，否则首词匹配正文，兜底最后一篇
+function wordHomeIdx(k){ // art 可信时优先；多篇命中按标记日期消歧（标记时文章才存在）
   const e=marks[k];
-  if(e&&typeof e==='object'&&typeof e.art==='number'&&e.art<ART.length)return e.art;
   const first=k.split(' ')[0].toLowerCase();
+  const cands=[];
   for(let i=0;i<ART.length;i++){
     const text=ART[i].sentences.join(' ').toLowerCase();
-    if(new RegExp('\\b'+first.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(text))return i}
-  return ART.length-1}
+    let p=text.indexOf(first);
+    while(p>=0){
+      const b=p===0?true:/[^a-z0-9]/.test(text[p-1]);
+      const a2=p+first.length>=text.length?true:/[^a-z0-9]/.test(text[p+first.length]);
+      if(b&&a2){cands.push(i);break}
+      p=text.indexOf(first,p+1)}}
+  if(!cands.length)return ART.length-1;
+  if(cands.length===1)return cands[0];
+  // 多篇命中：按标记日期消歧——date<=标记日 里最新一篇（标记时它才存在）；art 坏值不可信
+  const day=e&&typeof e==='object'?e.day:null;
+  if(day){
+    const dated=cands.map(i=>({i,date:ART[i].date})).filter(x=>x.date<=day).sort((x,y)=>y.date.localeCompare(x.date));
+    if(dated.length)return dated[0].i}
+  return cands[0]}
 function render(){
   const byArt=Array.from({length:ART.length},()=>[]);
   const loose=[]; // 归不了文章的兜底组
