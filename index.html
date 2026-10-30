@@ -30,6 +30,7 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 .vpanel li .del:hover{color:var(--hard)}
 .vpanel .btns{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
 .vpanel .btns button{padding:2px 8px;font-size:.72rem}
+w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /* 词组成员：下划线提示（不整块高亮，避免误导连读范围） */
 @media(max-width:900px){.vpanel{width:min(70vw,280px);height:300px;bottom:16px;top:auto!important}.vpanel.folded{height:auto;max-height:36px;overflow:hidden}} /* 手机端：固定右下角，可折叠不挡正文 */
 .hidden{display:none}
 .sent{transition:background .3s}.sent.active{background:#eef6f0}
@@ -227,13 +228,21 @@ function toggleFold(i){ // 手机端折叠：默认收起（只露标题条）�
   const f=vp.querySelector('.fold');if(f)f.textContent=folded?'▸':'▾';
   store.set('vfold',folded?'1':'0');
   positionPanels()}
-function restoreMarks(){document.querySelectorAll('w').forEach(w=>{if(marks[cleanWord(w.dataset.w)])w.classList.add('on')});}
+function restoreMarks(){ // 已标词高亮：单词条直接匹配；词组词条（含空格）逐词匹配正文标下划线
+  document.querySelectorAll('w').forEach(w=>{
+    const cw=cleanWord(w.dataset.w);
+    if(marks[cw]){w.classList.add('on');return}
+    // 词组高亮：该词是某词组词条的成员（rushed into 里的 rushed/into）→ 加词组下划线样式
+    const inPhrase=Object.keys(marks).some(k=>k.includes(' ')&&k.split(' ').includes(cw));
+    if(inPhrase)w.classList.add('inphrase')});}
 // ===== 生词归属与翻译 =====
-const TKEY='translations',TVER='v5'; // v5：冷僻单字义项过滤+常用词人工补义，作废 v4（properly→"韪"事故）
+const TKEY='translations',TVER='v6'; // v6：人工义优先于缓存（旧坏翻译已被缓存挡住 MANUAL），作废 v5
 function getTrans(){return store.get(TKEY+TVER)}
-// 人工优先义项：gtx 词典会把高频词的核心义埋在一堆冷僻义里（article 缺"冠词"）
+// 人工优先义项：gtx 词典会把高频词核心义埋掉/给冷僻义（article 缺"冠词"、clearance→净空、panicked→恐吓）
 const MANUAL={article:'名词：冠词（语法）、文章、物品（an article of clothing 一件衣物）\n〔语境提示〕语法课上 article=a/an/the',
-  properly:'副词：正确地、适当地、得体地（=correctly, in a proper way）'};
+  properly:'副词：正确地、适当地、得体地（=correctly, in a proper way）',
+  clearance:'名词：放行许可（航空：waiting for clearance 等待塔台放行）；清关（海关）；净空',
+  panicked:'动词：恐慌、惊慌失措（panic 的过去式）\n〔语境〕I panicked = 我慌了'};
 function validTrans(t,k){ // 翻译结果有效性：空/纯标点符号/回显原文/已知垃圾模式都算无效
   if(!t)return false;
   if(!/[一-鿿A-Za-z0-9]/.test(t))return false; // 必须含汉字/字母/数字（滤掉"。"、"…"等）
@@ -247,8 +256,11 @@ function cleanSense(d){ // 词典义项清洗：去冷僻单字项（properly→
       const keep=terms.split('、').filter(t=>t.length>=2||['他','她','它','在','有','的','了'].includes(t));
       return keep.length?pos+'：'+keep.join('、'):''}).filter(Boolean).join('；')}
 async function translate(k,ctx){ // 主源 gtx；ctx=所在句子时先取整句译文做语境义，词典义项全列兜底
-  const cache=getTrans();if(cache[k])return cache[k];
-  if(MANUAL[k]){const c=getTrans();c[k]=MANUAL[k];store.set(TKEY+TVER,c);return MANUAL[k]} // 人工义优先
+  const cache=getTrans();
+  if(MANUAL[k]){ // 人工义最高优先：即使缓存里有旧坏翻译也要覆盖写入（clearance→净空事故）
+    if(cache[k]!==MANUAL[k]){cache[k]=MANUAL[k];store.set(TKEY+TVER,cache)}
+    return MANUAL[k]}
+  if(cache[k])return cache[k];
   let t='';
   if(ctx){try{ // 语境优先：整句翻译，用户看到的第一个释义来自真实上下文
     const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&q='+encodeURIComponent(ctx));

@@ -116,6 +116,7 @@ window.ARTICLES = [
   {
     title: "The Wrong Train (B1)",
     date: "2026-10-28",
+    archived: true,
     level: "B1 · 出行/突发",
     sentences: [
       "Last Saturday, I rushed into the station with only two minutes to spare and jumped onto the first train that was about to leave.",
@@ -139,6 +140,7 @@ window.ARTICLES = [
   {
     title: "A Complaint at the Hotel (B1)",
     date: "2026-10-28",
+    archived: true,
     level: "B1 · 酒店/投诉",
     sentences: [
       "The room looked perfect in the photos: a wide bed, a sea view, and a modern bathroom with a rain shower.",
@@ -161,6 +163,7 @@ window.ARTICLES = [
   {
     title: "The an/a Test Day (B1)",
     date: "2026-10-28",
+    archived: true,
     level: "B1 · 校园/观点",
     sentences: [
       "My English teacher once gave us an unusual test: for an entire day, we were not allowed to say a single sentence without using an article correctly.",
@@ -178,6 +181,72 @@ window.ARTICLES = [
       "the rule / the board / the end of that day：双方都知道指哪个 → 用 the",
       "not A but B 结构：not the letter（不是字母）—— 转折强调",
       "grow fewer and fewer（越来越少）：fewer + 可数，less + 不可数"
+    ]
+  },
+  {
+    title: "Lost at the Airport (B1)",
+    date: "2026-10-31",
+    level: "B1 · 机场/求助",
+    sentences: [
+      "We landed at Charles de Gaulle at six in the evening, and I had exactly fifty minutes to catch my connecting flight to Rome.",
+      "The problem was that I had checked one suitcase through, and the transfer screen showed nothing about where it should go.",
+      "I joined the line at the transfer desk, where a tired agent was helping a family whose passports had just expired.",
+      "When my turn finally came, I explained my situation quickly: short connection, one checked bag, and no idea which gate to run to.",
+      "She printed a new boarding pass, wrote a big 'GATE 34' on it, and told me to take the shuttle train between terminals.",
+      "I ran, dragging nothing but my backpack, and reached the gate just as the final boarding call was ending.",
+      "The flight attendant scanned my pass, smiled, and said, 'That was close — but your suitcase made it too.'",
+      "Since that day, I never book a connection shorter than two hours, no matter how cheap the ticket looks."
+    ],
+    notes: [
+      "connecting flight（转机航班）/ short connection（转机时间短）/ transfer desk（中转柜台）—— 机场转机三件套",
+      "I had checked one suitcase through：check through（行李直挂到目的地）—— 值机高频短语动词",
+      "When my turn finally came（轮到我时）—— 排队场景万能开场",
+      "That was close（好险）—— 口语感叹，比 dangerous 地道一百倍",
+      "no matter how cheap the ticket looks（不管票多便宜）：no matter how + 形容词 + 主谓，让步句型"
+    ]
+  },
+  {
+    title: "The Late Bus and the Kind Stranger (B1)",
+    date: "2026-10-31",
+    level: "B1 · 出行/求助",
+    sentences: [
+      "The last bus to my neighborhood leaves at 23:10, and that night I arrived at the stop at 23:09 with a broken umbrella and no plan B.",
+      "The screen said 'DELAYED 25 MIN', which was either wonderful news or a cruel joke, depending on whether it actually came.",
+      "An old woman was waiting there too, and after a while she asked if the bus usually ran this late.",
+      "We started talking, and it turned out she had taken that exact bus home from her night shift for twenty years.",
+      "When the bus finally arrived, the driver looked at my phone's dead battery and my empty pockets and waved me on: 'Pay next time.'",
+      "The woman sat beside me and told me about her daughter who lived abroad, and how a two-euro debt from a stranger had once saved her own night.",
+      "I got off at my stop feeling lighter than the situation deserved, and I never saw her again.",
+      "But I did pay the driver back the next evening — two euros, and a story I still tell."
+    ],
+    notes: [
+      "plan B（备用方案）—— 口语高频；dead battery（没电了）",
+      "It turned out（原来是/结果是）—— 已学过，本篇复习（The Delayed Flight 里的 turned out to be）",
+      "waved me on（挥手让我上）—— wave + 宾语 + 方向副词，画面感极强的表达",
+      "feeling lighter than the situation deserved（心情比处境该有的好）—— 比较级 + deserve，写作亮点句",
+      "night shift（夜班）/ pay back（偿还）—— 注意 pay back the driver = 还司机钱"
+    ]
+  },
+  {
+    title: "Why I Keep a Paper Notebook (B1)",
+    date: "2026-10-31",
+    level: "B1 · 生活/观点",
+    sentences: [
+      "Every January, I buy one paper notebook, and every December it is full — of meeting notes, half-finished ideas, and shopping lists I no longer need.",
+      "Friends keep telling me that a notes app on my phone could do all of this, and they are right, in the same way that a bus could replace a walk.",
+      "When I write by hand, I remember things: research on memory suggests that the slow, physical act of writing helps the brain hold on to information.",
+      "There is also something honest about a notebook — it has no notifications, it cannot ring, and it never suggests that I watch a video while I think.",
+      "Of course, paper has real disadvantages: I cannot search it, I lose it more easily than my phone, and yesterday's page is gone forever once it is written.",
+      "But maybe that is the point — a notebook forces me to choose what deserves to be written down.",
+      "A notes app keeps everything and therefore means nothing; the notebook keeps only what survived a second of doubt.",
+      "So every January, I buy a new one, and I write my name and phone number on the first page, in case I lose the whole year."
+    ],
+    notes: [
+      "in the same way that...（就像...一样）：类比结构，雅思写作加分",
+      "hold on to（抓住不放/记住）—— 短语动词；keep doing 本篇回顾",
+      "cannot ring（不会响铃）—— ring 此处=（电话）响，不是戒指",
+      "force me to choose（逼我取舍）：force sb. to do；deserve to be written down（值得被写下）—— deserve + 被动",
+      "keeps everything and therefore means nothing：对仗金句，什么都留=什么都不留 —— 议论文结尾直接可用"
     ]
   }
 ];

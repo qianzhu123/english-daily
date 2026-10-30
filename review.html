@@ -45,15 +45,17 @@ padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:no
 <body>
 <div class="wrap">
 <h1>复习 <a class="back" href="index.html">← 返回阅读</a></h1>
-<div class="meta">自由复习：全部生词按标记日期陈列 · 点词朗读 · 每个词点「盖住」自测回忆，再点「显示」对答案 · 会了点 × 直接删除</div>
+<div class="meta">自由复习：生词按文章分组（配着课文过词）· 点词朗读 · 点「盖住」自测回忆，再点「显示」对答案 · 会了点 × 直接删除</div>
 <div class="days" id="days"></div>
 <div id="gramsec"></div>
 <div id="history"></div>
 </div>
 <div id="toast"></div>
+<script src="articles.js"></script>
 <script>
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 let marks=store.get('vocab');
+const ART=window.ARTICLES||[]; // 按文章分组陈列（用户 10-31 定版：复习=对着读过的文章过词，不是对着操作日期）
 function esc(s){return String(s).replace(/&/g,'&').replace(/</g,'<')}
 function cleanWord(s){return s.replace(/[.,!?;:"'()“”’]/g,'').toLowerCase().trim()}
 function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -70,17 +72,19 @@ let toastTimer=null;
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
 clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200)}
 function speak(text,rate){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||0.9;u.voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u)}
-// ===== 翻译（gtx 主源 + MyMemory 兜底 + 有效性过滤） =====
-const TKEY='translations',TVER='v5';
+// ===== 翻译（gtx 主源 + MyMemory 兜底 + 有效性过滤 + 人工义） =====
+const TKEY='translations',TVER='v6';
 function getTrans(){return store.get(TKEY+TVER)}
-const MANUAL={article:'名词：冠词（语法）、文章、物品（an article of clothing 一件衣物）\n〔语境提示〕语法课上 article=a/an/the',properly:'副词：正确地、适当地、得体地（=correctly, in a proper way）'};
+const MANUAL={article:'名词：冠词（语法）、文章、物品（an article of clothing 一件衣物）\n〔语境提示〕语法课上 article=a/an/the',properly:'副词：正确地、适当地、得体地（=correctly, in a proper way）',
+clearance:'名词：放行许可（航空：waiting for clearance 等待塔台放行）；清关（海关）；净空',panicked:'动词：恐慌、惊慌失措（panic 的过去式）\n〔语境〕I panicked = 我慌了'};
 function validTrans(t,k){if(!t)return false;if(!/[一-鿿A-Za-z0-9]/.test(t))return false;
 if(t.toLowerCase()===k.toLowerCase())return false;if(/MYMEMORY WARNING|QUERY LENGTH|%s/.test(t))return false;return true}
 function cleanSense(d){return d.split('；').map(g=>{const [pos,terms]=g.split('：');if(!terms)return g;
 const keep=terms.split('、').filter(t=>t.length>=2||['他','她','它','在','有','的','了'].includes(t));
 return keep.length?pos+'：'+keep.join('、'):''}).filter(Boolean).join('；')}
-async function translate(k){const cache=getTrans();if(cache[k])return cache[k];
-if(MANUAL[k]){const c=getTrans();c[k]=MANUAL[k];store.set(TKEY+TVER,c);return MANUAL[k]}
+async function translate(k){const cache=getTrans();
+if(MANUAL[k]){if(cache[k]!==MANUAL[k]){cache[k]=MANUAL[k];store.set(TKEY+TVER,cache)}return MANUAL[k]}
+if(cache[k])return cache[k];
 let t='';
 try{const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&dt=bd&dj=1&q='+encodeURIComponent(k));
 if(r.ok){const j=await r.json();
@@ -91,30 +95,49 @@ const j=await r.json();let m=j&&j.responseData&&j.responseData.translatedText||'
 if(validTrans(m,k))t=m}catch(e){}}
 if(validTrans(t,k)){const c=getTrans();c[k]=t;store.set(TKEY+TVER,c);return t}
 return '（暂无释义）'}
-// ===== 陈列与交互 =====
-let dayFilter=null; // null=全部；否则只显示该日期
+// ===== 陈列与交互：按文章分组（词条自带 art 字段；无 art 的按首词回扫 articles.js 定位） =====
+let dayFilter=null; // 保留变量兼容旧调用；null=全部
+function wordHomeIdx(k){ // 与 index.html 同规则：art 字段优先，否则首词匹配正文，兜底最后一篇
+  const e=marks[k];
+  if(e&&typeof e==='object'&&typeof e.art==='number'&&e.art<ART.length)return e.art;
+  const first=k.split(' ')[0].toLowerCase();
+  for(let i=0;i<ART.length;i++){
+    const text=ART[i].sentences.join(' ').toLowerCase();
+    if(new RegExp('\\b'+first.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(text))return i}
+  return ART.length-1}
 function render(){
-  const byday={};
-  Object.keys(marks).forEach(k=>{const d=(marks[k]&&marks[k].day)||todayStr();(byday[d]=byday[d]||[]).push(k)});
-  const days=Object.keys(byday).sort((a,b)=>b.localeCompare(a)); // 新日期在上
+  const byArt=Array.from({length:ART.length},()=>[]);
+  const loose=[]; // 归不了文章的兜底组
+  Object.keys(marks).forEach(k=>{
+    const i=wordHomeIdx(k);
+    if(ART[i])byArt[i].push(k);else loose.push(k)});
+  byArt.forEach(ws=>ws.sort((a,b)=>((marks[a]&&marks[a].seq)||0)-((marks[b]&&marks[b].seq)||0)));
+  // 文章选择条（只列有词的文章）
   const today=todayStr();
-  if(dayFilter&&!byday[dayFilter])dayFilter=null; // 选中的日期删空后回落到全部
-  // 日期选择条
+  const arts=ART.map((a,i)=>({a,i,ws:byArt[i]})).filter(x=>x.ws.length);
   document.getElementById('days').innerHTML=
-    `<button class="${dayFilter===null?'act':''}" onclick="setDay(null)">全部</button>`+
-    days.map(d=>`<button class="${dayFilter===d?'act':''}" onclick="setDay('${d}')">${d===today?'今天':d}<span class="n">${byday[d].length}</span></button>`).join('');
-  const showDays=dayFilter?[dayFilter]:days;
-  document.getElementById('history').innerHTML=showDays.length?showDays.map(d=>{
-    const ws=byday[d];
-    return `<div class="dayh">${d===today?'今天':d} <span class="tag">${ws.length} 词</span></div>
-    <div class="wl">${ws.map(k=>`
-      <div class="wrow"><span class="w ${d===today?'today':''}" onclick="speak('${esc(k).replace(/'/g,"\\'")}')">${esc(k)}</span>
-      <span class="tr" id="tr-${esc(k).replace(/[^a-z0-9]/gi,'_')}">${getTrans()[k]?esc(getTrans()[k]):'<i style=color:#bbb>查译中…</i>'}</span>
-      <button class="peek" data-peek="${esc(k)}" onclick="peek('${esc(k).replace(/'/g,"\\'")}')">盖住</button>
-      <span class="del" onclick="delWord('${esc(k).replace(/'/g,"\\'")}')" title="会了，删除">×</span></div>`).join('')}</div>`}).join('')
-  :'<div class="empty">还没有生词。去阅读页点词加入。</div>';
+    `<button class="${dayFilter===null?'act':''}" onclick="setDay(null)">全部<span class="n">${Object.keys(marks).length}</span></button>`+
+    arts.map(x=>`<button class="${dayFilter===x.i?'act':''}" onclick="setDay(${x.i})">${esc(x.a.title.replace(/ \(B1\)$/,''))}<span class="n">${x.ws.length}</span></button>`).join('')
+    +(loose.length?`<button class="${dayFilter==='loose'?'act':''}" onclick="setDay('loose')">其他<span class="n">${loose.length}</span></button>`:'');
+  const showArts=dayFilter===null?arts:(dayFilter==='loose'?[]:arts.filter(x=>x.i===dayFilter));
+  let html=showArts.map(x=>{
+    const ws=x.ws;
+    const meta=esc(x.a.date)+' · '+esc(x.a.level||'');
+    return `<div class="dayh">${esc(x.a.title)} <span class="tag">${ws.length} 词</span><span style="color:var(--dim);font-size:.75rem;font-weight:400">${meta}</span></div>
+    <div class="wl">${ws.map(k=>rowHtml(k)).join('')}</div>`}).join('');
+  if(dayFilter==='loose'||loose.length&&(dayFilter===null))
+    html+=`<div class="dayh">其他 <span class="tag">${loose.length} 词</span></div><div class="wl">${loose.map(k=>rowHtml(k)).join('')}</div>`;
+  document.getElementById('history').innerHTML=html||'<div class="empty">还没有生词。去阅读页点词加入。</div>';
   // 补翻译
   Object.keys(marks).forEach(k=>{if(!getTrans()[k])translate(k).then(()=>renderQuiet())})}
+function rowHtml(k){
+  const id='tr-'+k.replace(/[^a-z0-9]/gi,'_');
+  const e=marks[k]||{};
+  const dtag=e.day&&e.day!==todayStr()?`<span style="color:#bbb;font-size:.68rem">${e.day.slice(5)} </span>`:'';
+  return `<div class="wrow"><span class="w" onclick="speak('${esc(k).replace(/'/g,"\\'")}')">${esc(k)}</span>
+  <span class="tr" id="${id}">${getTrans()[k]?esc(getTrans()[k]):'<i style=color:#bbb>查译中…</i>'}</span>${dtag}
+  <button class="peek" data-peek="${esc(k)}" onclick="peek('${esc(k).replace(/'/g,"\\'")}')">盖住</button>
+  <span class="del" onclick="delWord('${esc(k).replace(/'/g,"\\'")}')" title="会了，删除">×</span></div>`}
 function setDay(d){dayFilter=d;render()}
 // ===== 语法点收藏区 =====
 function gramDB(){return store.get('grammar')}
