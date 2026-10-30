@@ -248,5 +248,73 @@ window.ARTICLES = [
       "force me to choose（逼我取舍）：force sb. to do；deserve to be written down（值得被写下）—— deserve + 被动",
       "keeps everything and therefore means nothing：对仗金句，什么都留=什么都不留 —— 议论文结尾直接可用"
     ]
+  },
+  /* ===== 预备稿（draft:true 隐藏；用户交当前批次后删 draft 即发，防止干等） ===== */
+  {
+    title: "The Pharmacy on Sunday (B1)",
+    date: "2026-11-03",
+    draft: true,
+    level: "B1 · 生活/看病",
+    sentences: [
+      "On Sunday morning I woke up with a sore throat and a slight fever, and every pharmacy in my neighborhood was closed except one.",
+      "The pharmacist asked me a series of questions I hadn't prepared for: how long I had felt like this, whether I was allergic to anything, and if I was taking other medicine.",
+      "I managed to answer most of them, but when she asked whether the pain was worse when I swallowed, I realized I didn't know the word for 'swallow'.",
+      "I pointed at my throat and made a swallowing motion, and she laughed and handed me a lozenge to try.",
+      "In the end she recommended something gentle, explained how many times a day I should take it, and reminded me to drink plenty of water.",
+      "What stayed with me wasn't the medicine but how much vocabulary a simple visit requires — and how far pointing, guessing, and a smile can actually get you.",
+      "Since then, I have kept a small list of body-related words on my phone, because the next pharmacy might be in another country."
+    ],
+    notes: [
+      "sore throat（嗓子疼）/ slight fever（低烧）—— 看病开场两件套",
+      "a series of questions I hadn't prepared for：定语从句修饰 questions，介词 for 挂句尾（正式写作别这样拆）",
+      "whether I was allergic to anything（是否过敏）—— be allergic to + 名词",
+      "how many times a day I should take it：间接问句语序（不是 how many times a day should I take it）",
+      "plenty of water（大量的水）—— 不可数用 plenty of/much，可数用 plenty of/many"
+    ]
+  },
+  {
+    title: "The Interview Question I Got Wrong (B1)",
+    date: "2026-11-03",
+    draft: true,
+    level: "B1 · 工作/面试",
+    sentences: [
+      "Every interview has one question you know is coming, and for me it was always 'What is your greatest weakness?'",
+      "I used to answer with the classic trick: 'I'm a perfectionist, so I work too hard.'",
+      "Last month an interviewer stopped me halfway and said, politely, that she had heard that sentence eleven times that week.",
+      "I was so embarrassed that I told her the truth: I avoid asking for help, because I grew up thinking that needing help meant being weak.",
+      "She nodded and said that half of engineering is knowing when to ask, and she shared how her own team handles it.",
+      "I didn't get that job, but I got something more useful — an answer I no longer have to fake.",
+      "Now when the question comes, I say: 'I used to avoid asking for help; I've been practicing it deliberately, and it's already made my work faster.'",
+      "The strange thing is that this honest answer has worked better than the clever one ever did."
+    ],
+    notes: [
+      "I used to answer（我过去总这么答）—— used to 复习（A Week Without My Phone 学过）",
+      "so...that...（如此...以至于）：I was so embarrassed that I told her the truth",
+      "knowing when to ask：疑问词 + to do（宾语从句的紧缩形式）—— 口语高频",
+      "an answer I no longer have to fake（不用再假装的答案）—— have to 变否定 = 不必",
+      "结尾对仗：has worked better than the clever one ever did —— 比较级 + ever did，写作收尾可用"
+    ]
+  },
+  {
+    title: "Two Hours in a Foreign Supermarket (B1)",
+    date: "2026-11-03",
+    draft: true,
+    level: "B1 · 购物/生活",
+    sentences: [
+      "My first supermarket trip abroad was supposed to take twenty minutes; it took me two hours.",
+      "The problem wasn't the language on the packages — it was that everything I knew about sizes, brands, and prices had quietly stopped applying.",
+      "I stood in front of the milk shelf for ten minutes, comparing labels, before I realized that 'low-fat' in that country meant something completely different.",
+      "At the checkout, the cashier asked me something I couldn't catch, and I panicked and just said 'Yes' — which turned out to mean I had agreed to donate one euro to charity.",
+      "It was only one euro, but I thought about that 'Yes' for the rest of the day.",
+      "Now, before I travel, I learn five small sentences: 'What is this?', 'How much is it?', 'Do I need a bag?', 'No, thank you', and 'Could you say that again, slowly?'",
+      "That last one is the most important, because 'Yes' to an unclear question is the most expensive word in a foreign country."
+    ],
+    notes: [
+      "be supposed to（本应该）—— Was supposed to take twenty minutes（预期二十分钟）",
+      "stop applying（不再适用）—— apply 此处=适用，不是申请",
+      "turn out to mean（结果发现是）—— turned out 第三次出现，已眼熟了吧",
+      "the most expensive word（最贵的词）—— 讽刺修辞，口语讲故事的 punchline",
+      "Could you say that again, slowly?（能再说一遍吗，慢点）—— 听不懂时的救命句，背下来"
+    ]
   }
 ];

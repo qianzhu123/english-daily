@@ -97,6 +97,7 @@ function render(){
   const app=document.getElementById('app');
   app.innerHTML='';sentEls=[];sentTexts=[]; // 幂等：重渲染前清空，杜绝文章叠加
   const list=A.map((a,i)=>({a,i})).filter(x=>!x.a.draft&&(showOld||!x.a.archived&&!isDone(x.a.title)));
+  renderTask(list); // 任务卡：常驻顶部，会话断了也能看到当前任务（用户 10-31 需求）
   if(!list.length)app.innerHTML='<div style="color:var(--dim);padding:40px 0;text-align:center">当前批次已读完 ✓ 点「看往期」回看，或等新文章发布。</div>';
   list.forEach(({a,i},n)=>{ // i=A 原索引（data-a/面板 id 用它——稳定不随批次漂移）；n+1 仅作显示编号
     const d=document.createElement('div');
@@ -312,6 +313,22 @@ function addWord(k,ctx,artIdx){if(!k)return;
     e.seq=(Number(store.get('seq'))||0)+1;store.set('seq',e.seq); // 显式序号：生词本顺序的唯一定据，合并/刷新都不乱
     marks[k]=e;translate(k,ctx)}
   speak(k,0.9)}
+// ===== 任务卡：当前批次+当日任务，常驻页顶（防会话过多找不到任务） =====
+const TASKS={
+  '2026-10-28':'回考：could / won\'t + 原形 ✅ 已过；冠词 an+元音 继续盯',
+  '2026-10-30':'作业：①an/a 按读音判断 ✅ ②例句 I eat an apple... ✅（iPhone 大写）③场景：酒店投诉（打给经理，用投诉三句式）——尚未开练',
+  '2026-10-31':'阅读本批 3 篇（Lost at the Airport / The Late Bus / Paper Notebook），标生词；场景作业：酒店投诉（还没交）'
+};
+function renderTask(list){
+  let el=document.getElementById('taskcard');
+  if(!el){el=document.createElement('div');el.id='taskcard';app.parentNode.insertBefore(el,app)}
+  if(showOld||!list.length){el.innerHTML='';return} // 往期视图不占地方
+  const today=todayStr();
+  const task=TASKS[today]||TASKS['2026-10-31']; // 凌晨/跨天沿用最近任务
+  const remain=list.length;
+  el.innerHTML=`<div style="background:#eef6f0;border-left:4px solid var(--accent);border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:.9rem;line-height:1.7">
+  <b style="color:var(--accent)">📋 今日任务</b>（${today} · 还剩 ${remain} 篇未读）<br>${esc(task)}
+  <div style="color:var(--dim);font-size:.78rem;margin-top:4px">读完全部并交生词后说「更新」，我发下一批（预备稿已备好，随时可发）</div></div>`}
 function renderVocab(){
   const ks=Object.keys(marks);
   const tc=getTrans();
