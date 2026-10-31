@@ -101,14 +101,15 @@ function render(){
   if(!list.length)app.innerHTML='<div style="color:var(--dim);padding:40px 0;text-align:center">当前批次已读完 ✓ 点「看往期」回看，或等新文章发布。</div>';
   list.forEach(({a,i},n)=>{ // i=A 原索引（data-a/面板 id 用它——稳定不随批次漂移）；n+1 仅作显示编号
     const d=document.createElement('div');
-    d.className='art-wrap';d.style.position='relative';
+    d.className='art-wrap';d.style.position='relative';d.dataset.ai=i; // data-ai=原索引：positionPanels 按 DOM 位置配对用（原索引≠DOM 序，旧版卡死根因）
     d.innerHTML=`<h2>${n+1}. ${esc(a.title)}</h2><div class="meta">${esc(a.date)} · 第 ${readCount(a.title)} 遍 · ${esc(a.level)} <button onclick="markDone('${esc(a.title).replace(/'/g,"\\'")}',this)" style="padding:1px 8px;font-size:.72rem;margin-left:6px">✓ 读完了</button><button onclick="playArticle(${i},this)" style="padding:1px 8px;font-size:.72rem">▶ 整篇朗读</button><button onclick="toggleArticleTr(${i},this)" style="padding:1px 8px;font-size:.72rem">整篇翻译</button></div>`;    const box=document.createElement('div');box.className='article';
     const p=document.createElement('p');
     a.sentences.forEach((s,j)=>{const sp=document.createElement('span');sp.className='sent';sp.dataset.i=i+'-'+j;
       // 标点放 <w> 外：点击高亮只盖住词本身，不带标点（À-ɏ=带变音符字母，résumé 可点）
+      let wi=0; // 句内词序：data-i=定位词的精确位置（同词多处只亮点过的那个）
       const tokHtml=t=>{const m=t.match(/^([^A-Za-z0-9À-ɏ]*)([A-Za-z0-9À-ɏ'’-]+)([\s\S]*)$/);
         if(!m)return esc(t);
-        return esc(m[1])+`<w data-w="${esc(m[2].toLowerCase())}" data-a="${i}">${esc(m[2])}</w>`+esc(m[3])};
+        return esc(m[1])+`<w data-w="${esc(m[2].toLowerCase())}" data-a="${i}" data-i="${j}-${wi++}">${esc(m[2])}</w>`+esc(m[3])};
       sp.innerHTML=s.split(/\s+/).map(tokHtml).join(' ');
       p.appendChild(sp);p.appendChild(document.createTextNode(' '));sentEls.push(sp);sentTexts.push(s)});
     box.appendChild(p);
@@ -138,10 +139,10 @@ function positionPanels(){ // 面板驻右空白垂直居中；活动区间锁�
   const contentRight=wrapEl?wrapEl.getBoundingClientRect().right:0;
   const gutter=window.innerWidth-contentRight;
   const hasGutter=gutter>320; // 右侧空白够宽才外挂，否则贴回文章内（窄屏回退）
-  const visIdx=[]; // 先收集本屏可见的文章（artWrapEl[i]=A 原索引 i 对应的 DOM 节点，显示序≠原索引）
+  const visIdx=[]; // 先收集本屏可见的文章：按 data-ai 配对（DOM 里只有可见文章，节点序≠A 原索引——旧版按序取节点导致面板全错位/卡死）
   const artWrapEl=document.querySelectorAll('.art-wrap');
   A.forEach((a,i)=>{
-    const wrap=artWrapEl[i];const vp=document.getElementById('vpanel-'+i);
+    const wrap=[...artWrapEl].find(el=>Number(el.dataset.ai)===i);const vp=document.getElementById('vpanel-'+i);
     if(!wrap||!vp)return;
     const wr=wrap.getBoundingClientRect();
     const panelH=vp.offsetHeight||160;
@@ -191,14 +192,20 @@ document.addEventListener('click',e=>{
       if(k===prev){selState=null;return}
       selState={key:k,words:[k],wEl:w};w.classList.add('sel');speak(k,0.9);return}
     if(marks[k]){delete marks[k];w.classList.remove('on')}
-    else{addWord(k,w.closest('.sent')?w.closest('.sent').textContent:null,Number(w.dataset.a));w.classList.add('on')}
+    else{const loc=w.dataset.i; // 词的精确位置（句号-句内词序）：只亮你点的那一个，不全文连亮
+      addWord(k,w.closest('.sent')?w.closest('.sent').textContent:null,Number(w.dataset.a),loc);w.classList.add('on')}
     store.set('vocab',marks);renderVocab();
   });
 function cleanWord(s){return s.replace(/[.,!?;:"'()“”’]/g,'').toLowerCase().trim()}
 function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-function addWord(k,ctx){if(!k)return;
-  if(marks[k]){const e=normEntry(marks[k]);e.n=(e.n||1)+1;if(!e.day)e.day=todayStr();marks[k]=e}
-  else{const e=normEntry(1);e.day=todayStr();marks[k]=e;translate(k,ctx)}
+function addWord(k,ctx,artIdx,loc){if(!k)return;
+  if(marks[k]){const e=normEntry(marks[k]);e.n=(e.n||1)+1;if(!e.day)e.day=todayStr();if(typeof artIdx==='number')e.art=artIdx;
+    if(loc){e.locs=e.locs||[];if(!e.locs.includes(loc))e.locs.push(loc)} // 多处出现：记录每次点的位置
+    marks[k]=e}
+  else{const e=normEntry(1);e.day=todayStr();if(typeof artIdx==='number')e.art=artIdx;
+    if(loc)e.locs=[loc];
+    e.seq=(Number(store.get('seq'))||0)+1;store.set('seq',e.seq); // 显式序号：生词本顺序的唯一定据，合并/刷新都不乱
+    marks[k]=e;translate(k,ctx)}
   speak(k,0.9)}
 function confirmPhrase(){
   const phrase=selState?selState.words.join(' '):'';
@@ -230,13 +237,16 @@ function toggleFold(i){ // 手机端折叠：默认收起（只露标题条）�
   const f=vp.querySelector('.fold');if(f)f.textContent=folded?'▸':'▾';
   store.set('vfold',folded?'1':'0');
   positionPanels()}
-function restoreMarks(){ // 已标词高亮：只亮词所属文章（data-a=art）里的出现处——幻影标记根因：旧版全文章亮
-  const home={}; // 词 → 所属文章（wordHomeIdx 结果缓存）
+function restoreMarks(){ // 已标词高亮：只亮你点过的位置（e.locs 精确到句-词序）；旧数据无 locs 时按所属文章亮该篇全部出现处
+  const home={}; // 词 → 所属文章
   Object.keys(marks).forEach(k=>{home[k]=wordHomeIdx(k)});
   document.querySelectorAll('w').forEach(w=>{
     const cw=cleanWord(w.dataset.w);
     const wArt=Number(w.dataset.a);
-    if(marks[cw]){if(home[cw]===wArt)w.classList.add('on');return}
+    const e=marks[cw];
+    if(e){
+      if(Array.isArray(e.locs)&&e.locs.length){if(e.locs.includes(w.dataset.i))w.classList.add('on');return} // 精确位置命中才亮
+      if(home[cw]===wArt)w.classList.add('on');return} // 旧词条：所属文章内的出现处都亮
     // 词组成员下划线：词组归属文章里的出现处才标
     const phrase=Object.keys(marks).find(k=>k.includes(' ')&&k.split(' ').includes(cw));
     if(phrase&&home[phrase]===wArt)w.classList.add('inphrase')});}
@@ -307,17 +317,11 @@ function wordHomeIdx(k){ // 词/词组 → 文章索引（A 原索引，稳定�
     const dated=cands.map(i=>({i,date:A[i].date})).filter(x=>x.date<=day).sort((x,y)=>y.date.localeCompare(x.date));
     if(dated.length)return dated[0].i}
   return cands[0]}
-function addWord(k,ctx,artIdx){if(!k)return;
-  if(marks[k]){const e=normEntry(marks[k]);e.n=(e.n||1)+1;if(!e.day)e.day=todayStr();if(typeof artIdx==='number')e.art=artIdx;marks[k]=e}
-  else{const e=normEntry(1);e.day=todayStr();if(typeof artIdx==='number')e.art=artIdx;
-    e.seq=(Number(store.get('seq'))||0)+1;store.set('seq',e.seq); // 显式序号：生词本顺序的唯一定据，合并/刷新都不乱
-    marks[k]=e;translate(k,ctx)}
-  speak(k,0.9)}
 // ===== 任务卡：当前批次+当日任务，常驻页顶（防会话过多找不到任务） =====
 const TASKS={
   '2026-10-28':'回考：could / won\'t + 原形 ✅ 已过；冠词 an+元音 继续盯',
   '2026-10-30':'作业：①an/a 按读音判断 ✅ ②例句 I eat an apple... ✅（iPhone 大写）③场景：酒店投诉（打给经理，用投诉三句式）——尚未开练',
-  '2026-10-31':'阅读本批 3 篇（Lost at the Airport / The Late Bus / Paper Notebook），标生词；场景作业：酒店投诉（还没交）'
+  '2026-10-31':'①读本批 3 篇并标生词（单词只是弹药）②【主任务·对话】酒店投诉：你半夜打电话给前台→要求换房→见经理，目标把三句式用出来：The air conditioner is broken. / This is not as described. / I\'d like to speak to the manager. 回来在对话里打第一句就算开练'
 };
 function renderTask(list){
   let el=document.getElementById('taskcard');
@@ -328,7 +332,7 @@ function renderTask(list){
   const remain=list.length;
   el.innerHTML=`<div style="background:#eef6f0;border-left:4px solid var(--accent);border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:.9rem;line-height:1.7">
   <b style="color:var(--accent)">📋 今日任务</b>（${today} · 还剩 ${remain} 篇未读）<br>${esc(task)}
-  <div style="color:var(--dim);font-size:.78rem;margin-top:4px">读完全部并交生词后说「更新」，我发下一批（预备稿已备好，随时可发）</div></div>`}
+  <div style="color:var(--dim);font-size:.78rem;margin-top:4px">阅读是为对话攒弹药——真正的目标永远是下面的场景对话，读完全部并交生词后说「更新」发下一批</div></div>`}
 function renderVocab(){
   const ks=Object.keys(marks);
   const tc=getTrans();
@@ -349,7 +353,9 @@ function renderVocab(){
       if(!getTrans()[k])translate(k).then(t=>{const sp=li.querySelector('.tr');if(sp&&li.dataset.k===k){sp.textContent=t;sp.classList.remove('dim')}});
       li.onclick=e=>{ // 点词条=朗读；删除只走 × 按钮
         if(e.target.classList.contains('del')){delete marks[k];store.set('vocab',marks);
-          document.querySelectorAll('w').forEach(w=>{if(cleanWord(w.dataset.w)===k)w.classList.remove('on')});renderVocab();return}
+          document.querySelectorAll('w').forEach(w=>{if(cleanWord(w.dataset.w)===k)w.classList.remove('on');
+            const ph=Object.keys(marks).find(pk=>pk.includes(' ')&&pk.split(' ').includes(cleanWord(w.dataset.w)));
+            if(!ph)w.classList.remove('inphrase')});renderVocab();return}
         speak(k,0.9)}})});
   positionPanels()}
 function exportVocab(){const t=Object.keys(marks).join(', ');navigator.clipboard&&navigator.clipboard.writeText(t);toastMsg('已复制生词：\n'+t)}
