@@ -58,7 +58,7 @@ w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /
 <body>
 <div class="wrap">
 <h1>Daily English</h1>
-<div class="meta">点词标记 → 收进该文章的生词本（右侧跟随浮动）· 单击即入本 · 点词条朗读 · × 删除 · <button onclick="location.href='review.html'" id="reviewBtn" style="padding:2px 8px;font-size:.78rem">复习</button> <button onclick="togglePhraseMode()" id="phraseBtn" style="padding:2px 8px;font-size:.78rem">+ 词组</button> <button onclick="syncNow()" id="syncBtn" style="padding:2px 8px;font-size:.78rem">同步</button> <button onclick="exportVocab()" style="padding:2px 8px;font-size:.78rem">导出</button> <button onclick="drawScene()" id="sceneBtn" style="padding:2px 8px;font-size:.78rem">🎲 场景</button> <button onclick="toggleOld()" id="oldBtn" style="padding:2px 8px;font-size:.78rem">看往期</button> <button onclick="showToken()" style="padding:2px 8px;font-size:.78rem">🔑</button></div><div id="app"></div>
+<div class="meta">点词标记 → 收进该文章的生词本（右侧跟随浮动）· 单击即入本 · 点词条朗读 · × 删除 · <button onclick="location.href='review.html'" id="reviewBtn" style="padding:2px 8px;font-size:.78rem">复习</button> <button onclick="togglePhraseMode()" id="phraseBtn" style="padding:2px 8px;font-size:.78rem">+ 词组</button> <button onclick="syncNow()" id="syncBtn" style="padding:2px 8px;font-size:.78rem">同步</button> <button onclick="exportVocab()" style="padding:2px 8px;font-size:.78rem">导出</button> <button onclick="drawScene()" id="sceneBtn" style="padding:2px 8px;font-size:.78rem">🎲 场景</button> <button onclick="publishNext()" id="pubBtn" style="padding:2px 8px;font-size:.78rem">🔄 更新下一批</button> <button onclick="location.href='training.html'" style="padding:2px 8px;font-size:.78rem">🎯 训练</button> <button onclick="toggleOld()" id="oldBtn" style="padding:2px 8px;font-size:.78rem">看往期</button> <button onclick="showToken()" style="padding:2px 8px;font-size:.78rem">🔑</button></div><div id="app"></div>
 </div>
 <div id="tokbox" class="hidden" style="position:fixed;left:50%;transform:translateX(-50%);bottom:70px;background:var(--card);border-radius:10px;box-shadow:0 2px 14px rgba(0,0,0,.2);padding:14px 16px;max-width:340px;width:90%;font-size:.85rem;z-index:9">
 <b>GitHub 同步设置</b>（fine-grained token，仅授权 english-daily 仓库 Contents 读写）
@@ -321,18 +321,20 @@ function wordHomeIdx(k){ // 词/词组 → 文章索引（A 原索引，稳定�
 const TASKS={
   '2026-10-28':'回考：could / won\'t + 原形 ✅ 已过；冠词 an+元音 继续盯',
   '2026-10-30':'作业：①an/a 按读音判断 ✅ ②例句 I eat an apple... ✅（iPhone 大写）③场景：酒店投诉（打给经理，用投诉三句式）——尚未开练',
-  '2026-10-31':'①读本批 3 篇并标生词（单词只是弹药）②【主任务·对话】酒店投诉：你半夜打电话给前台→要求换房→见经理，目标把三句式用出来：The air conditioner is broken. / This is not as described. / I\'d like to speak to the manager. 回来在对话里打第一句就算开练'
+  '2026-10-31':'①读本批 3 篇并标生词（单词只是弹药）②【主任务·对话】酒店投诉：你半夜打电话给前台→要求换房→见经理，目标把三句式用出来：The air conditioner is broken. / This is not as described. / I\'d like to speak to the manager. 回来在对话里打第一句就算开练',
+  '2026-11-02':'①读本批 2 篇（从今天起新节奏：每天 2 篇，读完+对话完成才发下一批；页顶「🔄 更新下一批」可自助发布）②【主任务·对话】酒店投诉续集：前台说客满没房→你争取明天换房或部分退款→前台甩出免费早餐打发→你拒绝并坚持。全部题目在「🎯 训练」页（顶部导航），答案折叠，先写再对'
 };
 function renderTask(list){
   let el=document.getElementById('taskcard');
   if(!el){el=document.createElement('div');el.id='taskcard';app.parentNode.insertBefore(el,app)}
   if(showOld||!list.length){el.innerHTML='';return} // 往期视图不占地方
   const today=todayStr();
-  const task=TASKS[today]||TASKS['2026-10-31']; // 凌晨/跨天沿用最近任务
+  const keys=Object.keys(TASKS).sort();
+  const task=TASKS[today]||TASKS[keys[keys.length-1]]; // 凌晨/跨天沿用最近任务
   const remain=list.length;
   el.innerHTML=`<div style="background:#eef6f0;border-left:4px solid var(--accent);border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:.9rem;line-height:1.7">
   <b style="color:var(--accent)">📋 今日任务</b>（${today} · 还剩 ${remain} 篇未读）<br>${esc(task)}
-  <div style="color:var(--dim);font-size:.78rem;margin-top:4px">阅读是为对话攒弹药——真正的目标永远是下面的场景对话，读完全部并交生词后说「更新」发下一批</div></div>`}
+  <div style="color:var(--dim);font-size:.78rem;margin-top:4px">阅读是为对话攒弹药——训练题目在「🎯 训练」页；读完+对话完成后点「🔄 更新下一批」自助发下一批</div></div>`}
 function renderVocab(){
   const ks=Object.keys(marks);
   const tc=getTrans();
@@ -487,6 +489,35 @@ async function syncNow(){
   }catch(e){document.getElementById('tokstat').textContent='✗ '+e.message}
   syncing=false;if(btn)btn.textContent='同步'}
 render();
+// ===== 自助更新：一键发布下一批（草稿 draft:true → 正式 + 旧批次归档），经 GitHub API 写 articles.js =====
+// 纯前端无法改文件 → 用 token 直接 PUT articles.js（与生词同步同一 token 权限）。无 token 或无草稿时给出页面内提示。
+async function publishNext(){
+  const drafts=A.filter(x=>x.draft);
+  if(!drafts.length){toastMsg('预备稿是空的，还没有下一批可发——我会在会话里补稿');return}
+  const firstDraft=drafts[0].date||'下一批';
+  if(!getToken()){toastMsg('需要🔑 token 才能自助发布（或直接在会话里说「更新」）');showToken();return}
+  const btn=document.getElementById('pubBtn');if(btn)btn.textContent='发布中…';
+  try{
+    // 1. 拉远端最新 articles.js（防覆盖）
+    const r=await fetch('https://api.github.com/repos/'+REPO_OWNER+'/'+REPO_NAME+'/contents/articles.js',{cache:'no-store'});
+    if(!r.ok)throw new Error('读取 articles.js 失败 '+r.status);
+    const j=await r.json();
+    const src=decodeURIComponent(escape(atob(j.content.replace(/\s/g,''))));
+    // 2. 改写：删掉全部 draft:true 标记（预备稿整批发布）；本地旧 active 批次补 archived:true
+    const targetDate=firstDraft;
+    let out=src.replace(/^[ \t]*draft:\s*true,\s*\n/gm,'');
+    A.filter(x=>!x.draft&&!x.archived).forEach(x=>{
+      const t=x.title.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      out=out.replace(new RegExp('(title:\\s*"'+t+'",\\s*\\n\\s*date:\\s*"[^"]*",\\s*\\n)(?![ \\t]*archived)([ \\t]*)(level:)'),'$1$2archived: true,\n$2$3')});
+    // 3. PUT 回去
+    const content=btoa(unescape(encodeURIComponent(out)));
+    const pr=await fetch('https://api.github.com/repos/'+REPO_OWNER+'/'+REPO_NAME+'/contents/articles.js',{method:'PUT',
+      headers:{Authorization:'Bearer '+getToken(),'Content-Type':'application/json'},
+      body:JSON.stringify({message:'publish batch '+targetDate+' (self-serve button)',content,sha:j.sha})});
+    if(!pr.ok)throw new Error('写入失败 '+pr.status+' '+(await pr.text()).slice(0,100));
+    toastMsg('✓ 已发布 '+targetDate+' 批次（'+drafts.length+' 篇）。GitHub Pages 约 1 分钟生效，届时 Ctrl+F5 强刷即可');
+    if(btn)btn.textContent='✓ 已发布';
+  }catch(e){toastMsg('✗ '+e.message);if(btn)btn.textContent='🔄 更新下一批'}}
 function speak(text,rate){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||parseFloat(document.getElementById('rate').value);u.voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u)}
 function playAll(){speechSynthesis.cancel();let i=0;
   const next=()=>{if(i>=sentTexts.length)return;sentEls.forEach(e=>e.classList.remove('active'));

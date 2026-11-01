@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Training · Daily English</title>
+<style>
+:root{--bg:#fafaf7;--card:#fff;--ink:#1a1a1a;--dim:#6b6b6b;--accent:#2d6a4f;--bad:#e63946;--mark:#ffe08a}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);line-height:1.75}
+.wrap{max-width:720px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:1.4rem;margin:0 0 2px}
+.meta{color:var(--dim);font-size:.85rem;margin-bottom:16px}
+a.back{color:var(--accent);text-decoration:none;font-size:.9rem}
+.card{background:var(--card);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:16px 20px;margin-bottom:14px}
+.card h2{font-size:1.02rem;margin:0 0 8px;color:var(--accent)}
+.card .tag{font-size:.7rem;background:#eef6f0;color:var(--accent);padding:2px 8px;border-radius:10px;margin-left:6px;vertical-align:middle}
+.card p{margin:6px 0;font-size:.95rem}
+.answer{background:#f4f0e4;border-left:3px solid #c9a227;border-radius:6px;padding:10px 14px;margin-top:10px;font-size:.92rem;display:none;white-space:pre-line}
+.answer b{color:#8a6d00}
+.reveal{margin-top:10px;padding:4px 12px;font-size:.8rem}
+.speak{border:none;background:none;cursor:pointer;font-size:1rem;padding:0 4px}
+.try{width:100%;border:1px solid #ddd;border-radius:8px;padding:8px 10px;font-size:.92rem;font-family:inherit;margin-top:8px;resize:vertical;min-height:56px}
+.fb{font-size:.85rem;margin-top:6px}
+.fb.ok{color:var(--accent)}.fb.no{color:var(--bad)}
+/* 顶部导航 */
+.nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.nav button{border:1px solid #ccc;background:var(--card);color:var(--ink);padding:4px 12px;border-radius:16px;font-size:.82rem;cursor:pointer}
+.nav button.act{background:var(--accent);color:#fff;border-color:var(--accent)}
+#toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99;max-width:80vw}
+#toast.show{opacity:.95}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>训练 <a class="back" href="index.html">← 返回阅读</a></h1>
+<div class="meta">每日训练放这里：场景对话、句式练习、回考……答案折叠，先自己写再对答案（写在这里 = 完成打卡，我下次会话看得到）</div>
+<div class="nav" id="nav"></div>
+<div id="content"></div>
+</div>
+<div id="toast"></div>
+<script>
+const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+// ===== 每日训练内容（由 Claude 更新；key=日期，新的在上） =====
+const TRAIN=[
+{
+  day:'2026-11-02',
+  title:'续集：酒店投诉 · 谈判回合',
+  brief:'上次你三句式全对开了场（The air conditioner is broken / This is not as described / I\'d like to speak to the manager ✅），前台回你：酒店客满、今晚没房。现在轮到你反击——目标：明天换房，或今晚部分退款。',
+  items:[
+    {kind:'对话',
+     q:'你现在的台词（前台刚说完 "I\'m afraid the hotel is fully booked tonight — there are no other rooms available."）。用英文回应，至少达成一个诉求：① 明天换房 ② 今晚部分退款。提示句式：is there any chance of... / Could you at least... / I\'d like to...',
+     ref:'I understand, but this is not what I booked. Is there any chance of moving me to another room tomorrow? And could you at least offer a partial refund for tonight?\n（另一个可用的路子：Then I\'d like to speak to the manager first thing in the morning. Please note down my room number and the time of this call.）'},
+    {kind:'对话',
+     q:'前台说：\"I can offer you a free breakfast tomorrow.\"（复制上一篇文章的剧情：早餐换不了睡眠）。用英文拒绝这个补偿并坚持你的诉求。',
+     ref:'Thank you, but breakfast doesn\'t solve the problem — I need sleep, not food. What I\'d like is a room change tomorrow, or a partial refund for tonight.'},
+    {kind:'句式',
+     q:'翻译成英文（谈判三连）：① 这比我预想的贵一点——有没有可能打个折？② 那免费早餐或延迟退房呢？③ 好吧，谢谢，我考虑一下。（第三句=礼貌施压，谈判最硬的牌）',
+     ref:'① This is a bit more than I expected — is there any chance of a discount?\n② What about a free breakfast, or a late checkout?\n③ Thank you anyway, I\'ll think about it.'},
+    {kind:'回考',
+     q:'旧错误抽查：把下面说成英文（都是你踩过的坑）——① 我订了牛排，但你给我端来三文鱼（两句：投诉+要求换对）② 请问能买单吗？',
+     ref:'① I ordered the steak, but you brought me the salmon. Could you bring me the right one?\n（注意 could you 后接原形 bring，不是 brought）\n② Can I have the check, please?'}
+  ]
+},
+{
+  day:'2026-11-01',
+  title:'酒店投诉 · 开场（已完成 ✅）',
+  brief:'你已用三句式开场全对，谈判回合进行中——见 11-02 的续集。',
+  items:[
+    {kind:'已完成',q:'The air conditioner is broken. / This is not as described. / I\'d like to speak to the manager.',ref:'三句全对 ✅（2026-11-01 凌晨交）'}
+  ]
+}];
+function esc(s){return String(s).replace(/&/g,'&').replace(/</g,'<')}
+let toastTimer=null;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200)}
+function speak(text,rate){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||0.9;u.voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u)}
+let curDay=null;
+function render(){
+  document.getElementById('nav').innerHTML=TRAIN.map((d,i)=>`<button class="${curDay===d.day?'act':(i===0&&curDay===null?'act':'')}" onclick="pick('${d.day}')">${d.day.slice(5)} ${d.title.slice(0,10)}</button>`).join('');
+  const d=TRAIN.find(x=>x.day===(curDay||TRAIN[0].day))||TRAIN[0];
+  const saved=store.get('traintry');
+  document.getElementById('content').innerHTML=`
+  <div class="card"><h2>${esc(d.title)}<span class="tag">${d.day}</span></h2><p style="color:var(--dim)">${esc(d.brief)}</p></div>`+
+  d.items.map((it,n)=>{
+    const key=d.day+'#'+n;const mine=saved[key]||'';
+    return `<div class="card"><h2>${esc(it.kind)}<span class="tag">#${n+1}</span> <button class="speak" onclick="speak(${JSON.stringify(it.q.replace(/\n/g,' ')).replace(/"/g,'"')})" title="朗读">🔊</button></h2>
+    <p>${esc(it.q).replace(/\n/g,'<br>')}</p>
+    <textarea class="try" id="try-${n}" placeholder="先自己写英文，再点「对答案」……">${esc(mine)}</textarea>
+    <div class="fb" id="fb-${n}"></div>
+    <button class="reveal" onclick="reveal('${d.day}',${n})">对答案</button>
+    <div class="answer" id="ans-${n}"><b>参考（不是唯一答案，意思和句式对就算过）</b>
+${esc(it.ref)}</div></div>`}).join('');
+}
+function pick(day){curDay=day;render()}
+function reveal(day,n){
+  const d=TRAIN.find(x=>x.day===day);const it=d.items[n];
+  const ans=document.getElementById('ans-'+n);const ta=document.getElementById('try-'+n);const fb=document.getElementById('fb-'+n);
+  const shown=ans.style.display==='block';
+  if(shown){ans.style.display='none';return}
+  ans.style.display='block';
+  // 打卡：把作答存 localStorage，Claude 下次会话能读到（traintry）
+  const saved=store.get('traintry');saved[day+'#'+n]=ta.value.trim();store.set('traintry',saved);
+  if(ta.value.trim()){fb.className='fb ok';fb.textContent='✓ 已记录你的作答（'+ta.value.trim().split(/\s+/).length+' 词）——Claude 下次会话批改'}
+  else{fb.className='fb no';fb.textContent='下次先写一句再对答案，输出才有提取压力'}
+  speak(it.ref.replace(/①|②|③/g,''),0.9);
+}
+render();
+</script>
+</body>
+</html>

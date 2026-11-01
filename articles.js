@@ -256,6 +256,7 @@ window.ARTICLES = [
   {
     title: "The Pharmacy on Sunday (B1)",
     date: "2026-11-01",
+    archived: true,
     level: "B1 · 生活/看病",
     sentences: [
       "On Sunday morning I woke up with a sore throat and a slight fever, and every pharmacy in my neighborhood was closed except one.",
@@ -277,6 +278,7 @@ window.ARTICLES = [
   {
     title: "The Interview Question I Got Wrong (B1)",
     date: "2026-11-01",
+    archived: true,
     level: "B1 · 工作/面试",
     sentences: [
       "Every interview has one question you know is coming, and for me it was always 'What is your greatest weakness?'",
@@ -299,6 +301,7 @@ window.ARTICLES = [
   {
     title: "Two Hours in a Foreign Supermarket (B1)",
     date: "2026-11-01",
+    archived: true,
     level: "B1 · 购物/生活",
     sentences: [
       "My first supermarket trip abroad was supposed to take twenty minutes; it took me two hours.",
@@ -315,6 +318,100 @@ window.ARTICLES = [
       "turn out to mean（结果发现是）—— turned out 第三次出现，已眼熟了吧",
       "the most expensive word（最贵的词）—— 讽刺修辞，口语讲故事的 punchline",
       "Could you say that again, slowly?（能再说一遍吗，慢点）—— 听不懂时的救命句，背下来"
+    ]
+  },
+  /* ===== 11-02 批次（2 篇，新节奏第一天；主题为酒店投诉对话续集攒弹药） ===== */
+  {
+    title: "The Hotel That Was Fully Booked (B1)",
+    date: "2026-11-02",
+    level: "B1 · 旅行/酒店投诉",
+    sentences: [
+      "The air conditioner in my room had broken sometime after midnight, and by two in the morning the room felt like a greenhouse.",
+      "I called the front desk and explained the problem as calmly as I could, but the clerk told me the hotel was fully booked and there were no other rooms available.",
+      "'Fully booked' is a strange thing to hear at two in the morning from a hotel that, at check-in, had felt almost empty.",
+      "I didn't shout and I didn't threaten; I simply asked what the hotel was going to do about it, and I made sure my voice sounded like a question that expected an answer.",
+      "The clerk put me on hold for ten minutes — I later learned this is a standard tactic — and then offered me a free breakfast, as if breakfast could replace sleep.",
+      "I thanked him for the offer, wrote down his name and the exact time of my call, and said I would like to speak to the manager in the morning.",
+      "At nine o'clock the manager gave me a room on a higher floor, refunded one night, and apologized twice — because I had a record of everything, and because I had stayed polite.",
+      "The lesson I took away: you don't win complaints by being the loudest person at the desk; you win them by being the calmest one with the facts."
+    ],
+    notes: [
+      "had broken（坏在半夜之后某刻）—— 过去完成时复现：坏在「我发现热」之前",
+      "as calmly as I could（尽可能冷静地）—— as...as one can 结构，比 very calmly 高级",
+      "fully booked（客满）/ no rooms available（没有空房）—— 酒店投诉场景必备词，对话里马上要用",
+      "put me on hold（让我等着别挂）—— 电话场景高频；standard tactic（惯用手段）",
+      "refund one night（退一晚房费）—— refund 动词/名词同形；a partial refund 部分退款",
+      "take away（从...学到、带走）—— The lesson I took away = 我的收获；结尾金句：win by being the calmest one with the facts"
+    ]
+  },
+  {
+    title: "How to Ask for a Discount Without Losing Face (B1)",
+    date: "2026-11-02",
+    level: "B1 · 购物/谈判",
+    sentences: [
+      "In some countries, asking for a lower price feels normal; in others, it feels almost rude — but there is a polite middle ground that works almost everywhere.",
+      "The trick is to separate the person from the price: you are not attacking the seller, you are just exploring whether the number can move.",
+      "'This is a bit more than I expected — is there any chance of a discount?' is honest, soft, and hard to refuse.",
+      "If the answer is no, ask a smaller question: 'What about a free breakfast, or a late checkout?' — sellers find it easier to give something than to lower the number.",
+      "I once watched my father negotiate a hotel price for ten minutes, and he never once said the word 'cheap'; he kept saying 'fair'.",
+      "'I want us both to feel this is fair' is a magical sentence, because it turns an argument into a problem you are solving together.",
+      "Of course, the strongest card is still being ready to walk away — politely: 'Thank you anyway, I'll think about it.'",
+      "Sellers suddenly remember their discounts when the customer stands up, smiles, and doesn't need the thing too much."
+    ],
+    notes: [
+      "middle ground（中间地带/折中方案）—— 议论文高频词",
+      "separate A from B（把 A 和 B 分开）—— 此处指对事不对人",
+      "is there any chance of...（有没有可能...）—— 委婉请求句式，比 Can you 礼貌一档，马上要用",
+      "late checkout（延迟退房）—— 酒店谈判第二个可要的东西（第一个是折扣，第三个是免费早餐）",
+      "turn A into B（把 A 变成 B）—— turns an argument into a problem",
+      "walk away（转身就走）—— 谈判最硬的牌：I'll think about it（我考虑一下）= 礼貌的施压"
+    ]
+  },
+  /* ===== 预备稿（draft:true 隐藏；界面「🔄 更新下一批」按钮可自助发布） ===== */
+  {
+    title: "Changing the Booking (B1)",
+    date: "2026-11-03",
+    level: "B1 · 旅行/改签",
+    draft: true,
+    sentences: [
+      "Two days before my flight, my meeting moved, and I had to change my hotel booking from Tuesday to Thursday.",
+      "I expected this to be difficult — in my experience, 'change' is a word companies dislike — but the process took four minutes.",
+      "The agent on the phone asked for my confirmation number, put me on hold once, and came back with two options.",
+      "Option one: keep the same room type and pay the difference of eighteen euros; option two: take a smaller room and pay nothing extra.",
+      "I asked the question I had learned the hard way: 'Is there any chance of keeping the bigger room at the same price, since the change was not my fault?'",
+      "She paused, and then said something I did not expect: 'Actually, yes — the hotel has a policy for date changes, and you qualify.'",
+      "I am still not sure whether the policy existed or whether she simply created it, but I took the win politely and wrote down her name anyway.",
+      "Changing a booking used to scare me; now I know the script is always the same: confirmation number, what you want, one polite push, and a thank-you."
+    ],
+    notes: [
+      "had to change（不得不改）—— have to 过去式 = had to",
+      "pay the difference（补差价）—— 改签/换购高频",
+      "since the change was not my fault（因为改动不是我造成的）—— since 表原因，谈判里先免责再请求",
+      "you qualify（你符合条件）—— qualify for sth；对话里听到 qualify 就是有戏",
+      "take the win（见好就收）—— 口语表达；script（固定流程/话术）此处理解为『套路』"
+    ]
+  },
+  {
+    title: "The Broken Umbrella Day (B1)",
+    date: "2026-11-03",
+    level: "B1 · 生活/突发",
+    draft: true,
+    sentences: [
+      "It was the kind of rain that makes umbrellas decorative, and mine had already turned inside out twice by the time I reached the bus stop.",
+      "The bus was late — not delayed, late — and the display kept promising that it was two stops away, for twenty minutes.",
+      "A woman next to me sighed and said, 'They always do this when it rains,' and somehow that small sentence made me feel less alone.",
+      "When the bus finally arrived, it was so full that the doors opened, considered the crowd, and closed again.",
+      "The man behind me started complaining loudly about the city, the weather, and the government, in that order.",
+      "I did something unusual for me: I laughed, and he laughed too, and we stood there — two soaked strangers — sharing a moment of pure, useless anger.",
+      "The bus came eventually. The rain never really stopped. But I remember that bus stop more fondly than most sunny days.",
+      "Sometimes the thing you remember from a trip is not the museum you paid for but the broken umbrella you shared."
+    ],
+    notes: [
+      "turn inside out（翻面/被吹翻）—— 伞被吹翻的地道说法",
+      "kept promising（一直许诺）—— keep doing 复习（第三次出现）",
+      "so full that...（太挤以至于...）—— so...that 复现（Interview 篇刚学）",
+      "in that order（按这个顺序）—— 幽默列举收尾，口语加分",
+      "soaked（湿透的）—— 比 very wet 高级；more fondly than...（比...更温情地记得）"
     ]
   }
 ];
