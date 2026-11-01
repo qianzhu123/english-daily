@@ -277,7 +277,6 @@ window.ARTICLES = [
   {
     title: "The Interview Question I Got Wrong (B1)",
     date: "2026-11-01",
-    draft: true,
     level: "B1 · 工作/面试",
     sentences: [
       "Every interview has one question you know is coming, and for me it was always 'What is your greatest weakness?'",
@@ -300,7 +299,6 @@ window.ARTICLES = [
   {
     title: "Two Hours in a Foreign Supermarket (B1)",
     date: "2026-11-01",
-    draft: true,
     level: "B1 · 购物/生活",
     sentences: [
       "My first supermarket trip abroad was supposed to take twenty minutes; it took me two hours.",
