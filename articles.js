@@ -256,7 +256,6 @@ window.ARTICLES = [
   {
     title: "The Pharmacy on Sunday (B1)",
     date: "2026-11-01",
-    archived: true,
     level: "B1 · 生活/看病",
     sentences: [
       "On Sunday morning I woke up with a sore throat and a slight fever, and every pharmacy in my neighborhood was closed except one.",
