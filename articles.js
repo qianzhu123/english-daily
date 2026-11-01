@@ -186,6 +186,7 @@ window.ARTICLES = [
   {
     title: "Lost at the Airport (B1)",
     date: "2026-10-31",
+    archived: true,
     level: "B1 · 机场/求助",
     sentences: [
       "We landed at Charles de Gaulle at six in the evening, and I had exactly fifty minutes to catch my connecting flight to Rome.",
@@ -208,6 +209,7 @@ window.ARTICLES = [
   {
     title: "The Late Bus and the Kind Stranger (B1)",
     date: "2026-10-31",
+    archived: true,
     level: "B1 · 出行/求助",
     sentences: [
       "The last bus to my neighborhood leaves at 23:10, and that night I arrived at the stop at 23:09 with a broken umbrella and no plan B.",
@@ -230,6 +232,7 @@ window.ARTICLES = [
   {
     title: "Why I Keep a Paper Notebook (B1)",
     date: "2026-10-31",
+    archived: true,
     level: "B1 · 生活/观点",
     sentences: [
       "Every January, I buy one paper notebook, and every December it is full — of meeting notes, half-finished ideas, and shopping lists I no longer need.",
