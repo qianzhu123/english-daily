@@ -255,7 +255,7 @@ window.ARTICLES = [
   /* ===== 预备稿（draft:true 隐藏；用户交当前批次后删 draft 即发，防止干等） ===== */
   {
     title: "The Pharmacy on Sunday (B1)",
-    date: "2026-11-03",
+    date: "2026-11-01",
     level: "B1 · 生活/看病",
     sentences: [
       "On Sunday morning I woke up with a sore throat and a slight fever, and every pharmacy in my neighborhood was closed except one.",
@@ -276,7 +276,7 @@ window.ARTICLES = [
   },
   {
     title: "The Interview Question I Got Wrong (B1)",
-    date: "2026-11-03",
+    date: "2026-11-01",
     level: "B1 · 工作/面试",
     sentences: [
       "Every interview has one question you know is coming, and for me it was always 'What is your greatest weakness?'",
@@ -298,7 +298,7 @@ window.ARTICLES = [
   },
   {
     title: "Two Hours in a Foreign Supermarket (B1)",
-    date: "2026-11-03",
+    date: "2026-11-01",
     level: "B1 · 购物/生活",
     sentences: [
       "My first supermarket trip abroad was supposed to take twenty minutes; it took me two hours.",
