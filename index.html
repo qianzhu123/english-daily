@@ -391,24 +391,39 @@ function playArticle(artIdx,btn){
   btn.textContent='⏹ 停止';
   btn.onclick=()=>{speechSynthesis.cancel();sentEls.forEach(e=>e.classList.remove('active'));btn.textContent='▶ 整篇朗读';btn.onclick=()=>playArticle(artIdx,btn)};
   next()}
-// ===== 整篇翻译：显示/隐藏本文全文译文（gtx 整篇一次性请求） =====
+// ===== 整篇翻译：显示/隐藏本文全文译文（gtx 整篇 → 失败逐句兜底 → MyMemory 兜底） =====
 const atrTKEY='arttr';
+const atrVer='v2'; // 升版本：gtx 整篇被 429 限流期间产生的空/坏缓存全部作废
+async function gtxOnce(text){ // 单次 gtx 请求，返回全文或 ''
+  const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&q='+encodeURIComponent(text));
+  if(!r.ok)return '';
+  const j=await r.json();
+  return j.sentences?j.sentences.map(s=>s.trans||'').join(''):''}
+async function translateArticle(sentences){ // 整篇→逐句→MyMemory 三级：限流不再一票否决
+  try{const full=await gtxOnce(sentences.join('\n'));if(full)return full}catch(e){}
+  // gtx 挂了（实测 429）：逐句请求再试一轮，失败句留原文
+  const parts=[];
+  for(const s of sentences){
+    let t='';
+    try{t=await gtxOnce(s)}catch(e){}
+    if(!t){ // 单句再挂走 MyMemory
+      try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(s)+'&langpair=en|zh-CN');
+        const j=await r.json();const m=j&&j.responseData&&j.responseData.translatedText||'';
+        if(m&&!/MYMEMORY WARNING/.test(m))t=m}catch(e){}}
+    parts.push(t||s)}
+  return parts.join('\n')}
 async function toggleArticleTr(artIdx,btn){
   const artBox=document.getElementById('vpanel-'+artIdx).parentNode.querySelector('.article');
   let tr=artBox.parentNode.querySelector('.arttr');
   if(tr){tr.remove();btn.textContent='整篇翻译';return} // 再点收起
   btn.textContent='翻译中…';
-  const cache=store.get(atrTKEY);
+  const cache=store.get(atrTKEY+atrVer);
   const key='a'+artIdx;
   let full=cache[key];
   if(!full){
-    const text=window.ARTICLES[artIdx].sentences.join('\n');
-    try{
-      const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&q='+encodeURIComponent(text));
-      if(r.ok){const j=await r.json();
-        full=j.sentences?j.sentences.map(s=>s.trans||'').join(''):''}
-    }catch(e){}
-    if(full){cache[key]=full;store.set(atrTKEY,cache)}
+    const sentences=window.ARTICLES[artIdx].sentences;
+    try{full=await translateArticle(sentences)}catch(e){full=''}
+    if(full){const c=store.get(atrTKEY+atrVer);c[key]=full;store.set(atrTKEY+atrVer,c)}
   }
   if(!full){btn.textContent='整篇翻译';toastMsg('翻译失败，稍后再试');return}
   const div=document.createElement('div');div.className='arttr notes';div.style.background='#f4f8f4';

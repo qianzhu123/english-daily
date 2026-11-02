@@ -97,7 +97,7 @@ if(validTrans(t,k)){const c=getTrans();c[k]=t;store.set(TKEY+TVER,c);return t}
 return '（暂无释义）'}
 // ===== 陈列与交互：按文章分组（词条自带 art 字段；无 art 的按首词回扫 articles.js 定位） =====
 let dayFilter=null; // 保留变量兼容旧调用；null=全部
-function wordHomeIdx(k){ // art 可信时优先；多篇命中按标记日期消歧（标记时文章才存在）
+function wordHomeIdx(k){ // art 可信时优先（标记时写入的原索引，十一起就是对的）；验证不过才回扫重猜
   const e=marks[k];
   const first=k.split(' ')[0].toLowerCase();
   const cands=[];
@@ -111,7 +111,9 @@ function wordHomeIdx(k){ // art 可信时优先；多篇命中按标记日期消
       p=text.indexOf(first,p+1)}}
   if(!cands.length)return ART.length-1;
   if(cands.length===1)return cands[0];
-  // 多篇命中：按标记日期消歧——date<=标记日 里最新一篇（标记时它才存在）；art 坏值不可信
+  // 多篇命中：先信词条自带的 art（要求 art 文章确含该词，防旧坏值）；跨午夜标记 day 会变"明天"，
+  // 按日期猜会把词判给新批次同词文章（trick/checkout 误归 11-02 事故根因）——日期消歧只做最后兜底
+  if(e&&typeof e==='object'&&Number.isInteger(e.art)&&ART[e.art]&&cands.includes(e.art))return e.art;
   const day=e&&typeof e==='object'?e.day:null;
   if(day){
     const dated=cands.map(i=>({i,date:ART[i].date})).filter(x=>x.date<=day).sort((x,y)=>y.date.localeCompare(x.date));
