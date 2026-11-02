@@ -324,6 +324,7 @@ window.ARTICLES = [
   {
     title: "The Hotel That Was Fully Booked (B1)",
     date: "2026-11-02",
+    archived: true,
     level: "B1 · 旅行/酒店投诉",
     sentences: [
       "The air conditioner in my room had broken sometime after midnight, and by two in the morning the room felt like a greenhouse.",
@@ -347,6 +348,7 @@ window.ARTICLES = [
   {
     title: "How to Ask for a Discount Without Losing Face (B1)",
     date: "2026-11-02",
+    archived: true,
     level: "B1 · 购物/谈判",
     sentences: [
       "In some countries, asking for a lower price feels normal; in others, it feels almost rude — but there is a polite middle ground that works almost everywhere.",
@@ -372,7 +374,6 @@ window.ARTICLES = [
     title: "Changing the Booking (B1)",
     date: "2026-11-03",
     level: "B1 · 旅行/改签",
-    draft: true,
     sentences: [
       "Two days before my flight, my meeting moved, and I had to change my hotel booking from Tuesday to Thursday.",
       "I expected this to be difficult — in my experience, 'change' is a word companies dislike — but the process took four minutes.",
@@ -395,7 +396,6 @@ window.ARTICLES = [
     title: "The Broken Umbrella Day (B1)",
     date: "2026-11-03",
     level: "B1 · 生活/突发",
-    draft: true,
     sentences: [
       "It was the kind of rain that makes umbrellas decorative, and mine had already turned inside out twice by the time I reached the bus stop.",
       "The bus was late — not delayed, late — and the display kept promising that it was two stops away, for twenty minutes.",
