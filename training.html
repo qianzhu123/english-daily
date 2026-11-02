@@ -50,6 +50,10 @@ const TRAIN=[
   day:'2026-11-03',
   title:'酒店投诉 · 降级版（照框架填空）',
   brief:'剧情接着上次的：你半夜投诉空调坏了，前台说客满。今天的题全部自带句式卡——不用记文章，照着框架填词就行。填对一个算一个，写完点「对答案」。',
+  daily:['As I mentioned, the air conditioner has been out of order since midnight.（正如我提到的——把话题拉回事实，比重复投诉更有效）',
+    'I\'d appreciate it if you could look into this tonight.（如果您今晚能处理，我将不胜感激——最客气的施压句）',
+    'That doesn\'t quite work for me.（这对我来说不太行——比 No 拒绝得体十倍）',
+    'I\'d like to get this sorted out before I check out.（我想在退房前把这事解决——sorted out = 解决，口语高频）'],
   items:[
     {kind:'填空',
      q:'你想争取明天换房。句式卡：<b>Is there any chance of ___ (move) to another room tomorrow?</b><br>照框架把句子补完整（提示：any chance of 后面的动词要变形）。',
@@ -69,6 +73,10 @@ const TRAIN=[
   day:'2026-11-02',
   title:'酒店投诉 · 谈判回合（原版，偏难）',
   brief:'这天的题偏难，做不完没关系——11-03 的降级版已覆盖同样的句式，先做新版。',
+  daily:['Is there any chance of a discount?（有没有可能打个折——委婉请求万能开头）',
+    'What about a free breakfast, or a late checkout?（那...呢——退一步要补偿）',
+    'Thank you anyway, I\'ll think about it.（谢谢，我考虑一下——礼貌施压，谈判最硬的牌）',
+    'I want us both to feel this is fair.（我想让双方都觉得公道——把争论变成一起解决的问题）'],
   items:[
     {kind:'对话',
      q:'前台："I\'m afraid the hotel is fully booked tonight." 用英文回应，争取明天换房或今晚部分退款。',
@@ -95,6 +103,9 @@ function render(){
   const saved=store.get('traintry');
   document.getElementById('content').innerHTML=`
   <div class="card"><h2>${esc(d.title)}<span class="tag">${d.day}</span></h2><p style="color:var(--dim)">${esc(d.brief)}</p></div>`+
+  (d.daily&&d.daily.length?`<div class="card"><h2>📌 今日高级句 <span class="tag">每天 4 句</span></h2>`+
+    d.daily.map(s=>{const [en,zh]=s.split('（');return `<div class="frames"><div><b>${esc(en)}</b> <button class="speak" onclick="speak(this.dataset.s)" data-s="${esc(en)}">🔊</button></div><div style="color:var(--dim);font-size:.85rem">${zh?'（'+esc(zh):''}</div></div>`}).join('')+
+    `</div>`:'')+
   d.items.map((it,n)=>{
     const key=d.day+'#'+n;const mine=saved[key]||'';
     return `<div class="card"><h2>${esc(it.kind)}<span class="tag">#${n+1}</span> <button class="speak" onclick="speak(this.dataset.q)" data-q="${esc(it.q).replace(/"/g,'"')}" title="朗读">🔊</button></h2>
