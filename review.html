@@ -73,28 +73,43 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200)}
 function speak(text,rate){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||0.9;u.voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u)}
 // ===== 翻译（gtx 主源 + MyMemory 兜底 + 有效性过滤 + 人工义） =====
-const TKEY='translations',TVER='v6';
+const TKEY='translations',TVER='v7';
 function getTrans(){return store.get(TKEY+TVER)}
 const MANUAL={article:'名词：冠词（语法）、文章、物品（an article of clothing 一件衣物）\n〔语境提示〕语法课上 article=a/an/the',properly:'副词：正确地、适当地、得体地（=correctly, in a proper way）',
 clearance:'名词：放行许可（航空：waiting for clearance 等待塔台放行）；清关（海关）；净空',panicked:'动词：恐慌、惊慌失措（panic 的过去式）\n〔语境〕I panicked = 我慌了'};
 function validTrans(t,k){if(!t)return false;if(!/[一-鿿A-Za-z0-9]/.test(t))return false;
-if(t.toLowerCase()===k.toLowerCase())return false;if(/MYMEMORY WARNING|QUERY LENGTH|%s/.test(t))return false;return true}
-function cleanSense(d){return d.split('；').map(g=>{const [pos,terms]=g.split('：');if(!terms)return g;
-const keep=terms.split('、').filter(t=>t.length>=2||['他','她','它','在','有','的','了'].includes(t));
-return keep.length?pos+'：'+keep.join('、'):''}).filter(Boolean).join('；')}
+if(t.toLowerCase()===k.toLowerCase())return false;if(/MYMEMORY WARNING|QUERY LENGTH|%s|ALL AVAILABLE FREE TRANSLATIONS/i.test(t))return false;return true}
+async function tryGtx(q,dt){try{
+  const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt='+dt+(dt==='t'?'':'&dj=1')+'&q='+encodeURIComponent(q));
+  if(!r.ok)return '';
+  const j=await r.json();
+  if(dt==='t')return j.sentences?j.sentences.map(s=>s.trans||'').join(''):'';
+  return j&&j.dict&&j.dict.length?j:(j&&j.sentences&&j.sentences[0]?j:null)
+}catch(e){return ''}}
+async function tryBackup(q){ // 备用链路：Google 移动版接口 + Lingva（Cloudflare 反代，无需 key）
+  try{const r=await fetch('https://translate.googleapis.com/translate_a/one?client=one&sl=en&tl=zh-CN&dt=t&q='+encodeURIComponent(q));
+  if(r.ok){const j=await r.json();
+  if(j&&j.sentences&&j.sentences[0]&&j.sentences[0].trans)return j.sentences.map(s=>s.trans||'').join('')}}catch(e){}
+  try{const r=await fetch('https://lingva.ml/api/v1/en/zh/'+encodeURIComponent(q));
+  if(r.ok){const j=await r.json();
+  if(j&&j.translation)return j.translation}}catch(e){}
+  return ''}
 async function translate(k){const cache=getTrans();
 if(MANUAL[k]){if(cache[k]!==MANUAL[k]){cache[k]=MANUAL[k];store.set(TKEY+TVER,cache)}return MANUAL[k]}
 if(cache[k])return cache[k];
 let t='';
-try{const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&dt=bd&dj=1&q='+encodeURIComponent(k));
-if(r.ok){const j=await r.json();
-if(j.dict&&j.dict.length){const d=cleanSense(j.dict.map(d=>d.pos+'：'+d.terms.join('、')).join('；'));if(validTrans(d,k))t=d}
-else if(j.sentences&&j.sentences[0]&&validTrans(j.sentences[0].trans,k))t=j.sentences[0].trans}}catch(e){}
+try{const j=await tryGtx(k,'bd');
+if(j&&j.dict){const d=cleanSense(j.dict.map(d=>d.pos+'：'+d.terms.join('、')).join('；'));if(validTrans(d,k))t=d}
+else if(j&&j.sentences&&j.sentences[0]&&validTrans(j.sentences[0].trans,k))t=j.sentences[0].trans}catch(e){}
+if(!t){const s=await tryBackup(k);if(validTrans(s,k))t=s}
 if(!validTrans(t,k)){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(k)+'&langpair=en|zh-CN');
 const j=await r.json();let m=j&&j.responseData&&j.responseData.translatedText||'';
 if(validTrans(m,k))t=m}catch(e){}}
 if(validTrans(t,k)){const c=getTrans();c[k]=t;store.set(TKEY+TVER,c);return t}
 return '（暂无释义）'}
+function cleanSense(d){return d.split('；').map(g=>{const [pos,terms]=g.split('：');if(!terms)return g;
+const keep=terms.split('、').filter(t=>t.length>=2||['他','她','它','在','有','的','了'].includes(t));
+return keep.length?pos+'：'+keep.join('、'):''}).filter(Boolean).join('；')}
 // ===== 陈列与交互：按文章分组（词条自带 art 字段；无 art 的按首词回扫 articles.js 定位） =====
 let dayFilter=null; // 保留变量兼容旧调用；null=全部
 function wordHomeIdx(k){ // art 可信时优先（标记时写入的原索引，十一起就是对的）；验证不过才回扫重猜

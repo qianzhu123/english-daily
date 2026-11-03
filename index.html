@@ -251,7 +251,7 @@ function restoreMarks(){ // 已标词高亮：只亮你点过的位置（e.locs 
     const phrase=Object.keys(marks).find(k=>k.includes(' ')&&k.split(' ').includes(cw));
     if(phrase&&home[phrase]===wArt)w.classList.add('inphrase')});}
 // ===== 生词归属与翻译 =====
-const TKEY='translations',TVER='v6'; // v6：人工义优先于缓存（旧坏翻译已被缓存挡住 MANUAL），作废 v5
+const TKEY='translations',TVER='v7'; // v7：作废 v6（Google 302 验证页+MyMemory 额度耗尽期间写入了"暂无释义"坏缓存）
 function getTrans(){return store.get(TKEY+TVER)}
 // 人工优先义项：gtx 词典会把高频词核心义埋掉/给冷僻义（article 缺"冠词"、clearance→净空、panicked→恐吓）
 const MANUAL={article:'名词：冠词（语法）、文章、物品（an article of clothing 一件衣物）\n〔语境提示〕语法课上 article=a/an/the',
@@ -262,15 +262,33 @@ function validTrans(t,k){ // 翻译结果有效性：空/纯标点符号/回显�
   if(!t)return false;
   if(!/[一-鿿A-Za-z0-9]/.test(t))return false; // 必须含汉字/字母/数字（滤掉"。"、"…"等）
   if(t.toLowerCase()===k.toLowerCase())return false;
-  if(/MYMEMORY WARNING|QUERY LENGTH|%s/.test(t))return false;
+  if(/MYMEMORY WARNING|QUERY LENGTH|%s|ALL AVAILABLE FREE TRANSLATIONS/i.test(t))return false; // 额度耗尽提示也是垃圾
   return true}
+async function tryGtx(q,dt){ // gtx 主源；失败返回 ''（429/302 验证页/断网都算失败）
+  try{
+    const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt='+dt+(dt==='t'?'':'&dj=1')+'&q='+encodeURIComponent(q));
+    if(!r.ok)return '';
+    const j=await r.json();
+    if(dt==='t')return j.sentences&&j.sentences[0]&&j.sentences[0].trans?j.sentences.map(s=>s.trans||'').join(''):'';
+    return j&&j.dict&&j.dict.length?j:j.sentences&&j.sentences[0]?j:null
+  }catch(e){return ''}}
+async function tryBackup(q){ // 备用链路1:Google 移动版接口（不同路径，独立限流）；备用链路2:Lingva( Cloudflare 反代 Google，无需 key)
+  try{ // move 接口:同样返回 JSON，路径 translate_a/one
+    const r=await fetch('https://translate.googleapis.com/translate_a/one?client=one&sl=en&tl=zh-CN&dt=t&q='+encodeURIComponent(q));
+    if(r.ok){const j=await r.json();
+      if(j&&j.sentences&&j.sentences[0]&&j.sentences[0].trans)return j.sentences.map(s=>s.trans||'').join('')}}catch(e){}
+  try{ // Lingva 公共实例（Cloudflare 域，通常不拦）
+    const r=await fetch('https://lingva.ml/api/v1/en/zh/'+encodeURIComponent(q));
+    if(r.ok){const j=await r.json();
+      if(j&&j.translation)return j.translation}}catch(e){}
+  return ''}
 function cleanSense(d){ // 词典义项清洗：去冷僻单字项（properly→"韪"事故）
   return d.split('；').map(g=>g.replace(/、/g,'、').replace(/、[^、]{1}$/,'').replace(/、(?=[^、]{1}、)/g,'、'))
     .map(g=>{ // 组内过滤单字冷僻项（除核心代词/名词外）
       const [pos,terms]=g.split('：');if(!terms)return g;
       const keep=terms.split('、').filter(t=>t.length>=2||['他','她','它','在','有','的','了'].includes(t));
       return keep.length?pos+'：'+keep.join('、'):''}).filter(Boolean).join('；')}
-async function translate(k,ctx){ // 主源 gtx；ctx=所在句子时先取整句译文做语境义，词典义项全列兜底
+async function translate(k,ctx){ // 主源 gtx → 备用(move/Lingva) → MyMemory 兜底；额度耗尽提示不算翻译
   const cache=getTrans();
   if(MANUAL[k]){ // 人工义最高优先：即使缓存里有旧坏翻译也要覆盖写入（clearance→净空事故）
     if(cache[k]!==MANUAL[k]){cache[k]=MANUAL[k];store.set(TKEY+TVER,cache)}
@@ -278,22 +296,21 @@ async function translate(k,ctx){ // 主源 gtx；ctx=所在句子时先取整句
   if(cache[k])return cache[k];
   let t='';
   if(ctx){try{ // 语境优先：整句翻译，用户看到的第一个释义来自真实上下文
-    const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&q='+encodeURIComponent(ctx));
-    if(r.ok){const j=await r.json();
-      if(j.sentences&&j.sentences[0]&&j.sentences[0].trans){const s=j.sentences[0].trans;
-        if(validTrans(s,ctx))t='〔语境〕'+s}}} // 语境结果同样过有效性检查
+    let s=await tryGtx(ctx,'t');
+    if(!s)s=await tryBackup(ctx);
+    if(validTrans(s,ctx))t='〔语境〕'+s} // 语境结果同样过有效性检查
   catch(e){}}
-  try{ // 词典义项（不截断，多义词如 runway 全部列出；单字冷僻项过滤）
-    const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&dt=bd&dj=1&q='+encodeURIComponent(k));
-    if(r.ok){const j=await r.json();
-      if(j.dict&&j.dict.length){const d=cleanSense(j.dict.map(x=>x.pos+'：'+x.terms.join('、')).join('；'));
-        if(validTrans(d,k))t=t?t+'\n〔词典〕'+d:d} // 词典结果也过有效性检查
-      else if(!t&&j.sentences&&j.sentences[0]&&validTrans(j.sentences[0].trans,k))t=j.sentences[0].trans}}
-  catch(e){}
-  if(!t){try{ // 兜底 MyMemory，过滤垃圾
+  if(!t||t.indexOf('〔语境〕')===-1||true){ // 词典义项始终补上（多义词如 runway 全部列出）
+    const j=await tryGtx(k,'bd');
+    if(j&&j.dict){const d=cleanSense(j.dict.map(x=>x.pos+'：'+x.terms.join('、')).join('；'));
+      if(validTrans(d,k))t=t?t+'\n〔词典〕'+d:d}
+    else if(!t){
+      const s2=await tryBackup(k);
+      if(validTrans(s2,k))t=s2}}
+  if(!t){try{ // 兜底 MyMemory，过滤垃圾（额度耗尽提示已在 validTrans 拦截）
     const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(k)+'&langpair=en|zh-CN');
     const j=await r.json();let m=j&&j.responseData&&j.responseData.translatedText||'';
-    if(m&&(m.toLowerCase()===k.toLowerCase()||/MYMEMORY WARNING|QUERY LENGTH|%s/.test(m)))m='';
+    if(m&&(m.toLowerCase()===k.toLowerCase()||/MYMEMORY WARNING|QUERY LENGTH|%s/i.test(m)))m='';
     t=m}catch(e){}}
   if(validTrans(t,k)){const c=getTrans();c[k]=t;store.set(TKEY+TVER,c);return t}
   return '（暂无释义）'}
