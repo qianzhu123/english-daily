@@ -108,28 +108,37 @@ function render(){
     const key=d.day+'#'+n;const mine=saved[key]||'';
     return `<div class="card"><h2>场景 #${n+1}</h2>
     <p>${esc(it.q)}</p>
-    <textarea class="try" id="try-${n}" placeholder="用你自己的英文写……写错没关系">${esc(mine)}</textarea>
+    <textarea class="try" id="try-${n}" placeholder="用你自己的英文写……写错没关系" onblur="saveTry('${d.day}',${n})">${esc(mine)}</textarea>
     <div class="fb" id="fb-${n}"></div>
     <button class="reveal" onclick="reveal('${d.day}',${n})">对答案</button>
     <div class="answer" id="ans-${n}"><b>参考（一种写法，不是标准答案）</b> <button class="speak" onclick="speak(this.dataset.s)" data-s="${esc(it.refEn||it.ref)}">🔊</button>
 ${esc(it.ref)}</div></div>`}).join('');
 }
 function pick(day){curDay=day;render()}
-// 导出作答：粘贴给 Claude 批改用。只导出写过的题，按日期分组，含场景原文方便对照
+// 导出作答：粘贴给 Claude 批改用。
+// 关键修复：作答以「输入框实时内容」为准（用户改过多版的最终版），traintry 只是保存兜底——
+// 旧版导出读 traintry 快照（点对答案那一刻存的），用户后续编辑全部丢失（用户实测报告的严重问题）
 function exportAnswers(){
   const saved=store.get('traintry');
-  const keys=Object.keys(saved).filter(k=>saved[k]&&saved[k].trim());
-  if(!keys.length){toast('还没有作答记录——先在场景里写英文');return}
-  const days=[...new Set(keys.map(k=>k.split('#')[0]))].sort().reverse(); // 新日期在上
-  let text='';
+  const days=[...new Set(TRAIN.map(d=>d.day))];
+  let text='';let count=0;
   days.forEach(day=>{
     const d=TRAIN.find(x=>x.day===day);if(!d)return;
-    text+='【'+day+' '+d.title+'】\n';
-    keys.filter(k=>k.startsWith(day+'#')).sort((a,b)=>a.split('#')[1]-b.split('#')[1]).forEach(k=>{
-      const n=Number(k.split('#')[1]);const it=d.items[n];if(!it)return;
-      text+='场景'+(n+1)+'：'+it.q.replace(/\n/g,' ')+'\n我的作答：'+saved[k]+'\n\n'})});
+    let dayText='';
+    d.items.forEach((it,n)=>{
+      // 优先级：当前 DOM 输入框内容（最终版）> traintry 快照
+      const ta=document.getElementById('try-'+n);
+      const live=ta&&curDay===day?ta.value.trim():'';
+      const snap=(saved[day+'#'+n]||'').trim();
+      const ans=live||snap;
+      if(!ans)return;
+      count++;
+      dayText+='场景'+(n+1)+'：'+it.q.replace(/\n/g,' ')+'\n我的作答：'+ans+'\n\n'});
+    if(dayText)text+='【'+day+' '+d.title+'】\n'+dayText});
+  if(!count){toast('还没有作答记录——先在场景里写英文');return}
+  text=text.replace(/\n+$/,'\n');
   // 复制到剪贴板（手机/桌面通用），失败降级为弹层手动复制
-  const done=()=>toast('✓ 作答已复制，去会话里粘贴即可批改（'+keys.length+' 题）');
+  const done=()=>toast('✓ 作答已复制，去会话里粘贴即可批改（'+count+' 题）');
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(text).then(done).catch(()=>fallback(text))
   }else fallback(text);
@@ -138,6 +147,11 @@ function exportAnswers(){
     box.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:70px;background:var(--card);border-radius:10px;box-shadow:0 2px 14px rgba(0,0,0,.2);padding:14px 16px;width:90%;max-width:360px;z-index:9;max-height:50vh;overflow:auto';
     box.innerHTML='<b style="font-size:.85rem">长按/全选复制以下内容发给 Claude：</b><textarea style="width:100%;height:180px;margin-top:8px;font-size:.82rem;font-family:inherit">'+esc(t)+'</textarea><div style="text-align:right"><button onclick="this.parentNode.parentNode.remove()" style="padding:2px 10px;font-size:.78rem">关闭</button></div>';
     document.body.appendChild(box)}}
+function saveTry(day,n){ // 输入框失焦即存：编辑后不点对答案也不丢
+  const ta=document.getElementById('try-'+n);if(!ta)return;
+  const v=ta.value.trim();
+  const saved=store.get('traintry');
+  if(v&&v!==(saved[day+'#'+n]||'')){saved[day+'#'+n]=v;store.set('traintry',saved)}}
 function reveal(day,n){
   const d=TRAIN.find(x=>x.day===day);const it=d.items[n];
   const ans=document.getElementById('ans-'+n);const ta=document.getElementById('try-'+n);const fb=document.getElementById('fb-'+n);
@@ -145,7 +159,7 @@ function reveal(day,n){
   // 提取压力：没写不给看（用户定版：直接给内容填=没意义）
   if(!ta.value.trim()){toast('先写一句（写错没关系），再对答案');fb.className='fb no';fb.textContent='先写，再看';return}
   ans.style.display='block';
-  const saved=store.get('traintry');saved[day+'#'+n]=ta.value.trim();store.set('traintry',saved);
+  saveTry(day,n); // 点对答案时也保存当前版本（但不覆盖更新的失焦保存——同一内容幂等）
   fb.className='fb ok';fb.textContent='✓ 已记录你的作答——Claude 下次会话批改';
 }
 render();
