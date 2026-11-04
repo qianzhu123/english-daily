@@ -1,5 +1,15 @@
 window.MISTAKES = [
   {
+    date: "2026-11-04",
+    scene: "训练批改·酒店产出（11-03 训练页作答）",
+    items: [
+      { wrong: "could you resolve it?", right: "could you fix it, please?", why: "resolve 偏书面/偏大（解决纠纷、化解危机），修空调用 fix（或 send someone to check it）——口语里小词优先", kind: "词性/搭配" },
+      { wrong: "I want change room at tomorrow", right: "I'd like to change my room tomorrow.", why: "三个坑连击：①want 后接 to do（want to change）②my room 不说裸 room ③tomorrow 前不加 at（时间副词直接放句尾）", kind: "句式" },
+      { wrong: "I want to get my money", right: "I'd like a refund, please.", why: "get my money 意思到了但像讨债；退款专词=refund（要回已付的钱），want to 也生硬，请求用 I'd like", kind: "词性/搭配" },
+      { wrong: "Does the breakfest was include the room cost?", right: "Is breakfast included in the room price?", why: "四坑：①breakfest→breakfast 拼写 ②Does 后接原形（was 是过去式不能跟）③疑问句只能一个助动词，Do/Does 与 was 二选一 ④含在内=include 的被动 included；这句是 does+was 双助动词连击，属头号洞变体", kind: "句式" }
+    ]
+  },
+  {
     date: "2026-10-22",
     scene: "点餐场景",
     items: [
