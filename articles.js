@@ -415,6 +415,52 @@ window.ARTICLES = [
       "walk away（转身就走）—— 谈判最硬的牌：I'll think about it（我考虑一下）= 礼貌的施压"
     ]
   },
+  {
+    title: "The Wrong Pizza, Twice (B1)",
+    date: "2026-11-05",
+    level: "B1 · 餐厅/服务事故",
+    draft: true,
+    sentences: [
+      "The pizza arrived with ham on it, and I had ordered the mushroom one — a small mistake, the kind any busy kitchen makes.",
+      "The waiter apologized and took it away, and ten minutes later a new pizza landed in front of me.",
+      "It also had ham on it. The same wrong pizza, twice, from the same table order.",
+      "At this point I had two options: get louder, or get clearer.",
+      "I chose clearer: 'I'm the table that ordered the mushroom pizza — number twelve, no ham, the ticket should say it.'",
+      "Giving the table number changed everything; the waiter stopped guessing and went to check the ticket, and the right pizza came out in five minutes.",
+      "The manager came over himself, comped the pizza, and added a free dessert, which is what a good restaurant does when it fixes its own mistake.",
+      "Loud gets attention; specific gets results. A table number is worth more than an angry sentence."
+    ],
+    notes: [
+      "the kind any busy kitchen makes —— kind of + 定语从句，说明错误性质",
+      "landed in front of me（落在我面前）—— land 比 arrived 更有画面感",
+      "At this point（到这一步）—— 叙事转折高频短语",
+      "comped the pizza（免了披萨的单）—— comp = 免单，餐饮行业行话（comped 过去式）",
+      "Loud gets attention; specific gets results. —— 对仗金句，吵架不如给信息"
+    ]
+  },
+  {
+    title: "Renting a Car with a Paper License (B1)",
+    date: "2026-11-05",
+    level: "B1 · 旅行/租车",
+    draft: true,
+    sentences: [
+      "Renting a car abroad always looks simple online: pick a car, pay, done.",
+      "The counter is where the real questions live, and mine started with one I hadn't expected: 'Is this your full license, or a temporary one?'",
+      "My license was fine, but it was paper — a printout from the issuing authority, because the plastic card had not arrived yet.",
+      "The clerk frowned at it for a while, then asked me to wait, and I used the time to read the insurance options instead of worrying.",
+      "She came back with a solution instead of a refusal: full insurance, a higher deposit, and a note on the file that said 'paper license approved by supervisor'.",
+      "I said yes to all three, because 'no' from a car rental desk usually costs more time than 'yes with conditions'.",
+      "Driving off, I realized the trick wasn't luck: I had brought a second ID, the booking printout, and patience — the three things the counter actually wants.",
+      "A rental counter is not an exam; it is a negotiation with a checklist. Bring the checklist, and the negotiation goes your way."
+    ],
+    notes: [
+      "the real questions live（真正的问题都在这）—— live 拟人用法，口语常见",
+      "a printout from the issuing authority（签发机关的打印件）—— issuing 签发的；paper license 纸质驾照",
+      "instead of worrying（而不是干着急）—— instead of + doing",
+      "'no'...costs more time than 'yes with conditions' —— 带条件的同意好过直接拒绝，谈判思维",
+      "goes your way（朝你要的方向走）—— 事情顺利的高频表达"
+    ]
+  },
   /* ===== 预备稿（draft:true 隐藏；界面「🔄 更新下一批」按钮可自助发布） ===== */
   {
     title: "Changing the Booking (B1)",

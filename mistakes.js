@@ -1,6 +1,18 @@
 window.MISTAKES = [
   {
     date: "2026-11-04",
+    scene: "训练批改·退房与安检（11-04 训练页作答）",
+    items: [
+      { wrong: "this pill", right: "this bill", why: "pill=药丸；账单=bill。b/p 混（11-05 批改订正）", kind: "词性/拼写" },
+      { wrong: "this pill is not true", right: "this charge doesn't look right / I think there's a mistake in the bill", why: "账单\"不对\"地道说 look right / there's a mistake；is not true 是说\"这句话是假的\"——对象错了", kind: "句式" },
+      { wrong: "What does the bill", right: "What are these charges for?", why: "句子断在半路：does 后必须跟动词原形（what does the bill include?）；问构成用 what...for 句式更顺", kind: "句式" },
+      { wrong: "I take a botter of water", right: "I have a bottle of water.", why: "①take→have（随身带着=have/with，take 是\"拿走\"方向）②botter→bottle 拼写③陈述现状用一般现在时，take 是动作不是状态", kind: "词性/拼写" },
+      { wrong: "Could I drink it", right: "Could I drink it and refill it after security?", why: "只写了半句——题里要求的\"问别的办法\"（喝掉再灌）没出来，输出完整性待加强", kind: "句式" },
+      { wrong: "I know", right: "OK, no problem.", why: "I know 对安检员说显得顶撞（=我知道了别啰嗦）；接受结果用 OK / Sure / No problem", kind: "语用" }
+    ]
+  },
+  {
+    date: "2026-11-04",
     scene: "训练批改·酒店产出（11-03 训练页作答）",
     items: [
       { wrong: "could you resolve it?", right: "could you fix it, please?", why: "resolve 偏书面/偏大（解决纠纷、化解危机），修空调用 fix（或 send someone to check it）——口语里小词优先", kind: "词性/搭配" },
