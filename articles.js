@@ -252,6 +252,52 @@ window.ARTICLES = [
       "keeps everything and therefore means nothing：对仗金句，什么都留=什么都不留 —— 议论文结尾直接可用"
     ]
   },
+  {
+    title: "The Extra Charge at Checkout (B1)",
+    date: "2026-11-04",
+    level: "B1 · 旅行/酒店收尾",
+    sentences: [
+      "Checking out should take two minutes: hand over the key card, pay, leave.",
+      "Mine took twenty, because the bill in front of me was ninety euros higher than the price I had booked online.",
+      "There it was, in small print: 'city tax', 'service fee', and one line I could not understand at all — 'mini-bar restocking'.",
+      "I had not touched the mini-bar, and I said so — not angrily, just clearly: 'I didn't use the mini-bar. Could you check that charge again?'",
+      "The clerk didn't argue; she simply checked, found that the charge belonged to the room next door, and removed it in seconds.",
+      "The city tax, she explained, was real — my booking website just never showed it, which is a different kind of problem.",
+      "So I paid the part that was fair and questioned the part that was not, and the whole thing ended with a 'sorry' and a 'thank you'.",
+      "The rule I took home: always read the bill line by line before you pay it — most errors are honest mistakes, but they only get fixed if someone points at them."
+    ],
+    notes: [
+      "checkout（退房）/ check out（动词短语分开写）—— 名词动 词两形，酒店场景最后一关",
+      "in small print（在小字里）—— small print = 合同/账单里不起眼的条款，高频比喻",
+      "I had not touched the mini-bar —— 过去完成时复现：没碰过（在结账之前）",
+      "belonged to（属于）—— the charge belonged to the room next door 账记错房间",
+      "line by line（逐行）—— read the bill line by line 逐行看账单；指账单明细时 bill/check/statement 都行",
+      "honest mistakes（无心之失）—— 结尾金句：错误只有被指出来才会被纠正"
+    ]
+  },
+  {
+    title: "Ninety Seconds at Airport Security (B1)",
+    date: "2026-11-04",
+    level: "B1 · 旅行/机场安检",
+    sentences: [
+      "Airport security has a script, and if you know the script, ninety seconds is enough.",
+      "First, before you even join the line: liquids out, laptop out, pockets empty — do all three and you will never be the person holding up the queue.",
+      "The officer asked me the two questions they always ask: 'Any liquids?' and 'Anything in your pockets?' — short questions expect short answers: 'Just a phone.'",
+      "My bag still got stopped, of course. A full water bottle, forgotten at the bottom, like every traveler before me.",
+      "'You can't take it through,' the officer said, and instead of arguing I asked the useful question: 'Can I drink it here and refill it on the other side?'",
+      "There was a fountain ten meters away; I drank it, walked back through, and lost nothing but thirty seconds.",
+      "The man behind me spent five minutes explaining why his bottle was 'basically empty'. It was not, and the line did not move.",
+      "Security is not a debate; it is a checklist. The people who pass fastest are not the smartest ones — they are the ones who prepared before the line."
+    ],
+    notes: [
+      "hold up the queue（堵住队伍）—— hold up 拖慢；queue 英式常用，美式说 line",
+      "liquids out / laptop out / pockets empty —— 安检三连指令，倒装省略句",
+      "short questions expect short answers —— 简短问题配简短回答（'Just a phone.'）",
+      "You can't take it through（这个带不过去）—— through 副词用法",
+      "refill（再灌满）—— re- 前缀=重新：refill/refold/retry",
+      "It is not a debate; it is a checklist —— 对仗金句，结尾直接可用"
+    ]
+  },
   /* ===== 预备稿（draft:true 隐藏；用户交当前批次后删 draft 即发，防止干等） ===== */
   {
     title: "The Pharmacy on Sunday (B1)",
@@ -373,6 +419,7 @@ window.ARTICLES = [
   {
     title: "Changing the Booking (B1)",
     date: "2026-11-03",
+    archived: true,
     level: "B1 · 旅行/改签",
     sentences: [
       "Two days before my flight, my meeting moved, and I had to change my hotel booking from Tuesday to Thursday.",
@@ -395,6 +442,7 @@ window.ARTICLES = [
   {
     title: "The Broken Umbrella Day (B1)",
     date: "2026-11-03",
+    archived: true,
     level: "B1 · 生活/突发",
     sentences: [
       "It was the kind of rain that makes umbrellas decorative, and mine had already turned inside out twice by the time I reached the bus stop.",

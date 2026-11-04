@@ -251,13 +251,14 @@ function restoreMarks(){ // 已标词高亮：只亮你点过的位置（e.locs 
     const phrase=Object.keys(marks).find(k=>k.includes(' ')&&k.split(' ').includes(cw));
     if(phrase&&home[phrase]===wArt)w.classList.add('inphrase')});}
 // ===== 生词归属与翻译 =====
-const TKEY='translations',TVER='v7'; // v7：作废 v6（Google 302 验证页+MyMemory 额度耗尽期间写入了"暂无释义"坏缓存）
+const TKEY='translations',TVER='v8'; // v8：MANUAL 覆盖机制会自动改写 pure 坏翻译，但 v6-v7 期间部分词已缓存"（暂无释义）"等垃圾，统一再作废一轮
 function getTrans(){return store.get(TKEY+TVER)}
 // 人工优先义项：gtx 词典会把高频词核心义埋掉/给冷僻义（article 缺"冠词"、clearance→净空、panicked→恐吓）
 const MANUAL={article:'名词：冠词（语法）、文章、物品（an article of clothing 一件衣物）\n〔语境提示〕语法课上 article=a/an/the',
   properly:'副词：正确地、适当地、得体地（=correctly, in a proper way）',
   clearance:'名词：放行许可（航空：waiting for clearance 等待塔台放行）；清关（海关）；净空',
-  panicked:'动词：恐慌、惊慌失措（panic 的过去式）\n〔语境〕I panicked = 我慌了'};
+  panicked:'动词：恐慌、惊慌失措（panic 的过去式）\n〔语境〕I panicked = 我慌了',
+  pure:'形容词：纯粹的、完全的（out of pure habit 纯粹出于习惯；pure luck 纯属运气）\n〔语境〕pure 放名词前=强调“就只是”，不是“单纯”'};
 function validTrans(t,k){ // 翻译结果有效性：空/纯标点符号/回显原文/已知垃圾模式都算无效
   if(!t)return false;
   if(!/[一-鿿A-Za-z0-9]/.test(t))return false; // 必须含汉字/字母/数字（滤掉"。"、"…"等）

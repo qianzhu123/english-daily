@@ -48,10 +48,31 @@ const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e)
 // ① 题目=纯中文场景，绝不印英文框架/候选句/文章原句 ② 参考答案先写后看（空作答不给看）③ 语音只手动只读英文短句
 const TRAIN=[
 {
+  day:'2026-11-04',
+  title:'开口产出 · 退房与安检（从零写）',
+  brief:'酒店剧情今天收尾（退房账单），再加机场安检一轮。规则不变：中文场景自己写，写完才看参考。参考只是一种写法——意思对就算过。',
+  daily:[
+    {en:'I didn\'t touch the mini-bar.',zh:'我没用过迷你吧——touch 此处=动过/用过，不是“摸”'},
+    {en:'Could you check this charge again?',zh:'这笔费用能再核一下吗？——质疑账单最客气且有效的说法'},
+    {en:'Here is my passport. I\'m flying to Tokyo.',zh:'这是我的护照，我飞东京——安检/值机开场两件套'},
+    {en:'Can I refill it after security?',zh:'过完安检能再灌水吗？——refill=重新灌满，被没收水瓶时的救命句'}
+  ],
+  items:[
+    {q:'退房时账单比你订价高出 90 欧，其中一笔“迷你吧补货”你没消费过。向前台开口质疑这笔费用（1-2 句）。',
+     ref:'Excuse me, I didn\'t use the mini-bar. Could you check this charge again?\n（说出 mini-bar + 质疑/核实就算过；charge 账目、bill 账单）'},
+    {q:'你不确定那 90 欧的差额都是什么。向前台询问账单构成。',
+     ref:'What are these charges for?\n（更具体：What is the city tax? Could you explain this line?）'},
+    {q:'机场安检员问你是否带液体。你包里有一瓶忘了喝完的水。如实回答并问有没有别的办法（比如喝掉再灌）。',
+     ref:'Yes, I have a bottle of water. Can I drink it and refill it after security?'},
+    {q:'安检员说这瓶水不能带过去。用一句话接受这个结果，礼貌不争辩。',
+     ref:'OK, no problem. / Sure, I\'ll leave it here.\n（安检不是辩论场——接受+不废话就是最快通关）'}
+  ]
+},
+{
   day:'2026-11-03',
   title:'开口产出 · 酒店篇（从零写）',
   brief:'下面 4 个场景都是你马上会用到的。每个场景用你自己的词写 1-2 句英文——长短不限，说清楚就行。写不出来先写最简单的版本，再点「对答案」对比。',
-  daily:[ // 今日实用句：听/读输入用，不是让你抄进答案的
+  daily:[
     {en:'The room is too hot.',zh:'房间太热了——最短投诉句，too + 形容词'},
     {en:'Is breakfast included?',zh:'早餐含在内吗？——住酒店必问'},
     {en:'I\'d like to check out, please.',zh:'我要退房——checkout 名词/动词两用'},

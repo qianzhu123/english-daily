@@ -73,10 +73,11 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200)}
 function speak(text,rate){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||0.9;u.voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u)}
 // ===== 翻译（gtx 主源 + MyMemory 兜底 + 有效性过滤 + 人工义） =====
-const TKEY='translations',TVER='v7';
+const TKEY='translations',TVER='v8';
 function getTrans(){return store.get(TKEY+TVER)}
 const MANUAL={article:'名词：冠词（语法）、文章、物品（an article of clothing 一件衣物）\n〔语境提示〕语法课上 article=a/an/the',properly:'副词：正确地、适当地、得体地（=correctly, in a proper way）',
-clearance:'名词：放行许可（航空：waiting for clearance 等待塔台放行）；清关（海关）；净空',panicked:'动词：恐慌、惊慌失措（panic 的过去式）\n〔语境〕I panicked = 我慌了'};
+clearance:'名词：放行许可（航空：waiting for clearance 等待塔台放行）；清关（海关）；净空',panicked:'动词：恐慌、惊慌失措（panic 的过去式）\n〔语境〕I panicked = 我慌了',
+pure:'形容词：纯粹的、完全的（out of pure habit 纯粹出于习惯；pure luck 纯属运气）\n〔语境〕pure 放名词前=强调“就只是”，不是“单纯”'};
 function validTrans(t,k){if(!t)return false;if(!/[一-鿿A-Za-z0-9]/.test(t))return false;
 if(t.toLowerCase()===k.toLowerCase())return false;if(/MYMEMORY WARNING|QUERY LENGTH|%s|ALL AVAILABLE FREE TRANSLATIONS/i.test(t))return false;return true}
 async function tryGtx(q,dt){try{
