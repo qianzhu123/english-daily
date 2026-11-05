@@ -48,6 +48,27 @@ const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e)
 // ① 题目=纯中文场景，绝不印英文框架/候选句/文章原句 ② 参考答案先写后看（空作答不给看）③ 语音只手动只读英文短句
 const TRAIN=[
 {
+  day:'2026-11-05',
+  title:'开口产出 · 餐厅与问路（从零写）',
+  brief:'今天的场景和阅读文章零重叠——阅读是输入，这里是纯输出。注意两处回考点：want 后接 to do；疑问句只能有一个助动词。规则不变：中文场景自己写，写完才看参考。',
+  daily:[ // 回考埋点：昨天的两个洞
+    {en:'I want to see the menu, please.',zh:'我想看菜单——want to do（昨天漏了 to）'},
+    {en:'What do you recommend?',zh:'你推荐什么？——do 后面跟动词原形（recommend），疑问句单助动词'},
+    {en:'Excuse me, how do I get to the station?',zh:'请问车站怎么走？——问路万能句'},
+    {en:'Is it far from here?',zh:'离这儿远吗？——far from 配对出现'}
+  ],
+  items:[
+    {q:'餐厅里你的菜等了 25 分钟还没来，你叫住服务员询问（1-2 句）。',
+     ref:'Excuse me, I ordered ten minutes ago. Could you check on my order, please?\n（说出 order + 追问就算过）'},
+    {q:'服务员问你：「soup or salad?」（汤还是沙拉，套餐二选一）。你要汤。一句话回答。',
+     ref:'Soup, please. / I\'d like the soup, please.\n（点餐请求用 I\'d like，不用 I want）'},
+    {q:'你找不到回酒店的路了，向路人开口求助（1-2 句）。',
+     ref:'Excuse me, how do I get to the Grand Hotel? I\'m a bit lost.\n（问路 = how do I get to + 地点；说明状态 I\'m lost）'},
+    {q:'路人告诉了你方向，但话很快。你没听全。请他慢一点、再说一遍（1 句）。',
+     ref:'Could you say that again, slowly, please?\n（听不懂救命句——第三次出现，要形成条件反射）'}
+  ]
+},
+{
   day:'2026-11-04',
   title:'开口产出 · 退房与安检（从零写）',
   brief:'酒店剧情今天收尾（退房账单），再加机场安检一轮。规则不变：中文场景自己写，写完才看参考。参考只是一种写法——意思对就算过。',

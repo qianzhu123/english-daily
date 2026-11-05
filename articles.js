@@ -255,6 +255,7 @@ window.ARTICLES = [
   {
     title: "The Extra Charge at Checkout (B1)",
     date: "2026-11-04",
+    archived: true,
     level: "B1 · 旅行/酒店收尾",
     sentences: [
       "Checking out should take two minutes: hand over the key card, pay, leave.",
@@ -278,6 +279,7 @@ window.ARTICLES = [
   {
     title: "Ninety Seconds at Airport Security (B1)",
     date: "2026-11-04",
+    archived: true,
     level: "B1 · 旅行/机场安检",
     sentences: [
       "Airport security has a script, and if you know the script, ninety seconds is enough.",
@@ -419,7 +421,6 @@ window.ARTICLES = [
     title: "The Wrong Pizza, Twice (B1)",
     date: "2026-11-05",
     level: "B1 · 餐厅/服务事故",
-    draft: true,
     sentences: [
       "The pizza arrived with ham on it, and I had ordered the mushroom one — a small mistake, the kind any busy kitchen makes.",
       "The waiter apologized and took it away, and ten minutes later a new pizza landed in front of me.",
@@ -442,7 +443,6 @@ window.ARTICLES = [
     title: "Renting a Car with a Paper License (B1)",
     date: "2026-11-05",
     level: "B1 · 旅行/租车",
-    draft: true,
     sentences: [
       "Renting a car abroad always looks simple online: pick a car, pay, done.",
       "The counter is where the real questions live, and mine started with one I hadn't expected: 'Is this your full license, or a temporary one?'",
