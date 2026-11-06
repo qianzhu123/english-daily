@@ -73,12 +73,15 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200)}
 function speak(text,rate){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||0.9;u.voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u)}
 // ===== 翻译（gtx 主源 + MyMemory 兜底 + 有效性过滤 + 人工义） =====
-const TKEY='translations',TVER='v9';
+const TKEY='translations',TVER='v10';
 function getTrans(){return store.get(TKEY+TVER)}
-const MANUAL={article:'名词：冠词（语法）、文章、物品（an article of clothing 一件衣物）\n〔语境提示〕语法课上 article=a/an/the',properly:'副词：正确地、适当地、得体地（=correctly, in a proper way）',
-clearance:'名词：放行许可（航空：waiting for clearance 等待塔台放行）；清关（海关）；净空',panicked:'动词：恐慌、惊慌失措（panic 的过去式）\n〔语境〕I panicked = 我慌了',
-pure:'形容词：纯粹的、完全的（out of pure habit 纯粹出于习惯；pure luck 纯属运气）\n〔语境〕pure 放名词前=强调“就只是”，不是“单纯”',
-mattered:'动词：要紧、重要（the only word that mattered 唯一重要的词）\n〔语境〕matter=要紧，不是“事情/物质”；“碍事”义基本不用'};
+// 格式=标准词典释义（词性：词义），不做单词条的说教式解读（用户 11-07 定版：不要针对某个词强行解释）
+const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
+  properly:'副词：正确地、适当地、得体地',
+  clearance:'名词：放行许可；清关；净空',
+  panicked:'动词：恐慌、惊慌失措（panic 的过去式）',
+  pure:'形容词：纯粹的；完全的；纯的',
+  mattered:'动词：要紧、重要（matter 的过去式）'};
 function validTrans(t,k){if(!t)return false;if(!/[一-鿿A-Za-z0-9]/.test(t))return false;
 if(t.toLowerCase()===k.toLowerCase())return false;if(/MYMEMORY WARNING|QUERY LENGTH|%s|ALL AVAILABLE FREE TRANSLATIONS/i.test(t))return false;return true}
 async function tryGtx(q,dt){try{
@@ -99,9 +102,19 @@ async function tryBackup(q){ // 备用链路：Google 移动版接口 + Lingva�
 async function translate(k){const cache=getTrans();
 if(MANUAL[k]){if(cache[k]!==MANUAL[k]){cache[k]=MANUAL[k];store.set(TKEY+TVER,cache)}return MANUAL[k]}
 if(cache[k])return cache[k];
+// 义项过滤需要语境：从词条归属文章里找回该词所在的句子（index.html 是标记时直接传，这里补齐同款行为）
+let ctx='';const e=marks[k]||{};
+if(Number.isInteger(e.art)&&ART[e.art]){const first=k.split(' ')[0].toLowerCase();
+  ctx=ART[e.art].sentences.find(s=>s.toLowerCase().includes(first))||''}
 let t='';
 try{const j=await tryGtx(k,'bd');
-if(j&&j.dict){const d=cleanSense(j.dict.map(d=>d.pos+'：'+d.terms.join('、')).join('；'));if(validTrans(d,k))t=d}
+if(j&&j.dict){ // 语境句也翻译一下，用于挑出与语义相符的义项
+  let ctxT='';if(ctx){try{ctxT=await tryGtx(ctx,'t')||await tryBackup(ctx)}catch(e2){}}
+  let d=cleanSense(j.dict.map(d=>d.pos+'：'+d.terms.join('、')).join('；'));
+  if(ctxT&&validTrans(ctxT,ctx)){const norm=t=>t.replace(/[的地了着]$/,''); // 义项词带"的/地"后缀，译文是裸词——去尾再比
+    const hit=d.split('；').filter(g=>(g.split('：')[1]||'').split('、').some(term=>term&&ctxT.indexOf(norm(term))>=0));
+    if(hit.length)d=hit.join('；')} // 全没命中就保留全部（宁多勿错杀）
+  if(validTrans(d,k))t=d}
 else if(j&&j.sentences&&j.sentences[0]&&validTrans(j.sentences[0].trans,k))t=j.sentences[0].trans}catch(e){}
 if(!t){const s=await tryBackup(k);if(validTrans(s,k))t=s}
 if(!validTrans(t,k)){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(k)+'&langpair=en|zh-CN');

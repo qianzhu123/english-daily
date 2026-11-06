@@ -251,15 +251,16 @@ function restoreMarks(){ // 已标词高亮：只亮你点过的位置（e.locs 
     const phrase=Object.keys(marks).find(k=>k.includes(' ')&&k.split(' ').includes(cw));
     if(phrase&&home[phrase]===wArt)w.classList.add('inphrase')});}
 // ===== 生词归属与翻译 =====
-const TKEY='translations',TVER='v9'; // v9：mattered 坏义（碍事）清缓存
+const TKEY='translations',TVER='v10'; // v10：多义词只留语境义项（旧缓存里的全义项列表作废）
 function getTrans(){return store.get(TKEY+TVER)}
 // 人工优先义项：gtx 词典会把高频词核心义埋掉/给冷僻义（article 缺"冠词"、clearance→净空、panicked→恐吓）
-const MANUAL={article:'名词：冠词（语法）、文章、物品（an article of clothing 一件衣物）\n〔语境提示〕语法课上 article=a/an/the',
-  properly:'副词：正确地、适当地、得体地（=correctly, in a proper way）',
-  clearance:'名词：放行许可（航空：waiting for clearance 等待塔台放行）；清关（海关）；净空',
-  panicked:'动词：恐慌、惊慌失措（panic 的过去式）\n〔语境〕I panicked = 我慌了',
-  pure:'形容词：纯粹的、完全的（out of pure habit 纯粹出于习惯；pure luck 纯属运气）\n〔语境〕pure 放名词前=强调“就只是”，不是“单纯”',
-  mattered:'动词：要紧、重要（the only word that mattered 唯一重要的词）\n〔语境〕matter=要紧，不是“事情/物质”；“碍事”义基本不用'};
+// 格式=标准词典释义（词性：词义），不做单词条的说教式解读（用户 11-07 定版：不要针对某个词强行解释）
+const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
+  properly:'副词：正确地、适当地、得体地',
+  clearance:'名词：放行许可；清关；净空',
+  panicked:'动词：恐慌、惊慌失措（panic 的过去式）',
+  pure:'形容词：纯粹的；完全的；纯的',
+  mattered:'动词：要紧、重要（matter 的过去式）'};
 function validTrans(t,k){ // 翻译结果有效性：空/纯标点符号/回显原文/已知垃圾模式都算无效
   if(!t)return false;
   if(!/[一-鿿A-Za-z0-9]/.test(t))return false; // 必须含汉字/字母/数字（滤掉"。"、"…"等）
@@ -290,21 +291,28 @@ function cleanSense(d){ // 词典义项清洗：去冷僻单字项（properly→
       const [pos,terms]=g.split('：');if(!terms)return g;
       const keep=terms.split('、').filter(t=>t.length>=2||['他','她','它','在','有','的','了'].includes(t));
       return keep.length?pos+'：'+keep.join('、'):''}).filter(Boolean).join('；')}
+function filterSenses(d,ctxTrans){ // 多义词只留与语境相符的义项（用户 11-07 定版：仅仅保留与语义相同的意思）
+  if(!ctxTrans)return d;
+  const norm=t=>t.replace(/[的地了着]$/,''); // 义项词常带"的/地"后缀（纯粹的/重要地），译文里是裸词——去尾再比
+  const hit=d.split('；').filter(g=>{
+    const terms=(g.split('：')[1]||'').split('、');
+    return terms.some(term=>term&&ctxTrans.indexOf(norm(term))>=0)});
+  return hit.length?hit.join('；'):d} // 全没命中就原样保留（宁多勿错杀）
 async function translate(k,ctx){ // 主源 gtx → 备用(move/Lingva) → MyMemory 兜底；额度耗尽提示不算翻译
   const cache=getTrans();
   if(MANUAL[k]){ // 人工义最高优先：即使缓存里有旧坏翻译也要覆盖写入（clearance→净空事故）
     if(cache[k]!==MANUAL[k]){cache[k]=MANUAL[k];store.set(TKEY+TVER,cache)}
     return MANUAL[k]}
   if(cache[k])return cache[k];
-  let t='';
+  let t='';let ctxT='';
   if(ctx){try{ // 语境优先：整句翻译，用户看到的第一个释义来自真实上下文
     let s=await tryGtx(ctx,'t');
     if(!s)s=await tryBackup(ctx);
-    if(validTrans(s,ctx))t='〔语境〕'+s} // 语境结果同样过有效性检查
+    if(validTrans(s,ctx)){t='〔语境〕'+s;ctxT=s}} // 语境结果同样过有效性检查；留副本供义项过滤
   catch(e){}}
-  if(!t||t.indexOf('〔语境〕')===-1||true){ // 词典义项始终补上（多义词如 runway 全部列出）
+  { // 词典义项补上，但多义词只留与语境相符的义项（runway 等多义词不再全列）
     const j=await tryGtx(k,'bd');
-    if(j&&j.dict){const d=cleanSense(j.dict.map(x=>x.pos+'：'+x.terms.join('、')).join('；'));
+    if(j&&j.dict){const d=filterSenses(cleanSense(j.dict.map(x=>x.pos+'：'+x.terms.join('、')).join('；')),ctxT);
       if(validTrans(d,k))t=t?t+'\n〔词典〕'+d:d}
     else if(!t){
       const s2=await tryBackup(k);
