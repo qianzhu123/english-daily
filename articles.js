@@ -420,6 +420,7 @@ window.ARTICLES = [
   {
     title: "The Wrong Pizza, Twice (B1)",
     date: "2026-11-05",
+    archived: true,
     level: "B1 · 餐厅/服务事故",
     sentences: [
       "The pizza arrived with ham on it, and I had ordered the mushroom one — a small mistake, the kind any busy kitchen makes.",
@@ -442,6 +443,7 @@ window.ARTICLES = [
   {
     title: "Renting a Car with a Paper License (B1)",
     date: "2026-11-05",
+    archived: true,
     level: "B1 · 旅行/租车",
     sentences: [
       "Renting a car abroad always looks simple online: pick a car, pay, done.",
@@ -459,6 +461,50 @@ window.ARTICLES = [
       "instead of worrying（而不是干着急）—— instead of + doing",
       "'no'...costs more time than 'yes with conditions' —— 带条件的同意好过直接拒绝，谈判思维",
       "goes your way（朝你要的方向走）—— 事情顺利的高频表达"
+    ]
+  },
+  {
+    title: "The Layover That Became a City Tour (B1+)",
+    date: "2026-11-07",
+    level: "B1+ · 旅行/转机意外",
+    sentences: [
+      "The announcement came in three languages, and by the third one I had already understood the only word that mattered: cancelled.",
+      "What would have been a twelve-hour nightmare for the passenger I used to be turned out to be the best day of that entire trip.",
+      "Instead of joining the queue of people demanding rebooking — a queue I estimated would take four hours and deliver two options, both worse than what I could find myself — I opened the airline app and did the math.",
+      "The next flight left the following morning; the airline was offering a hotel voucher to anyone willing to wait quietly, and the city outside the terminal was one I had never seen.",
+      "So I made the trade that experienced travelers make without thinking: one night of inconvenience for a free hotel and a whole unexpected city.",
+      "By nine I had checked in, dropped my bag, and was eating soup at a stall whose menu had no pictures and no English — which is, more often than not, exactly where the best food is.",
+      "The lesson wasn't that cancellations are good; it was that the difference between a disaster and a story is usually just one decision, made early, before the queue has formed."
+    ],
+    notes: [
+      "the passenger I used to be —— used to 嵌入名词短语，自我对比的高级写法",
+      "a queue I estimated would take four hours and deliver... —— 省略 that 的定语从句嵌套，雅思口语加分",
+      "do the math（算一笔账/盘算一下）—— 口语高频，不是做数学题",
+      "make the trade（做交换/权衡）—— 一晚不便换免费酒店+一座新城",
+      "more often than not（往往、多半）—— 习语，比 usually 地道",
+      "结尾金句：The difference between a disaster and a story is usually just one decision —— 灾难和故事之间只差一个早做的决定"
+    ]
+  },
+  {
+    title: "Two Words That Fixed My Order (B1+)",
+    date: "2026-11-07",
+    level: "B1+ · 餐厅/点餐进阶",
+    sentences: [
+      "For my first year of traveling, every restaurant interaction I had followed the same sad pattern: point at the menu, say the number, hope for the best.",
+      "It worked — mostly — but it kept me a customer, not a guest: no substitutions, no questions, no small adjustments, because asking felt like risk.",
+      "Then in Lisbon a waiter taught me, without meaning to, the two most useful words I know: 'for me'.",
+      "Not 'Can I have the fish without onions', which felt like a whole speech — just 'The grilled fish, for me' — and then, calmly, 'no onions, please', as if it were the most normal request in the world.",
+      "Because it is. Nobody in any restaurant on earth expects your order to be a contract; they adjust a hundred times a night.",
+      "'For me' does something subtle: it hands the sentence over politely, marks you as a participant rather than a tourist, and buys you the right to a follow-up request.",
+      "Since then I have ordered steaks medium-rare, sauces on the side, and ice cream with everything on it — not because the words are magic, but because a two-word opener made the third sentence possible."
+    ],
+    notes: [
+      "hope for the best（往好处盼/听天由命）—— plan for the worst, hope for the best",
+      "it kept me a customer, not a guest —— keep + 宾语 + 名词（保持某种身份），点睛句",
+      "without meaning to（无意间）—— 省略从句，口语高频",
+      "as if it were the most normal request —— as if + 虚拟（were），B1+ 标志性结构",
+      "hands the sentence over politely —— hand over 移交；把句子礼貌地交出去",
+      "buys you the right to...（为你赢得资格）—— buy 在此=换来，不是买东西"
     ]
   },
   /* ===== 预备稿（draft:true 隐藏；界面「🔄 更新下一批」按钮可自助发布） ===== */
