@@ -251,7 +251,7 @@ function restoreMarks(){ // 已标词高亮：只亮你点过的位置（e.locs 
     const phrase=Object.keys(marks).find(k=>k.includes(' ')&&k.split(' ').includes(cw));
     if(phrase&&home[phrase]===wArt)w.classList.add('inphrase')});}
 // ===== 生词归属与翻译 =====
-const TKEY='translations',TVER='v10'; // v10：多义词只留语境义项（旧缓存里的全义项列表作废）
+const TKEY='translations',TVER='v11'; // v11：terminal/grilled/hundred 人工义（hundred 符号垃圾清理）
 function getTrans(){return store.get(TKEY+TVER)}
 // 人工优先义项：gtx 词典会把高频词核心义埋掉/给冷僻义（article 缺"冠词"、clearance→净空、panicked→恐吓）
 // 格式=标准词典释义（词性：词义），不做单词条的说教式解读（用户 11-07 定版：不要针对某个词强行解释）
@@ -260,10 +260,14 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
   clearance:'名词：放行许可；清关；净空',
   panicked:'动词：恐慌、惊慌失措（panic 的过去式）',
   pure:'形容词：纯粹的；完全的；纯的',
-  mattered:'动词：要紧、重要（matter 的过去式）'};
+  mattered:'动词：要紧、重要（matter 的过去式）',
+  terminal:'名词：航站楼；终端；终点站',
+  grilled:'动词：烤（grill 的过去分词）；形容词：烤制的',
+  hundred:'数词：一百'};
 function validTrans(t,k){ // 翻译结果有效性：空/纯标点符号/回显原文/已知垃圾模式都算无效
   if(!t)return false;
   if(!/[一-鿿A-Za-z0-9]/.test(t))return false; // 必须含汉字/字母/数字（滤掉"。"、"…"等）
+  if(/^[：:，,。;；\s]/.test(t))return false; // 以残缺符号开头的碎片（hundred→"：一百"事故）也不算翻译
   if(t.toLowerCase()===k.toLowerCase())return false;
   if(/MYMEMORY WARNING|QUERY LENGTH|%s|ALL AVAILABLE FREE TRANSLATIONS/i.test(t))return false; // 额度耗尽提示也是垃圾
   return true}
@@ -349,7 +353,8 @@ const TASKS={
   '2026-10-28':'回考：could / won\'t + 原形 ✅ 已过；冠词 an+元音 继续盯',
   '2026-10-30':'作业：①an/a 按读音判断 ✅ ②例句 I eat an apple... ✅（iPhone 大写）③场景：酒店投诉（打给经理，用投诉三句式）——尚未开练',
   '2026-10-31':'①读本批 3 篇并标生词（单词只是弹药）②【主任务·对话】酒店投诉：你半夜打电话给前台→要求换房→见经理，目标把三句式用出来：The air conditioner is broken. / This is not as described. / I\'d like to speak to the manager. 回来在对话里打第一句就算开练',
-  '2026-11-02':'①读本批 2 篇（从今天起新节奏：每天 2 篇，读完+对话完成才发下一批；页顶「🔄 更新下一批」可自助发布）②【主任务·对话】酒店投诉续集：前台说客满没房→你争取明天换房或部分退款→前台甩出免费早餐打发→你拒绝并坚持。全部题目在「🎯 训练」页（顶部导航），答案折叠，先写再对'
+  '2026-11-02':'①读本批 2 篇（从今天起新节奏：每天 2 篇，读完+对话完成才发下一批；页顶「🔄 更新下一批」可自助发布）②【主任务·对话】酒店投诉续集：前台说客满没房→你争取明天换房或部分退款→前台甩出免费早餐打发→你拒绝并坚持。全部题目在「🎯 训练」页（顶部导航），答案折叠，先写再对',
+  '2026-11-08':'①读本批 2 篇（B1+ 难度档：自助结账/民宿沟通，读的时候留意 have been doing 的持续感）②【主任务·训练】11-08 训练页 4 场景（退换货+排队抱怨，与文章零重叠），写完导出作答发我批改；11-03/11-04/11-05 三天的批改标记已回填到训练页对应场景下（✅/❌ 条），先回看再写今天的'
 };
 function renderTask(list){
   let el=document.getElementById('taskcard');

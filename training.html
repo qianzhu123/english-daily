@@ -25,6 +25,11 @@ a.back{color:var(--accent);text-decoration:none;font-size:.9rem}
 .try{width:100%;border:1px solid #ddd;border-radius:8px;padding:8px 10px;font-size:.92rem;font-family:inherit;margin-top:8px;resize:vertical;min-height:56px}
 .fb{font-size:.85rem;margin-top:6px}
 .fb.ok{color:var(--accent)}.fb.no{color:var(--bad)}
+/* 批改标记条：Claude 会话批改后展示（11-03 起回填） */
+.gradebar{margin-top:10px;border-radius:6px;padding:8px 12px;font-size:.85rem;line-height:1.6}
+.gradebar.gok{background:#eef6f0;border-left:3px solid var(--accent)}
+.gradebar.gno{background:#fdf0f0;border-left:3px solid var(--bad)}
+.gradebar .gtxt{color:var(--dim);margin-top:2px;white-space:pre-line}
 /* 顶部导航 */
 .nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
 .nav button{border:1px solid #ccc;background:var(--card);color:var(--ink);padding:4px 12px;border-radius:16px;font-size:.82rem;cursor:pointer}
@@ -48,6 +53,27 @@ const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e)
 // ① 题目=纯中文场景，绝不印英文框架/候选句/文章原句 ② 参考答案先写后看（空作答不给看）③ 语音只手动只读英文短句
 const TRAIN=[
 {
+  day:'2026-11-08',
+  title:'开口产出 · 丢东西与换货（从零写）',
+  brief:'今天的场景和阅读文章零重叠——阅读是输入，这里是纯输出。重点回考两处：have been doing（"等了半小时"的持续感）；疑问句只能有一个助动词。规则不变：中文场景自己写，写完才看参考。',
+  daily:[ // 回考埋点：11-05 批改的两个洞
+    {en:'I\'ve been waiting for twenty minutes.',zh:'我已经等了二十分钟——have been doing 持续到现在，B1 核心时态'},
+    {en:'Could you tell me where the fitting room is?',zh:'能告诉我试衣间在哪吗？——could + 原形，问句一个助动词'},
+    {en:'I bought this yesterday, but it doesn\'t work.',zh:'这个我昨天买的，但坏了——过去的事用 bought（过去式）'},
+    {en:'Can I get a refund or exchange it?',zh:'能退款或者换一个吗？——refund 退款 / exchange 换货'}
+  ],
+  items:[
+    {q:'你在店里买的水壶用了两次就漏水了。你回到店里，向店员说明情况并提出解决（2 句：说明+要求）。',
+     ref:'I bought this bottle two days ago, and it leaks. Could I exchange it, please?\n（过去的事用过去式 bought；leak 漏水；换货 exchange）'},
+    {q:'店员问你有没有收据。你有，放在手机里。回答他。',
+     ref:'Yes, here it is. It\'s on my phone.\n（Here it is = 给您；指手机里那张收据用 It\'s on my phone）'},
+    {q:'店员说这个颜色没货了，要等一周。你不想等，提出退款。说出你的要求（1-2 句）。',
+     ref:'I don\'t want to wait. Could I get a refund instead?\n（instead=改要别的；refund 第三次出现，要形成条件反射）'},
+    {q:'你已经在退货队伍里排了 40 分钟，队几乎没动。向旁边的人抱怨一句（1-2 句，用上持续感）。',
+     ref:'I\'ve been standing here for forty minutes, and the line hasn\'t moved at all.\n（have been doing + for 时间段 = 已经…了；排队站军用 standing）'}
+  ]
+},
+{
   day:'2026-11-05',
   title:'开口产出 · 餐厅与问路（从零写）',
   brief:'今天的场景和阅读文章零重叠——阅读是输入，这里是纯输出。注意两处回考点：want 后接 to do；疑问句只能有一个助动词。规则不变：中文场景自己写，写完才看参考。',
@@ -59,13 +85,17 @@ const TRAIN=[
   ],
   items:[
     {q:'餐厅里你的菜等了 25 分钟还没来，你叫住服务员询问（1-2 句）。',
-     ref:'Excuse me, I ordered ten minutes ago. Could you check on my order, please?\n（说出 order + 追问就算过）'},
+     ref:'Excuse me, I ordered ten minutes ago. Could you check on my order, please?\n（说出 order + 追问就算过）',
+     grade:{ok:false,text:'催促句三个坑：①take me food 语序错（bring me my food）②**fasterly 不存在**——fast 本身就是副词 ③地道催法：My food is taking a long time.'}},
     {q:'服务员问你：「soup or salad?」（汤还是沙拉，套餐二选一）。你要汤。一句话回答。',
-     ref:'Soup, please. / I\'d like the soup, please.\n（点餐请求用 I\'d like，不用 I want）'},
+     ref:'Soup, please. / I\'d like the soup, please.\n（点餐请求用 I\'d like，不用 I want）',
+     grade:{ok:true,text:'完全正确——最简二选一回答，礼貌词就位'}},
     {q:'你找不到回酒店的路了，向路人开口求助（1-2 句）。',
-     ref:'Excuse me, how do I get to the Grand Hotel? I\'m a bit lost.\n（问路 = how do I get to + 地点；说明状态 I\'m lost）'},
+     ref:'Excuse me, how do I get to the Grand Hotel? I\'m a bit lost.\n（问路 = how do I get to + 地点；说明状态 I\'m lost）',
+     grade:{ok:false,text:'①help me show 双动词打架——要么 help me，要么 show me where the hotel is ②I\'m really waitting → **I\'ve been waiting**（现在完成进行时：「等了半小时」的持续感，B1 核心时态，重点盯）'}},
     {q:'路人告诉了你方向，但话很快。你没听全。请他慢一点、再说一遍（1 句）。',
-     ref:'Could you say that again, slowly, please?\n（听不懂救命句——第三次出现，要形成条件反射）'}
+     ref:'Could you say that again, slowly, please?\n（听不懂救命句——第三次出现，要形成条件反射）',
+     grade:{ok:true,text:'过关——救命句第三次出现已内化，开头加 Sorry 比参考答案还自然'}}
   ]
 },
 {
@@ -80,13 +110,17 @@ const TRAIN=[
   ],
   items:[
     {q:'退房时账单比你订价高出 90 欧，其中一笔“迷你吧补货”你没消费过。向前台开口质疑这笔费用（1-2 句）。',
-     ref:'Excuse me, I didn\'t use the mini-bar. Could you check this charge again?\n（说出 mini-bar + 质疑/核实就算过；charge 账目、bill 账单）'},
+     ref:'Excuse me, I didn\'t use the mini-bar. Could you check this charge again?\n（说出 mini-bar + 质疑/核实就算过；charge 账目、bill 账单）',
+     grade:{ok:false,text:'①pill→**bill**（pill=药丸，b/p 混）②is not true→doesn\'t look right（"账单不对"说 look right，is not true 是说"这句话是假的"）'}},
     {q:'你不确定那 90 欧的差额都是什么。向前台询问账单构成。',
-     ref:'What are these charges for?\n（更具体：What is the city tax? Could you explain this line?）'},
+     ref:'What are these charges for?\n（更具体：What is the city tax? Could you explain this line?）',
+     grade:{ok:false,text:'What does the bill —— 句子断在半路：does 后必须跟动词原形；问构成用 What are these charges for?'}},
     {q:'机场安检员问你是否带液体。你包里有一瓶忘了喝完的水。如实回答并问有没有别的办法（比如喝掉再灌）。',
-     ref:'Yes, I have a bottle of water. Can I drink it and refill it after security?'},
+     ref:'Yes, I have a bottle of water. Can I drink it and refill it after security?',
+     grade:{ok:false,text:'①I take a botter → I **have** a bottle（随身带着=have，take 是"拿走"；bottle 拼写）②只写了半句——"喝掉再灌"的后半段没出来，输出完整性待加强'}},
     {q:'安检员说这瓶水不能带过去。用一句话接受这个结果，礼貌不争辩。',
-     ref:'OK, no problem. / Sure, I\'ll leave it here.\n（安检不是辩论场——接受+不废话就是最快通关）'}
+     ref:'OK, no problem. / Sure, I\'ll leave it here.\n（安检不是辩论场——接受+不废话就是最快通关）',
+     grade:{ok:false,text:'I know 对工作人员显顶撞（=我知道了别啰嗦）；接受结果用 OK / Sure / No problem'}}
   ]
 },
 {
@@ -101,13 +135,17 @@ const TRAIN=[
   ],
   items:[
     {q:'你半夜到酒店房间，发现房间很热，空调不制冷。向打电话给前台的你，说 1-2 句英文。',
-     ref:'The room is too hot. The air conditioner doesn\'t work.\n（doesn\'t work / is broken 都对；更简单只说 The room is too hot 也算过）'},
+     ref:'The room is too hot. The air conditioner doesn\'t work.\n（doesn\'t work / is broken 都对；更简单只说 The room is too hot 也算过）',
+     grade:{ok:false,text:'could you resolve it? → could you **fix** it, please?（resolve 偏书面/偏大，修东西口语用 fix）'}},
     {q:'你希望酒店明天给你换一个房间。开口要。',
-     ref:'Could I change my room tomorrow?\n（I would like to change my room. 也对）'},
+     ref:'Could I change my room tomorrow?\n（I would like to change my room. 也对）',
+     grade:{ok:false,text:'I want change room at tomorrow 三连坑：①want 后接 to do ②my room 不说裸 room ③tomorrow 前不加 at'}},
     {q:'前台提出送你一份免费早餐作为补偿。你不想要早餐，你想要退钱。拒绝并说出你要什么。',
-     ref:'No, thank you. I\'d like a refund, please.\n（说出 refund 或 money back 就算过）'},
+     ref:'No, thank you. I\'d like a refund, please.\n（说出 refund 或 money back 就算过）',
+     grade:{ok:false,text:'I want to get my money → I\'d like a **refund**（退款专词；want to 生硬，请求用 I\'d like）'}},
     {q:'第二天早上你准备退房离开。说一句退房的话，再问一句早餐是否包含在房费里。',
-     ref:'I\'d like to check out, please. Is breakfast included?'}
+     ref:'I\'d like to check out, please. Is breakfast included?',
+     grade:{ok:false,text:'I\'d like to check out ✅ 完美；但 Does the breakfest was include 四坑：①breakfast 拼写 ②Does 与 was 双助动词只能留一个 ③疑问句单助动词 ④included 被动——**疑问句单助动词是新洞，回考盯**'}}
   ]
 }];
 function esc(s){return String(s).replace(/&/g,'&').replace(/</g,'<')}
@@ -127,11 +165,14 @@ function render(){
     `</div>`:'')+
   d.items.map((it,n)=>{
     const key=d.day+'#'+n;const mine=saved[key]||'';
+    const g=it.grade; // 批改标记（Claude 会话批改后录入，用户定版：从 11-03 起回填）
+    const gbar=g?`<div class="gradebar ${g.ok?'gok':'gno'}">${g.ok?'✅ 批改：过关':'❌ 批改：待改进'}${g.text?'<div class="gtxt">'+esc(g.text)+'</div>':''}</div>`:'';
     return `<div class="card"><h2>场景 #${n+1}</h2>
     <p>${esc(it.q)}</p>
     <textarea class="try" id="try-${n}" placeholder="用你自己的英文写……写错没关系" onblur="saveTry('${d.day}',${n})">${esc(mine)}</textarea>
     <div class="fb" id="fb-${n}"></div>
     <button class="reveal" onclick="reveal('${d.day}',${n})">对答案</button>
+    ${gbar}
     <div class="answer" id="ans-${n}"><b>参考（一种写法，不是标准答案）</b> <button class="speak" onclick="speak(this.dataset.s)" data-s="${esc(it.refEn||it.ref)}">🔊</button>
 ${esc(it.ref)}</div></div>`}).join('');
 }

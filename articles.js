@@ -466,6 +466,7 @@ window.ARTICLES = [
   {
     title: "The Layover That Became a City Tour (B1+)",
     date: "2026-11-07",
+    archived: true,
     level: "B1+ · 旅行/转机意外",
     sentences: [
       "The announcement came in three languages, and by the third one I had already understood the only word that mattered: cancelled.",
@@ -488,6 +489,7 @@ window.ARTICLES = [
   {
     title: "Two Words That Fixed My Order (B1+)",
     date: "2026-11-07",
+    archived: true,
     level: "B1+ · 餐厅/点餐进阶",
     sentences: [
       "For my first year of traveling, every restaurant interaction I had followed the same sad pattern: point at the menu, say the number, hope for the best.",
@@ -505,6 +507,49 @@ window.ARTICLES = [
       "as if it were the most normal request —— as if + 虚拟（were），B1+ 标志性结构",
       "hands the sentence over politely —— hand over 移交；把句子礼貌地交出去",
       "buys you the right to...（为你赢得资格）—— buy 在此=换来，不是买东西"
+    ]
+  },
+  {
+    title: "Fifteen Items, One Bar code (B1+)",
+    date: "2026-11-08",
+    level: "B1+ · 购物/自助结账",
+    sentences: [
+      "Self-checkout machines are honest in a way that people are not: they do not care about your day, your accent, or the fact that you are in a hurry.",
+      "I had been standing in that lane for six minutes — scanning, bagging, apologizing to the machine as if it could hear me — when the screen went red: unexpected item.",
+      "The item was a lemon; the problem was that I had placed it in the bagging area before scanning it, and the machine, unforgiving, refused to continue.",
+      "An assistant appeared, waved her card over the reader like a priest granting absolution, and disappeared before I could even say thank you.",
+      "Here is what nobody tells you about these machines: they have been watching you shop this whole time, and they are simply waiting for you to make one mistake.",
+      "By the time I walked out, I had spent more energy negotiating with a computer than I would have spent chatting with a human cashier — and yet, the next day, I queued for the machine again.",
+      "Convenience does not always save time; sometimes it just moves the work, quietly, from someone paid to do it onto you."
+    ],
+    notes: [
+      "I had been standing... for six minutes —— 过去完成进行时（had been doing），『已经站了六分钟』的持续感，11-05 批改新洞 I've been waiting 的过去版",
+      "as if it could hear me —— as if + 虚拟（第二次出现，巩固）",
+      "granting absolution（赦免/开恩）—— 幽默的宗教比喻，雅思阅读高级词",
+      "have been watching you this whole time —— 现在完成进行时（机器一直在盯着你）",
+      "moves the work onto you —— 把活儿悄悄转移到你身上，结尾冷幽默金句"
+    ]
+  },
+  {
+    title: "Checking In at a Flat, Not a Hotel (B1+)",
+    date: "2026-11-08",
+    level: "B1+ · 住宿/民宿沟通",
+    sentences: [
+      "There is no front desk at an apartment rental, and that is exactly the point: if something goes wrong at midnight, the person you reach is not a receptionist but a stranger with a phone.",
+      "Our host had sent a door code, a Wi-Fi password, and a paragraph of instructions — and, being experienced, I had screenshotted all of it before landing, which is the only reason we got inside.",
+      "The heating did not work, and at eleven at night I faced the classic rental dilemma: complain now and risk a tense morning, or sleep cold and say nothing.",
+      "I typed the message I have settled on after years of this: 'Hi, sorry to bother you so late — the heating seems to have stopped. Is there a switch I might be missing?'",
+      "The wording matters more than the problem: 'seems to have stopped' leaves the host a way to say yes gracefully, and 'is there a switch I might be missing' blames the situation, not the flat.",
+      "She replied in four minutes: a tripped breaker, two photos, one apology, and by midnight the flat was warm.",
+      "A hotel solves problems for you; a rental asks you to solve them together — and the phrase you use to open that conversation decides which kind of night you are going to have."
+    ],
+    notes: [
+      "the person you reach is not... but... —— not...but 结构嵌入从句，比 but 更书面",
+      "being experienced, I had screenshotted... —— 分词短语作原因状语（= because I was experienced）",
+      "the heating seems to have stopped —— seem to have done（看起来已经停了），委婉陈述问题",
+      "Is there a switch I might be missing? —— might be doing 推测；blame the situation, not the flat（怪情况不怪房子）",
+      "a tripped breaker（跳闸的电闸）—— 民宿高频词；leave sb a way to say yes（给对方台阶）",
+      "A hotel solves problems for you; a rental asks you to solve them together —— 结尾对比金句"
     ]
   },
   /* ===== 预备稿（draft:true 隐藏；界面「🔄 更新下一批」按钮可自助发布） ===== */

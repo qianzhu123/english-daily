@@ -73,7 +73,7 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200)}
 function speak(text,rate){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||0.9;u.voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u)}
 // ===== 翻译（gtx 主源 + MyMemory 兜底 + 有效性过滤 + 人工义） =====
-const TKEY='translations',TVER='v10';
+const TKEY='translations',TVER='v11';
 function getTrans(){return store.get(TKEY+TVER)}
 // 格式=标准词典释义（词性：词义），不做单词条的说教式解读（用户 11-07 定版：不要针对某个词强行解释）
 const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
@@ -81,8 +81,12 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
   clearance:'名词：放行许可；清关；净空',
   panicked:'动词：恐慌、惊慌失措（panic 的过去式）',
   pure:'形容词：纯粹的；完全的；纯的',
-  mattered:'动词：要紧、重要（matter 的过去式）'};
+  mattered:'动词：要紧、重要（matter 的过去式）',
+  terminal:'名词：航站楼；终端；终点站',
+  grilled:'动词：烤（grill 的过去分词）；形容词：烤制的',
+  hundred:'数词：一百'};
 function validTrans(t,k){if(!t)return false;if(!/[一-鿿A-Za-z0-9]/.test(t))return false;
+if(/^[：:，,。;；\s]/.test(t))return false; // 残缺符号开头的碎片（hundred→"：一百"事故）
 if(t.toLowerCase()===k.toLowerCase())return false;if(/MYMEMORY WARNING|QUERY LENGTH|%s|ALL AVAILABLE FREE TRANSLATIONS/i.test(t))return false;return true}
 async function tryGtx(q,dt){try{
   const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt='+dt+(dt==='t'?'':'&dj=1')+'&q='+encodeURIComponent(q));
