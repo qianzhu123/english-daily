@@ -1,5 +1,17 @@
 window.MISTAKES = [
   {
+    date: "2026-11-07",
+    scene: "训练批改·餐厅与问路（11-05 训练页作答·完整导出）",
+    items: [
+      { wrong: "Could you take me food fasterly?", right: "Could you speed up my order, please? / My food is taking a long time.", why: "三个坑：①take me food 语序错（bring me my food / speed up my order）②**fasterly 不存在**——fast 本身是副词（faster 比较级），-ly 是臆造 ③催促服务员别用 could you+速度，用地道句 My food is taking a long time", kind: "词性/搭配" },
+      { wrong: "I'm really waitting for half an hour", right: "I've been waiting for half an hour.", why: "①waitting→waiting（双写只到 t，wait 不双写）②**从半小时前持续到现在=现在完成进行时 have been waiting**——一般进行时 I'm waiting 表达不了\"已经等了半小时\"的持续感，这是 B1 核心时态", kind: "时态" },
+      { wrong: "Could you help me show where the hotel is", right: "Could you show me where the hotel is? / How do I get to the hotel?", why: "help me show 双动词打架——要一个：help me（后面不接另一动作）或 show me where；句尾问号也丢了", kind: "句式" },
+      { wrong: "could you say that slowly again?", right: "Could you say that again, slowly, please?", why: "语序小错但意思全对——again 在 slowly 前更自然（再说一遍，慢点）；语序版本也有母语者用，不算大错， polish 级", kind: "句式" },
+      { wrong: "Soup, please", right: "Soup, please. ✅", why: "完全正确——最简二选一回答，礼貌词就位", kind: "已过关", resolved: true },
+      { wrong: "Sorry, could you say that slowly again?", right: "✅ 开头 Sorry 比参考答案更自然", why: "过关：救命句第三次出现已基本内化，Sorry 开头加分", kind: "已过关", resolved: true }
+    ]
+  },
+  {
     date: "2026-11-04",
     scene: "训练批改·退房与安检（11-04 训练页作答）",
     items: [
