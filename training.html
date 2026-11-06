@@ -136,27 +136,22 @@ function render(){
 ${esc(it.ref)}</div></div>`}).join('');
 }
 function pick(day){curDay=day;render()}
-// 导出作答：粘贴给 Claude 批改用。
-// 关键修复：作答以「输入框实时内容」为准（用户改过多版的最终版），traintry 只是保存兜底——
-// 旧版导出读 traintry 快照（点对答案那一刻存的），用户后续编辑全部丢失（用户实测报告的严重问题）
+// 导出作答：只导出**当前选中日期**的作答（用户定版：不要把其他日期混进来）
+// 作答以「输入框实时内容」为准（用户改过多版的最终版），traintry 只是保存兜底
 function exportAnswers(){
   const saved=store.get('traintry');
-  const days=[...new Set(TRAIN.map(d=>d.day))];
-  let text='';let count=0;
-  days.forEach(day=>{
-    const d=TRAIN.find(x=>x.day===day);if(!d)return;
-    let dayText='';
-    d.items.forEach((it,n)=>{
-      // 优先级：当前 DOM 输入框内容（最终版）> traintry 快照
-      const ta=document.getElementById('try-'+n);
-      const live=ta&&curDay===day?ta.value.trim():'';
-      const snap=(saved[day+'#'+n]||'').trim();
-      const ans=live||snap;
-      if(!ans)return;
-      count++;
-      dayText+='场景'+(n+1)+'：'+it.q.replace(/\n/g,' ')+'\n我的作答：'+ans+'\n\n'});
-    if(dayText)text+='【'+day+' '+d.title+'】\n'+dayText});
-  if(!count){toast('还没有作答记录——先在场景里写英文');return}
+  const day=curDay||TRAIN[0].day;
+  const d=TRAIN.find(x=>x.day===day);if(!d)return;
+  let text='【'+day+' '+d.title+'】\n';let count=0;
+  d.items.forEach((it,n)=>{
+    const ta=document.getElementById('try-'+n);
+    const live=ta?ta.value.trim():'';
+    const snap=(saved[day+'#'+n]||'').trim();
+    const ans=live||snap;
+    if(!ans)return;
+    count++;
+    text+='场景'+(n+1)+'：'+it.q.replace(/\n/g,' ')+'\n我的作答：'+ans+'\n\n'});
+  if(!count){toast('这一天还没有作答——先在场景里写英文');return}
   text=text.replace(/\n+$/,'\n');
   // 复制到剪贴板（手机/桌面通用），失败降级为弹层手动复制
   const done=()=>toast('✓ 作答已复制，去会话里粘贴即可批改（'+count+' 题）');
