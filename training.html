@@ -53,6 +53,27 @@ const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e)
 // ① 题目=纯中文场景，绝不印英文框架/候选句/文章原句 ② 参考答案先写后看（空作答不给看）③ 语音只手动只读英文短句
 const TRAIN=[
 {
+  day:'2026-11-09',
+  title:'开口产出 · 理发与错过班车（从零写）',
+  brief:'场景继续与文章零重叠。回考重点：should have done（本该…却没，复盘专用）；疑问句单助动词第三次盯。规则不变：中文场景自己写，写完才看参考。',
+  daily:[
+    {en:'How much is a haircut?',zh:'理发多少钱？——how much is + 名词，问价万能'},
+    {en:'Just a trim, please.',zh:'只修一下——trim=修剪（不说 cut a little）'},
+    {en:'I should have left earlier.',zh:'我本该早点出发的——should have done，复盘专用（实际没早走）'},
+    {en:'When does the next bus come?',zh:'下一班车什么时候来？——疑问句单助动词：does 后跟动词原形 come'}
+  ],
+  items:[
+    {q:'你走进理发店。理发师问你剪什么样的。你想只修短两厘米，不要剪太短。说出你的要求（1-2 句）。',
+     ref:'Just a trim, please. Two centimeters off, not too short.\n（trim=修剪；off=剪掉多少的量词用法，take two centimeters off）'},
+    {q:'理发师剪完问你意见。你发现后面右边比左边短了一点。礼貌指出并请他修一下（1-2 句）。',
+     ref:'Excuse me, the right side looks a bit shorter than the left. Could you fix it a little?\n（比较级 than；指出问题用 looks，不是 is not true）'},
+    {q:'你到车站时公交车刚开走。向站台的人解释情况并问下一班（2 句：懊恼+提问）。',
+     ref:'The bus just left. I should have left home earlier. When does the next bus come?\n（should have done=本该做实际没做；does 后接原形 come）'},
+    {q:'朋友问你为什么迟到了。解释：你在错误的站台等了十五分钟（说出持续感，用 have been 的句式）。',
+     ref:'Sorry, I was waiting at the wrong stop for fifteen minutes.\n（过去发生的事用过去进行 was waiting；have been waiting 只用于持续到现在）'}
+  ]
+},
+{
   day:'2026-11-08',
   title:'开口产出 · 丢东西与换货（从零写）',
   brief:'今天的场景和阅读文章零重叠——阅读是输入，这里是纯输出。重点回考两处：have been doing（"等了半小时"的持续感）；疑问句只能有一个助动词。规则不变：中文场景自己写，写完才看参考。',

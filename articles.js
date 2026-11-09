@@ -512,6 +512,7 @@ window.ARTICLES = [
   {
     title: "Fifteen Items, One Bar code (B1+)",
     date: "2026-11-08",
+    archived: true,
     level: "B1+ · 购物/自助结账",
     sentences: [
       "Self-checkout machines are honest in a way that people are not: they do not care about your day, your accent, or the fact that you are in a hurry.",
@@ -533,6 +534,7 @@ window.ARTICLES = [
   {
     title: "Checking In at a Flat, Not a Hotel (B1+)",
     date: "2026-11-08",
+    archived: true,
     level: "B1+ · 住宿/民宿沟通",
     sentences: [
       "There is no front desk at an apartment rental, and that is exactly the point: if something goes wrong at midnight, the person you reach is not a receptionist but a stranger with a phone.",
@@ -550,6 +552,50 @@ window.ARTICLES = [
       "Is there a switch I might be missing? —— might be doing 推测；blame the situation, not the flat（怪情况不怪房子）",
       "a tripped breaker（跳闸的电闸）—— 民宿高频词；leave sb a way to say yes（给对方台阶）",
       "A hotel solves problems for you; a rental asks you to solve them together —— 结尾对比金句"
+    ]
+  },
+  {
+    title: "The Taxi That Knew a Better Way (B1+)",
+    date: "2026-11-09",
+    level: "B1+ · 交通/出租车纠纷",
+    sentences: [
+      "The meter said twenty-two euros; the map on my phone said the trip should have cost nine, and the difference between those two numbers was the driver's whole evening.",
+      "I had checked the route before getting in — one of the few habits my first year of travel actually taught me — so I watched us turn away from it almost immediately.",
+      "Drivers who plan to overcharge never look surprised; this one simply said 'traffic', the universal word that means 'stop asking', and kept driving.",
+      "I did not raise my voice; I held up my phone and said, calmly, that I knew this route, that the app showed nine euros, and that I would pay what the app said.",
+      "He protested for exactly one traffic light — long enough to test me, short enough to know he had lost — and then the meter mysteriously began to run slower.",
+      "What surprised me most was not the attempt but my own calm: two years ago I would have paid the twenty-two euros and written an angry review from the airport.",
+      "The fare ended at ten sixty. I tipped anyway. Being right is cheap; being right and kind, at the same time, is the skill worth practicing."
+    ],
+    notes: [
+      "should have cost nine —— should have done（本该…实际没有），投诉/复盘高频结构",
+      "I had checked the route before getting in —— 过去完成时（上车前就查过）",
+      "the universal word that means 'stop asking' —— 同位语从句写法；watch sb do（watch us turn）",
+      "long enough to test me, short enough to know... —— enough to do 对仗，口语加分",
+      "the meter mysteriously began to run slower —— mysteriously 反讽用法的绝佳例子",
+      "结尾金句：Being right is cheap; being right and kind is the skill worth practicing"
+    ]
+  },
+  {
+    title: "Two Percent Battery (B1+)",
+    date: "2026-11-09",
+    level: "B1+ · 求助/手机没电",
+    sentences: [
+      "Two percent of battery is a strange kind of loneliness: the whole internet is still technically there, but you have about ninety seconds to use it.",
+      "I was standing outside a pharmacy in a town whose name I could not pronounce, needing one thing only — the address of the guesthouse I had booked that morning.",
+      "Asking a stranger for help used to feel expensive, like I owed them something; now I understand it is just a small trade: thirty seconds of their time for a problem I cannot solve alone.",
+      "I picked an older woman leaving the shop, said 'Excuse me, sorry — my phone is dying. Could you show me where this is?' and handed her the screen before it went black.",
+      "She did not speak English, but she recognized the street name, made a face that said 'far', and then — instead of pointing — simply waved at me to follow her.",
+      "She walked me four blocks in the wrong direction for her own errand, left me at a corner she clearly trusted, and waved again before I could dig out the word for thank you.",
+      "The guesthouse had a charger, of course. But the thing I remember from that night is not the phone coming back to life; it is how little it costs to help, and how rarely we let ourselves ask."
+    ],
+    notes: [
+      "a strange kind of loneliness —— 抽象名词量化写法，口语书面两用",
+      "I had booked that morning —— 过去完成时（那天早上订好的）",
+      "used to feel expensive, like I owed them something —— used to + feel + 比喻，情感描述高级写法",
+      "Could you show me where this is? —— 求助万能句（训练页刚练过的句族）",
+      "waved at me to follow her —— wave to/at sb + to do（招手让人跟）",
+      "walked me four blocks —— walk sb + 距离（陪走），双宾语动词又一声（drive sb home 同族）"
     ]
   },
   /* ===== 预备稿（draft:true 隐藏；界面「🔄 更新下一批」按钮可自助发布） ===== */
