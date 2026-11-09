@@ -251,10 +251,11 @@ function restoreMarks(){ // 已标词高亮：只亮你点过的位置（e.locs 
     const phrase=Object.keys(marks).find(k=>k.includes(' ')&&k.split(' ').includes(cw));
     if(phrase&&home[phrase]===wArt)w.classList.add('inphrase')});}
 // ===== 生词归属与翻译 =====
-const TKEY='translations',TVER='v12'; // v12：instructions/gracefully 人工义
+const TKEY='translations',TVER='v13'; // v13：关键词预置翻译（用户 11-10 提议：点词直接展示，不再现查）
 function getTrans(){return store.get(TKEY+TVER)}
 // 人工优先义项：gtx 词典会把高频词核心义埋掉/给冷僻义（article 缺"冠词"、clearance→净空、panicked→恐吓）
 // 格式=标准词典释义（词性：词义），不做单词条的说教式解读（用户 11-07 定版：不要针对某个词强行解释）
+// 关键词预置（用户 11-10 定版）：高频旅行词+近期坏译词直接给人工义，点词秒出不再请求
 const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
   properly:'副词：正确地、适当地、得体地',
   clearance:'名词：放行许可；清关；净空',
@@ -265,7 +266,28 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
   grilled:'动词：烤（grill 的过去分词）；形容词：烤制的',
   hundred:'数词：一百',
   instructions:'名词：说明、指示（instruction 的复数）',
-  gracefully:'副词：得体地、从容地；优雅地'};
+  gracefully:'副词：得体地、从容地；优雅地',
+  meter:'名词：（出租车）计价器；仪表；公尺',
+  technically:'副词：严格来说；名义上',
+  owed:'动词：欠（owe 的过去式/过去分词）；欠（钱/人情）',
+  fare:'名词：车费、票价',
+  overcharge:'动词：多收钱、宰客',
+  tipped:'动词：给小费（tip 的过去式）',
+  guesthouse:'名词：民宿、招待所',
+  pronounce:'动词：发音（……的音）',
+  charger:'名词：充电器',
+  errand:'名词：差事、跑腿',
+  waved:'动词：挥手（wave 的过去式）',
+  commission:'名词：手续费、佣金',
+  rate:'名词：汇率；费率；速度',
+  receipt:'名词：收据、小票',
+  clerk:'名词：职员、店员',
+  laundry:'名词：要洗的衣物；洗衣',
+  instinct:'名词：本能、直觉',
+  suspicion:'名词：怀疑、疑心',
+  villain:'名词：坏人、反派',
+  folded:'动词：折叠（fold 的过去式/过去分词）',
+  dissolved:'动词：消散、化解（dissolve 的过去式）'};
 function validTrans(t,k){ // 翻译结果有效性：空/纯标点符号/回显原文/已知垃圾模式都算无效
   if(!t)return false;
   if(!/[一-鿿A-Za-z0-9]/.test(t))return false; // 必须含汉字/字母/数字（滤掉"。"、"…"等）
@@ -428,14 +450,15 @@ function playArticle(artIdx,btn){
   next()}
 // ===== 整篇翻译：显示/隐藏本文全文译文（gtx 整篇 → 失败逐句兜底 → MyMemory 兜底） =====
 const atrTKEY='arttr';
-const atrVer='v2'; // 升版本：gtx 整篇被 429 限流期间产生的空/坏缓存全部作废
+const atrVer='v3'; // v3：缓存 key 从序号改标题（批次轮换后序号漂移串文章）+ 全文必须含中文
+function hasChinese(s){return /[一-鿿]/.test(s)}
 async function gtxOnce(text){ // 单次 gtx 请求，返回全文或 ''
   const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&q='+encodeURIComponent(text));
   if(!r.ok)return '';
   const j=await r.json();
   return j.sentences?j.sentences.map(s=>s.trans||'').join(''):''}
 async function translateArticle(sentences){ // 整篇→逐句→MyMemory 三级：限流不再一票否决
-  try{const full=await gtxOnce(sentences.join('\n'));if(full)return full}catch(e){}
+  try{const full=await gtxOnce(sentences.join('\n'));if(full&&hasChinese(full))return full}catch(e){}
   // gtx 挂了（实测 429）：逐句请求再试一轮，失败句留原文
   const parts=[];
   for(const s of sentences){
@@ -445,15 +468,15 @@ async function translateArticle(sentences){ // 整篇→逐句→MyMemory 三级
       try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(s)+'&langpair=en|zh-CN');
         const j=await r.json();const m=j&&j.responseData&&j.responseData.translatedText||'';
         if(m&&!/MYMEMORY WARNING/.test(m))t=m}catch(e){}}
-    parts.push(t||s)}
-  return parts.join('\n')}
+    parts.push(hasChinese(t)?t:s)} // 逐句也必须含中文，否则留原文（"全文翻译变英文"事故根因）
+  return hasChinese(parts.join(''))?parts.join('\n'):''} // 整体不含中文=全挂，返回空走失败提示
 async function toggleArticleTr(artIdx,btn){
   const artBox=document.getElementById('vpanel-'+artIdx).parentNode.querySelector('.article');
   let tr=artBox.parentNode.querySelector('.arttr');
   if(tr){tr.remove();btn.textContent='整篇翻译';return} // 再点收起
   btn.textContent='翻译中…';
   const cache=store.get(atrTKEY+atrVer);
-  const key='a'+artIdx;
+  const key='t'+window.ARTICLES[artIdx].title; // key 用标题：序号会随批次轮换漂移
   let full=cache[key];
   if(!full){
     const sentences=window.ARTICLES[artIdx].sentences;

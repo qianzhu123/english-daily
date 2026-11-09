@@ -30,6 +30,15 @@ a.back{color:var(--accent);text-decoration:none;font-size:.9rem}
 .gradebar.gok{background:#eef6f0;border-left:3px solid var(--accent)}
 .gradebar.gno{background:#fdf0f0;border-left:3px solid var(--bad)}
 .gradebar .gtxt{color:var(--dim);margin-top:2px;white-space:pre-line}
+/* 雅思练一练：选择+判断，即时反馈 */
+.quiz .passage{background:#f4f0e4;border-radius:6px;padding:8px 12px;font-size:.88rem;line-height:1.7;margin:6px 0}
+.opt{display:block;width:100%;text-align:left;border:1px solid #ddd;background:var(--card);border-radius:8px;padding:7px 12px;margin:6px 0;font-size:.9rem;cursor:pointer;font-family:inherit;color:var(--ink)}
+.opt.good{background:#eef6f0;border-color:var(--accent);font-weight:700}
+.opt.badv{background:#fdf0f0;border-color:var(--bad)}
+.qwhy{font-size:.85rem;color:var(--dim);margin-top:2px;display:none}
+.qwhy.show{display:block}
+.qdone{font-size:.78rem;font-weight:700;margin-top:4px}
+.qdone.ok{color:var(--accent)}.qdone.no{color:var(--bad)}
 /* 顶部导航 */
 .nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
 .nav button{border:1px solid #ccc;background:var(--card);color:var(--ink);padding:4px 12px;border-radius:16px;font-size:.82rem;cursor:pointer}
@@ -52,6 +61,40 @@ const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e)
 // 2026-11-03 定版规则（用户原话）："我阅读能力和说话能力不是一个层级"＋"不要直接给出具体内容供我直接填写"：
 // ① 题目=纯中文场景，绝不印英文框架/候选句/文章原句 ② 参考答案先写后看（空作答不给看）③ 语音只手动只读英文短句
 const TRAIN=[
+{
+  day:'2026-11-10',
+  title:'雅思练一练 · 判断与选择（即时反馈）',
+  brief:'今天不写句子——换成雅思阅读同款题型：判断 TRUE/FALSE/NOT GIVEN + 单选。点选项即时判分，答完看解析。这练的是读得准，跟场景输出互补。',
+  daily:[],
+  items:[],
+  quiz:[
+    {passage:'I did not raise my voice; I held up my phone and said, calmly, that I knew this route, that the app showed nine euros, and that I would pay what the app said.',
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The writer shouted at the taxi driver.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:1,
+     why:'原文 I did not raise my voice（没有提高声音）→ FALSE。雅思判断题考点：not + 动词 的直接否定'},
+    {passage:'The meter said twenty-two euros; the map on my phone said the trip should have cost nine.',
+     type:'单选',
+     q:'What does "should have cost" tell us?',
+     opts:['The trip actually cost nine euros','Nine euros was the expected fair price, but the real cost was different','The app made a mistake'],ans:1,
+     why:'should have done = 本该…（而实际不是）——预期 9 欧，实收 22 欧。这是本结构的核心语义'},
+    {passage:'She did not speak English, but she recognized the street name, made a face that said \'far\', and then — instead of pointing — simply waved at me to follow her.',
+     type:'单选',
+     q:'How did the woman help?',
+     opts:['She called a taxi for the writer','She pointed at the map carefully','She personally led the way'],ans:2,
+     why:'instead of pointing — waved at me to follow her：没指路，而是带着走。instead of + doing 是雅思高频替换信号'},
+    {passage:'Asking a stranger for help used to feel expensive, like I owed them something; now I understand it is just a small trade.',
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The writer now thinks asking for help costs nothing socially.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:0,
+     why:'used to feel expensive（过去觉得）→ now... just a small trade（现在觉得只是小交换）→ TRUE。考点：used to 与 now 的今昔对比'},
+    {passage:'Convenience does not always save time; sometimes it just moves the work, quietly, from someone paid to do it onto you.',
+     type:'单选',
+     q:'What is the writer\'s view of self-checkout?',
+     opts:['It is always faster than a cashier','It transfers effort from staff to customers','It should be removed from stores'],ans:1,
+     why:'moves the work... onto you（把活儿转移到你身上）——同义替换：transfer effort from staff to customers。雅思阅读考的就是这种改写识别'}
+  ]
+},
 {
   day:'2026-11-09',
   title:'开口产出 · 理发与错过班车（从零写）',
@@ -184,6 +227,9 @@ function render(){
   (d.daily&&d.daily.length?`<div class="card"><h2>📌 今日实用句 <span class="tag">听读用 · 别抄进答案</span></h2>`+
     d.daily.map(s=>`<div class="daily"><span class="en">${esc(s.en)}</span> <button class="speak" onclick="speak(this.dataset.s)" data-s="${esc(s.en)}">🔊</button><div class="zh">${esc(s.zh)}</div></div>`).join('')+
     `</div>`:'')+
+  // 雅思练一练（选择/判断，即时反馈；作答状态记 quizdone，刷新不重置）
+  (d.quiz&&d.quiz.length?`<div class="card"><h2>📝 雅思练一练 <span class="tag">点选项即时判分</span></h2>`+
+    d.quiz.map((qz,qn)=>quizHtml(d.day,qn,qz,saved)).join('')+'</div>':'')+
   d.items.map((it,n)=>{
     const key=d.day+'#'+n;const mine=saved[key]||'';
     const g=it.grade; // 批改标记（Claude 会话批改后录入，用户定版：从 11-03 起回填）
@@ -198,6 +244,28 @@ function render(){
 ${esc(it.ref)}</div></div>`}).join('');
 }
 function pick(day){curDay=day;render()}
+// 雅思练一练渲染 + 判分（quizdone 记 {day#qn: {pick, ok}}，防止重渲染丢状态）
+function quizHtml(day,qn,qz,saved){
+  const key=day+'#q'+qn;
+  const done=saved[key];
+  const opts=qz.opts.map((o,i)=>{
+    let cls='opt';
+    if(done){ // 已答：锁定，标出对错
+      if(i===qz.ans)cls+=' good';
+      else if(i===done.pick)cls+=' badv'}
+    return `<button class="${cls}" ${done?'disabled':''} onclick="answerQuiz('${day}',${qn},${i})">${'ABCD'[i]}. ${esc(o)}</button>`}).join('');
+  const res=done?`<div class="qdone ${done.ok?'ok':'no'}">${done.ok?'✓ 答对了':'✗ 答错了——正确答案：'+'ABCD'[qz.ans]}</div>`:'';
+  return `<div style="margin-top:14px"><div style="font-size:.72rem;color:var(--dim)">${esc(qz.type)}</div>
+  <div class="passage">${esc(qz.passage)}</div>
+  <p style="font-weight:700;margin:6px 0">${esc(qz.q)}</p>${opts}${res}
+  <div class="qwhy ${done?'show':''}" id="why-${qn}">💡 ${esc(qz.why)}</div></div>`}
+function answerQuiz(day,qn,pickIdx){
+  const d=TRAIN.find(x=>x.day===day);const qz=d.quiz[qn];
+  const ok=pickIdx===qz.ans;
+  const saved=store.get('traintry');
+  saved[day+'#q'+qn]={pick:pickIdx,ok:ok};store.set('traintry',saved);
+  render(); // 重渲染锁答案；解析条随 done 状态展开
+  const why=document.getElementById('why-'+qn);if(why)why.classList.add('show')}
 // 导出作答：只导出**当前选中日期**的作答（用户定版：不要把其他日期混进来）
 // 作答以「输入框实时内容」为准（用户改过多版的最终版），traintry 只是保存兜底
 function exportAnswers(){
@@ -205,6 +273,12 @@ function exportAnswers(){
   const day=curDay||TRAIN[0].day;
   const d=TRAIN.find(x=>x.day===day);if(!d)return;
   let text='【'+day+' '+d.title+'】\n';let count=0;
+  // 雅思练一练作答（选择/判断，含对错）
+  (d.quiz||[]).forEach((qz,qn)=>{
+    const r=saved[day+'#q'+qn];if(!r)return;
+    count++;
+    text+='练一练'+(qn+1)+'（'+qz.type+'）：'+qz.q+'\n我的选择：'+'ABCD'[r.pick]+'. '+qz.opts[r.pick]+(r.ok?'（✓ 对）':'（✗ 错，正确：'+'ABCD'[qz.ans]+'. '+qz.opts[qz.ans]+'）')+'\n\n'});
+  // 场景作答
   d.items.forEach((it,n)=>{
     const ta=document.getElementById('try-'+n);
     const live=ta?ta.value.trim():'';
@@ -213,7 +287,7 @@ function exportAnswers(){
     if(!ans)return;
     count++;
     text+='场景'+(n+1)+'：'+it.q.replace(/\n/g,' ')+'\n我的作答：'+ans+'\n\n'});
-  if(!count){toast('这一天还没有作答——先在场景里写英文');return}
+  if(!count){toast('这一天还没有作答——先在场景里写英文或做练一练');return}
   text=text.replace(/\n+$/,'\n');
   // 复制到剪贴板（手机/桌面通用），失败降级为弹层手动复制
   const done=()=>toast('✓ 作答已复制，去会话里粘贴即可批改（'+count+' 题）');
