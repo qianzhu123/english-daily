@@ -557,6 +557,7 @@ window.ARTICLES = [
   {
     title: "The Taxi That Knew a Better Way (B1+)",
     date: "2026-11-09",
+    archived: true,
     level: "B1+ · 交通/出租车纠纷",
     sentences: [
       "The meter said twenty-two euros; the map on my phone said the trip should have cost nine, and the difference between those two numbers was the driver's whole evening.",
@@ -579,6 +580,7 @@ window.ARTICLES = [
   {
     title: "Two Percent Battery (B1+)",
     date: "2026-11-09",
+    archived: true,
     level: "B1+ · 求助/手机没电",
     sentences: [
       "Two percent of battery is a strange kind of loneliness: the whole internet is still technically there, but you have about ninety seconds to use it.",
@@ -596,6 +598,50 @@ window.ARTICLES = [
       "Could you show me where this is? —— 求助万能句（训练页刚练过的句族）",
       "waved at me to follow her —— wave to/at sb + to do（招手让人跟）",
       "walked me four blocks —— walk sb + 距离（陪走），双宾语动词又一声（drive sb home 同族）"
+    ]
+  },
+  {
+    title: "The Pharmacy That Asked Three Questions (B1+)",
+    date: "2026-11-11",
+    level: "B1+ · 购物/药店沟通",
+    sentences: [
+      "In most countries a pharmacy is a shop; in this one it turned out to be a small clinic with a cash register, and the pharmacist was not going to let me forget it.",
+      "I asked for cough syrup, expecting the transaction to take thirty seconds — pick it up, pay, leave — but she looked at me as if I had just asked to borrow her car.",
+      "First question: who is it for? Second: how long has the cough lasted? Third: are you taking any other medicine? Each answer she typed into her computer like a border officer checking a passport.",
+      "I caught myself getting impatient, and then I caught something else: she had already stopped two mistakes before they reached my bag — a syrup I did not need, and a dose that would have been too strong for my mother.",
+      "If I had been in a hurry, if I had treated her questions as an insult instead of a filter, one of those bottles would have gone home with me.",
+      "The whole interview took four minutes. The wrong medicine would have cost me two days.",
+      "Some purchases are not transactions but consultations in disguise, and the extra minute you spend answering questions is the cheapest insurance you will ever buy."
+    ],
+    notes: [
+      "as if I had just asked to borrow her car —— as if + 过去完成（虚拟的过去），三现，比 were 更远一层",
+      "expecting the transaction to take thirty seconds —— expect sth to do（分词状语）",
+      "a dose that would have been too strong —— would have done（本来会…实际没有），虚拟完成时",
+      "If I had been in a hurry... —— if 虚拟过去式（had done），雅思口语加分结构",
+      "treated her questions as an insult instead of a filter —— treat A as B；filter（过滤器/把关人）比喻",
+      "consultations in disguise（伪装成交易的问诊）—— in disguise 习语；insurance 比喻收尾"
+    ]
+  },
+  {
+    title: "The Queue That Tested Everyone (B1+)",
+    date: "2026-11-11",
+    level: "B1+ · 生活/公共秩序",
+    sentences: [
+      "The line for the museum wrapped around the block, and after forty minutes it had become less a queue than a small society, complete with its own weather complaints and snack economy.",
+      "That was when the couple arrived — not behind me, which would have been honest, but slightly ahead, sliding into the gap in front of the woman with the stroller as if the gap had been reserved.",
+      "Nobody said anything at first; that is the magic of cutting in line, the first ten seconds are always free.",
+      "The woman with the stroller did not raise her voice. She simply said, 'Excuse me, the line starts back there,' and pointed — politely, firmly, the way you tell someone their shoelace is undone.",
+      "The couple mumbled something about meeting a friend inside, but the queue had already made its decision: forty people studied the pavement, and the couple walked to the back.",
+      "I used to think standing up in these moments required confidence, some quality I did not have; now I think it only requires one rehearsed sentence and the willingness to look unfriendly for five seconds.",
+      "The line applauded — quietly, inwardly, the way queues do — and we all went back to complaining about the sun."
+    ],
+    notes: [
+      "less a queue than a small society —— less A than B（与其说是A不如说是B），比较的高级形态",
+      "not behind me, which would have been honest —— would have been（那样就诚实了=实际不诚实），插入的虚拟评注",
+      "the first ten seconds are always free —— 插队心理学金句：没人开口的头十秒是白赚的",
+      "the way you tell someone their shoelace is undone —— the way + 从句（就像…那样），礼貌坚定的类比",
+      "some quality I did not have —— 同位语省略 that；require 只需一句排练好的话",
+      "applauded — quietly, inwardly —— 队伍内心鼓掌；破折号双副词写法"
     ]
   },
   /* ===== 预备稿（draft:true 隐藏；界面「🔄 更新下一批」按钮可自助发布） ===== */
