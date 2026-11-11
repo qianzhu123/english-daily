@@ -251,7 +251,7 @@ function restoreMarks(){ // 已标词高亮：只亮你点过的位置（e.locs 
     const phrase=Object.keys(marks).find(k=>k.includes(' ')&&k.split(' ').includes(cw));
     if(phrase&&home[phrase]===wArt)w.classList.add('inphrase')});}
 // ===== 生词归属与翻译 =====
-const TKEY='translations',TVER='v13'; // v13：关键词预置翻译（用户 11-10 提议：点词直接展示，不再现查）
+const TKEY='translations',TVER='v14'; // v14：MANUAL 扩到 57 词（block/slightly/stroller 坏译+11-11 两篇关键词全预置），清旧在线查询缓存
 function getTrans(){return store.get(TKEY+TVER)}
 // 人工优先义项：gtx 词典会把高频词核心义埋掉/给冷僻义（article 缺"冠词"、clearance→净空、panicked→恐吓）
 // 格式=标准词典释义（词性：词义），不做单词条的说教式解读（用户 11-07 定版：不要针对某个词强行解释）
@@ -287,7 +287,30 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
   suspicion:'名词：怀疑、疑心',
   villain:'名词：坏人、反派',
   folded:'动词：折叠（fold 的过去式/过去分词）',
-  dissolved:'动词：消散、化解（dissolve 的过去式）'};
+  dissolved:'动词：消散、化解（dissolve 的过去式）',
+  slightly:'副词：稍微、略微',
+  stroller:'名词：婴儿推车',
+  block:'名词：街区；块；动词：堵塞、挡住',
+  queue:'名词：（排的）队；动词：排队',
+  pharmacy:'名词：药房、药店',
+  pharmacist:'名词：药剂师',
+  syrup:'名词：糖浆（cough syrup 止咳糖浆）',
+  cough:'名词/动词：咳嗽',
+  dose:'名词：剂量、一剂（药）',
+  transaction:'名词：交易',
+  impatient:'形容词：不耐烦的、没耐心的',
+  insult:'名词：侮辱；动词：侮辱',
+  filter:'名词：过滤器；把关者；动词：过滤',
+  insurance:'名词：保险',
+  gap:'名词：缺口、空当；差距',
+  mumbled:'动词：咕哝、嘟囔（mumble 的过去式）',
+  pavement:'名词：（路边的）人行道',
+  applauded:'动词：鼓掌、称赞（applaud 的过去式）',
+  rehearsed:'动词：排练、演练（rehearse 的过去式）',
+  firmly:'副词：坚定地、坚决地',
+  reserved:'动词：预订、预留（reserve 的过去式/过去分词）',
+  willingness:'名词：意愿、乐意',
+  inwardly:'副词：在心里、暗自地'};
 function validTrans(t,k){ // 翻译结果有效性：空/纯标点符号/回显原文/已知垃圾模式都算无效
   if(!t)return false;
   if(!/[一-鿿A-Za-z0-9]/.test(t))return false; // 必须含汉字/字母/数字（滤掉"。"、"…"等）
@@ -380,7 +403,8 @@ const TASKS={
   '2026-11-02':'①读本批 2 篇（从今天起新节奏：每天 2 篇，读完+对话完成才发下一批；页顶「🔄 更新下一批」可自助发布）②【主任务·对话】酒店投诉续集：前台说客满没房→你争取明天换房或部分退款→前台甩出免费早餐打发→你拒绝并坚持。全部题目在「🎯 训练」页（顶部导航），答案折叠，先写再对',
   '2026-11-08':'①读本批 2 篇（B1+ 难度档：自助结账/民宿沟通，读的时候留意 have been doing 的持续感）②【主任务·训练】11-08 训练页 4 场景（退换货+排队抱怨，与文章零重叠），写完导出作答发我批改；11-03/11-04/11-05 三天的批改标记已回填到训练页对应场景下（✅/❌ 条），先回看再写今天的',
   '2026-11-09':'①读本批 2 篇（B1+：出租车纠纷/手机没电求助，重点句式 should have done 本该…却没）②【主任务·训练】11-09 训练页 4 场景（理发店+错过班车，与文章零重叠），写完导出作答发我批改',
-  '2026-11-11':'①读本批 2 篇（B1+：药店三问/插队事件——if 虚拟过去式 + would have done 本该…实际没有）②【主任务·训练】11-10 雅思练一练 5 题还没做的先做（判断+选择即时判分）；读完点「✓ 读完了」我会发下一批'
+  '2026-11-11':'①读本批 2 篇（B1+：药店三问/插队事件——if 虚拟过去式 + would have done 本该…实际没有）②【主任务·训练】11-10 雅思练一练 5 题还没做的先做（判断+选择即时判分）；读完点「✓ 读完了」我会发下一批',
+  '2026-11-12':'①读本批 2 篇（B1+：行李延误/换汇陷阱——if 虚拟 + would have done 二现，留意 DCC 换汇Always选当地货币）②【主任务·训练】11-12 训练页 4 场景（丢钱包+求助，与文章零重叠），写完导出作答发我批改；11-10 练一练 5 题没做完的补上'
 };
 function renderTask(list){
   let el=document.getElementById('taskcard');

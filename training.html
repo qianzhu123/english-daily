@@ -62,6 +62,27 @@ const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e)
 // ① 题目=纯中文场景，绝不印英文框架/候选句/文章原句 ② 参考答案先写后看（空作答不给看）③ 语音只手动只读英文短句
 const TRAIN=[
 {
+  day:'2026-11-12',
+  title:'开口产出 · 丢钱包与求助（从零写）',
+  brief:'场景继续与文章零重叠（阅读今天讲行李延误和换汇，训练走丢钱包/求助）。回考重点：过去的事用过去式（丢=lost，不是 lose）；have been doing 持续感二盯。规则不变：中文场景自己写，写完才看参考。',
+  daily:[ // 输入材料·听读用，别抄进答案
+    {en:'I\'ve lost my wallet.',zh:'我的钱包丢了——have lost：丢了且现在还没找到，用现在完成时'},
+    {en:'Could you help me, please?',zh:'能帮我一下吗？——万能求助句（第三次出现，要形成条件反射）'},
+    {en:'Someone took my bag.',zh:'有人拿走了我的包——过去的事用过去式 took'},
+    {en:'Where is the nearest police station?',zh:'最近的派出所在哪？——the nearest + 名词，问"最近的"专用'}
+  ],
+  items:[
+    {q:'你发现钱包不见了（在咖啡馆坐了半小时才摸口袋）。向店员说明情况并求助（1-2 句）。',
+     ref:'Excuse me, I can\'t find my wallet. I think I lost it here. Could you help me look for it?\n（找不到=can\'t find；丢了的事用 lost 过去式；求助 Could you help me）'},
+    {q:'店员帮你找了但没有。你说出丢的可能地点（你记得付钱时在收银台掏过），请她再看看收银台附近（1-2 句）。',
+     ref:'I remember taking it out at the counter when I paid. Could you check near the counter again?\n（remember doing=记得做过某事；check=查看）'},
+    {q:'店员建议你先挂失银行卡。你打给银行客服，说明卡丢了并要求冻结（1-2 句）。',
+     ref:'Hello, I\'ve lost my credit card. Could you freeze it for me, please?\n（freeze=冻结；卡丢了先冻结是标准动作）'},
+    {q:'补做：如果你刚才在出租车上也坐过，懊恼地复盘一句——早知道该下车前检查口袋（用 should have done 句式）。',
+     ref:'I should have checked my pockets before I got out of the taxi.\n（should have done=本该做实际没做，复盘专用；二现回考）'}
+  ]
+},
+{
   day:'2026-11-10',
   title:'雅思练一练 · 判断与选择（即时反馈）',
   brief:'今天不写句子——换成雅思阅读同款题型：判断 TRUE/FALSE/NOT GIVEN + 单选。点选项即时判分，答完看解析。这练的是读得准，跟场景输出互补。',

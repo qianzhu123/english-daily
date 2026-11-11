@@ -603,6 +603,7 @@ window.ARTICLES = [
   {
     title: "The Pharmacy That Asked Three Questions (B1+)",
     date: "2026-11-11",
+    archived: true,
     level: "B1+ · 购物/药店沟通",
     sentences: [
       "In most countries a pharmacy is a shop; in this one it turned out to be a small clinic with a cash register, and the pharmacist was not going to let me forget it.",
@@ -625,6 +626,7 @@ window.ARTICLES = [
   {
     title: "The Queue That Tested Everyone (B1+)",
     date: "2026-11-11",
+    archived: true,
     level: "B1+ · 生活/公共秩序",
     sentences: [
       "The line for the museum wrapped around the block, and after forty minutes it had become less a queue than a small society, complete with its own weather complaints and snack economy.",
@@ -642,6 +644,50 @@ window.ARTICLES = [
       "the way you tell someone their shoelace is undone —— the way + 从句（就像…那样），礼貌坚定的类比",
       "some quality I did not have —— 同位语省略 that；require 只需一句排练好的话",
       "applauded — quietly, inwardly —— 队伍内心鼓掌；破折号双副词写法"
+    ]
+  },
+  {
+    title: "The Suitcase That Took a Detour (B1+)",
+    date: "2026-11-12",
+    level: "B1+ · 机场/行李延误",
+    sentences: [
+      "The board said my flight was direct, but apparently my suitcase had other plans: when the belt finally stopped, forty bags had come and gone, and mine was not one of them.",
+      "The man at the baggage desk did not apologize first; he scanned the tag, nodded calmly, and said, 'It's still in Frankfurt. It will be on the next flight.'",
+      "I asked all the wrong questions at first — How long? Why? Whose fault is it? — and then I asked the right one: what happens to it if I change hotels tomorrow?",
+      "That question changed the conversation. He pulled up a form, and for the first time he looked up: 'Good question. Most people never ask it.'",
+      "He explained that the bag would be delivered to my address, not my airline, and that if I had known to register the hotel first, the whole thing would have been settled in one step.",
+      "In the end I lost the suitcase for a day and a half, and gained a rule I now use at every check-in: file the delivery address before the bag is lost, not after.",
+      "If I had filled in that form at the transfer desk in Frankfurt, I would have saved myself two phone calls and one very slow morning."
+    ],
+    notes: [
+      "had other plans（拟人：行李『另有安排』）—— 东西出问题的轻松说法，比 broken 更地道",
+      "forty bags had come and gone —— had done 过去完成：先到先走，行李后至",
+      "How long? Why? Whose fault? —— 连珠炮式追问；whose fault is it 追责句",
+      "what happens to it if... —— 真实条件句（if + 现在时），与文中虚拟句对照",
+      "if I had known to register the hotel first —— know to do（知道要去做）用法；if 虚拟过去式二现",
+      "would have been settled / would have saved —— would have done 两现：本会…实际没有"
+    ]
+  },
+  {
+    title: "The Exchange Counter Lesson (B1+)",
+    date: "2026-11-12",
+    level: "B1+ · 购物/换汇沟通",
+    sentences: [
+      "The board outside promised 'No Commission' in letters the size of my hand; the screen inside asked, very politely, whether I would like to be charged in euros or in my home currency.",
+      "I nearly said home currency, because it sounded safe — like being offered a receipt, or a seat.",
+      "It was not safe. Charging me in my home currency was the shop doing my bank's job badly and charging me extra for it: a worse exchange rate dressed up as a service.",
+      "The clerk did not argue when I said 'In euros, please.' That is the thing nobody tells you: the polite question costs nothing, and the polite mistake costs about eight percent.",
+      "I did the math later, standing on the pavement. On two hundred, the difference was small; on the whole trip, it was a very good dinner for two.",
+      "If I had said yes to the first screen, I would never have noticed — the charge looks normal, the receipt looks clean, and the loss hides inside a number you don't check.",
+      "Now I treat every 'would you prefer...' question as a small interview: what does each answer cost, and who is asking me?"
+    ],
+    notes: [
+      "No Commission（无手续费）—— 换汇点招牌话术；commission 二现（11-09 批次学过）",
+      "charged in euros or in my home currency —— DCC 动态货币转换：Always choose the local currency",
+      "dressed up as a service —— dress up as（装扮成）：坏东西包装成好东西",
+      "the polite question costs nothing, and the polite mistake costs about eight percent —— 对仗金句",
+      "If I had said yes... I would never have noticed —— if 虚拟过去式 + would have done 三现",
+      "treat every question as a small interview —— treat A as B 复现（11-11 药店篇同款）"
     ]
   },
   /* ===== 预备稿（draft:true 隐藏；界面「🔄 更新下一批」按钮可自助发布） ===== */
