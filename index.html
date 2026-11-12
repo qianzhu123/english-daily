@@ -65,8 +65,8 @@ w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /
 <textarea id="tokin" style="width:100%;height:60px;margin:8px 0;font-size:.75rem" placeholder="粘贴 token（github_pat_...）"></textarea>
 <div style="display:flex;gap:8px"><button onclick="saveToken()" style="flex:1">保存</button><button onclick="clearToken()" style="flex:1">清除</button><button onclick="document.getElementById('tokbox').classList.add('hidden')">关闭</button></div>
 <div id="tokstat" style="color:var(--dim);margin-top:6px;font-size:.78rem"></div></div>
-<script src="articles.js"></script>
-<script src="scenes.js"></script>
+<script src="articles.js?v=1112b"></script>
+<script src="scenes.js?v=1112b"></script>
 <script>
 const A=window.ARTICLES;
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
