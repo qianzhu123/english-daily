@@ -176,7 +176,7 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
   defensive:'形容词：戒备的、有防备心的',
   tenant:'名词：租户、房客（tenant rights 租客权益）',
   drilling:{any:'名词：钻孔、操练（drill 的动名词）',art:[{t:'Noise',v:'名词：（装修）电钻声'}]},
-  shelves:'名词：架子、搁板（shelf 的复数；put up shelves 装架子）};
+  shelves:'名词：架子、搁板（shelf 的复数；put up shelves 装架子）'};
 function validTrans(t,k){if(!t)return false;if(!/[一-鿿A-Za-z0-9]/.test(t))return false;
 if(/^[：:，,。;；\s]/.test(t))return false; // 残缺符号开头的碎片（hundred→"：一百"事故）
 if(t.toLowerCase()===k.toLowerCase())return false;if(/MYMEMORY WARNING|QUERY LENGTH|%s|ALL AVAILABLE FREE TRANSLATIONS/i.test(t))return false;return true}
