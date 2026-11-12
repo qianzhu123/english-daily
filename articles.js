@@ -649,6 +649,7 @@ window.ARTICLES = [
   {
     title: "The Suitcase That Took a Detour (B1+)",
     date: "2026-11-12",
+    archived: true,
     level: "B1+ · 机场/行李延误",
     sentences: [
       "The board said my flight was direct, but apparently my suitcase had other plans: when the belt finally stopped, forty bags had come and gone, and mine was not one of them.",
@@ -671,6 +672,7 @@ window.ARTICLES = [
   {
     title: "The Exchange Counter Lesson (B1+)",
     date: "2026-11-12",
+    archived: true,
     level: "B1+ · 购物/换汇沟通",
     sentences: [
       "The board outside promised 'No Commission' in letters the size of my hand; the screen inside asked, very politely, whether I would like to be charged in euros or in my home currency.",
@@ -688,6 +690,50 @@ window.ARTICLES = [
       "the polite question costs nothing, and the polite mistake costs about eight percent —— 对仗金句",
       "If I had said yes... I would never have noticed —— if 虚拟过去式 + would have done 三现",
       "treat every question as a small interview —— treat A as B 复现（11-11 药店篇同款）"
+    ]
+  },
+  {
+    title: "The Phone That Wasn't Worth Fixing (B1+)",
+    date: "2026-11-12",
+    level: "B1+ · 购物/维修砍价",
+    sentences: [
+      "The repair shop smelled like solder and burnt coffee, and the owner took one look at my phone and said, 'Screen and battery — that is almost a new phone.'",
+      "He quoted a number that was nearly the price of a new one, and then, seeing my face, added: 'I am not cheating you. The part alone costs this much.'",
+      "I did not argue about honesty; I argued about alternatives. 'What can you do for two hundred?' I asked — not angrily, the way you ask a taxi driver whether the meter is on.",
+      "He thought for a moment, then offered a used screen with a ninety-day guarantee, and the price dropped by a third, just like that.",
+      "If I had accepted the first number, I would have paid for a new part I did not need; if I had walked out, I would have kept my money and lost my photos.",
+      "The middle path — one calm question about alternatives — is what bargaining actually is. It is not fighting; it is asking what else is possible.",
+      "No matter how honest the shop, the first number is a starting point, not a price."
+    ],
+    notes: [
+      "took one look at my phone —— take one look at（看一眼就…），比 look at 更有画面",
+      "quoted a number —— quote（报价）；a number 代指价格，谈判常用替身词",
+      "I did not argue about honesty; I argued about alternatives —— 分号对仗：不争诚信，争选择",
+      "the way you ask a taxi driver whether... —— the way + 从句类比三现（11-11 插队篇同款）",
+      "If I had accepted..., I would have paid... —— if 虚拟过去式 + would have done 三现，双联句",
+      "the first number is a starting point, not a price —— 金句收尾；no matter how 让步复现"
+    ]
+  },
+  {
+    title: "The Noise Complaint That Ended in Tea (B1+)",
+    date: "2026-11-12",
+    level: "B1+ · 生活/邻里沟通",
+    sentences: [
+      "At midnight the drilling started again — three floors up, every evening this week, as punctual as a train.",
+      "My first plan was the note under the door, sharp and official, full of words like disturbance and regulations; my second plan was knocking, which felt braver and far more likely to work.",
+      "The man who opened the door looked more embarrassed than defensive. 'I am so sorry,' he said, 'I am putting up shelves, and I did not realize how far the sound travels.'",
+      "I had prepared a whole speech about tenant rights; what I actually said was, 'Could you do the drilling before ten? I start work early.'",
+      "'Before ten,' he repeated, 'done. And please — if the noise ever comes from my side again, knock instead of writing.'",
+      "We ended the conversation with tea I had not planned to stay for, and a promise that cost him nothing: shelves in the afternoon, silence at night.",
+      "A note can be read as an attack; a knock is just a person at the door. The same sentence lands differently when your face comes with it."
+    ],
+    notes: [
+      "as punctual as a train —— as...as 明喻；抱怨也能写得体",
+      "My first plan was...; my second plan was... —— 分号并列两方案，写作结构",
+      "looked more embarrassed than defensive —— more A than B 比较态描写情绪（11-11 less A than B 同族）",
+      "put up shelves —— 固定搭配：安装（put up 搭建）；do the drilling 做钻孔这活",
+      "if the noise ever comes from my side again —— 真实条件句（与虚拟句对照）",
+      "A note can be read as an attack; a knock is just a person at the door —— 金句：被动语态 can be read as"
     ]
   },
   /* ===== 预备稿（draft:true 隐藏；界面「🔄 更新下一批」按钮可自助发布） ===== */

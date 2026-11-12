@@ -65,8 +65,8 @@ w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /
 <textarea id="tokin" style="width:100%;height:60px;margin:8px 0;font-size:.75rem" placeholder="粘贴 token（github_pat_...）"></textarea>
 <div style="display:flex;gap:8px"><button onclick="saveToken()" style="flex:1">保存</button><button onclick="clearToken()" style="flex:1">清除</button><button onclick="document.getElementById('tokbox').classList.add('hidden')">关闭</button></div>
 <div id="tokstat" style="color:var(--dim);margin-top:6px;font-size:.78rem"></div></div>
-<script src="articles.js?v=1112b"></script>
-<script src="scenes.js?v=1112b"></script>
+<script src="articles.js?v=1112c"></script>
+<script src="scenes.js?v=1112c"></script>
 <script>
 const A=window.ARTICLES;
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -205,7 +205,7 @@ function addWord(k,ctx,artIdx,loc){if(!k)return;
   else{const e=normEntry(1);e.day=todayStr();if(typeof artIdx==='number')e.art=artIdx;
     if(loc)e.locs=[loc];
     e.seq=(Number(store.get('seq'))||0)+1;store.set('seq',e.seq); // 显式序号：生词本顺序的唯一定据，合并/刷新都不乱
-    marks[k]=e;translate(k,ctx)}
+    marks[k]=e;translate(k,ctx,artIdx)}
   speak(k,0.9)}
 function confirmPhrase(){
   const phrase=selState?selState.words.join(' '):'';
@@ -317,7 +317,7 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
   // ↓ 11-12 批次（行李延误/换汇）关键词预置：按两篇实际用词铺
   suitcase:'名词：行李箱、手提箱',
   detour:'名词：绕路、改道',
-  belt:'名词：（行李）传送带；安全带；腰带',
+  belt:{any:'名词：腰带；安全带',art:[{t:'Suitcase',v:'名词：（机场）行李传送带'}]},
   baggage:'名词：行李',
   apologize:'动词：道歉',
   scanned:'动词：扫描（scan 的过去式）',
@@ -340,7 +340,22 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
   difference:'名词：差别、差额',
   trip:'名词：旅程',
   local:'形容词：当地的',
-  apparently:'副词：看来、显然'};
+  apparently:'副词：看来、显然',
+  // ↓ 11-12 新批次（维修砍价/邻里噪音）关键词预置：按两篇实际用词铺，场景义优先
+  solder:'名词：焊锡、焊料（维修台的气味）',
+  quoted:'动词：报价（quote 的过去式）',
+  alternatives:'名词：其他选择、替代方案（alternative 的复数）',
+  guarantee:{any:'名词：保证、担保',art:[{t:'Phone',v:'名词：（维修）保修、保修期（ninety-day guarantee 九十天保修）'}]},
+  honesty:'名词：诚实',
+  bargaining:'名词/动词：讨价还价（bargain 的动名词）',
+  punctual:'形容词：准时的、守时的',
+  disturbance:{any:'名词：干扰、骚乱',art:[{t:'Noise',v:'名词：（噪音）扰民'}]},
+  regulations:'名词：规定、条例（regulation 的复数）',
+  embarrassed:'形容词：尴尬的、不好意思的',
+  defensive:'形容词：戒备的、有防备心的',
+  tenant:'名词：租户、房客（tenant rights 租客权益）',
+  drilling:{any:'名词：钻孔、操练（drill 的动名词）',art:[{t:'Noise',v:'名词：（装修）电钻声'}]},
+  shelves:'名词：架子、搁板（shelf 的复数；put up shelves 装架子）};
 function validTrans(t,k){ // 翻译结果有效性：空/纯标点符号/回显原文/已知垃圾模式都算无效
   if(!t)return false;
   if(!/[一-鿿A-Za-z0-9]/.test(t))return false; // 必须含汉字/字母/数字（滤掉"。"、"…"等）
@@ -379,11 +394,17 @@ function filterSenses(d,ctxTrans){ // 多义词只留与语境相符的义项（
     const terms=(g.split('：')[1]||'').split('、');
     return terms.some(term=>term&&ctxTrans.indexOf(norm(term))>=0)});
   return hit.length?hit.join('；'):d} // 全没命中就原样保留（宁多勿错杀）
-async function translate(k,ctx){ // 主源 gtx → 备用(move/Lingva) → MyMemory 兜底；额度耗尽提示不算翻译
+function sceneSense(m,artIdx){ // 场景义挑选：词条归属文章命中场景义项则用之，否则 any
+  if(typeof artIdx!=='number'||!A[artIdx])return m.any;
+  const hit=(m.art||[]).find(x=>A[artIdx].title.includes(x.t));
+  return hit?hit.v:m.any}
+async function translate(k,ctx,artIdx){ // 主源 gtx → 备用(move/Lingva) → MyMemory 兜底；额度耗尽提示不算翻译
   const cache=getTrans();
   if(MANUAL[k]){ // 人工义最高优先：即使缓存里有旧坏翻译也要覆盖写入（clearance→净空事故）
-    if(cache[k]!==MANUAL[k]){cache[k]=MANUAL[k];store.set(TKEY+TVER,cache)}
-    return MANUAL[k]}
+    const m=MANUAL[k];
+    const v=typeof m==='object'&&m.art?sceneSense(m,artIdx):m; // 对象=含场景义：按文章挑，退回 any
+    if(cache[k]!==v){cache[k]=v;store.set(TKEY+TVER,cache)}
+    return v}
   if(cache[k])return cache[k];
   let t='';let ctxT='';
   if(ctx){try{ // 语境优先：整句翻译，用户看到的第一个释义来自真实上下文
@@ -434,7 +455,7 @@ const TASKS={
   '2026-11-08':'①读本批 2 篇（B1+ 难度档：自助结账/民宿沟通，读的时候留意 have been doing 的持续感）②【主任务·训练】11-08 训练页 4 场景（退换货+排队抱怨，与文章零重叠），写完导出作答发我批改；11-03/11-04/11-05 三天的批改标记已回填到训练页对应场景下（✅/❌ 条），先回看再写今天的',
   '2026-11-09':'①读本批 2 篇（B1+：出租车纠纷/手机没电求助，重点句式 should have done 本该…却没）②【主任务·训练】11-09 训练页 4 场景（理发店+错过班车，与文章零重叠），写完导出作答发我批改',
   '2026-11-11':'①读本批 2 篇（B1+：药店三问/插队事件——if 虚拟过去式 + would have done 本该…实际没有）②【主任务·训练】11-10 雅思练一练 5 题还没做的先做（判断+选择即时判分）；读完点「✓ 读完了」我会发下一批',
-  '2026-11-12':'①读本批 2 篇（B1+：行李延误/换汇陷阱——if 虚拟 + would have done 二现，换汇 Always 选当地货币）②【主任务·训练】11-12 雅思练一练 5 题（判断+选择即时判分，就用这两篇做载体）；11-10 练一练没做完的补上'
+  '2026-11-12':'①读本批 2 篇新文章（B1+：维修砍价/邻里噪音——if 虚拟双联句三现 + no matter how 让步；砍价＝问替代方案，不争对错）②【主任务·训练】11-12 雅思练一练 5 题（判断+选择即时判分，行李/换汇旧篇做载体）；没做完的补上'
 };
 function renderTask(list){
   let el=document.getElementById('taskcard');

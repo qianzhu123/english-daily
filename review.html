@@ -138,7 +138,7 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
   // ↓ 11-12 批次（行李延误/换汇）关键词预置：按两篇实际用词铺
   suitcase:'名词：行李箱、手提箱',
   detour:'名词：绕路、改道',
-  belt:'名词：（行李）传送带；安全带；腰带',
+  belt:{any:'名词：腰带；安全带',art:[{t:'Suitcase',v:'名词：（机场）行李传送带'}]},
   baggage:'名词：行李',
   apologize:'动词：道歉',
   scanned:'动词：扫描（scan 的过去式）',
@@ -161,7 +161,22 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
   difference:'名词：差别、差额',
   trip:'名词：旅程',
   local:'形容词：当地的',
-  apparently:'副词：看来、显然'};
+  apparently:'副词：看来、显然',
+  // ↓ 11-12 新批次（维修砍价/邻里噪音）关键词预置：按两篇实际用词铺，场景义优先
+  solder:'名词：焊锡、焊料（维修台的气味）',
+  quoted:'动词：报价（quote 的过去式）',
+  alternatives:'名词：其他选择、替代方案（alternative 的复数）',
+  guarantee:{any:'名词：保证、担保',art:[{t:'Phone',v:'名词：（维修）保修、保修期（ninety-day guarantee 九十天保修）'}]},
+  honesty:'名词：诚实',
+  bargaining:'名词/动词：讨价还价（bargain 的动名词）',
+  punctual:'形容词：准时的、守时的',
+  disturbance:{any:'名词：干扰、骚乱',art:[{t:'Noise',v:'名词：（噪音）扰民'}]},
+  regulations:'名词：规定、条例（regulation 的复数）',
+  embarrassed:'形容词：尴尬的、不好意思的',
+  defensive:'形容词：戒备的、有防备心的',
+  tenant:'名词：租户、房客（tenant rights 租客权益）',
+  drilling:{any:'名词：钻孔、操练（drill 的动名词）',art:[{t:'Noise',v:'名词：（装修）电钻声'}]},
+  shelves:'名词：架子、搁板（shelf 的复数；put up shelves 装架子）};
 function validTrans(t,k){if(!t)return false;if(!/[一-鿿A-Za-z0-9]/.test(t))return false;
 if(/^[：:，,。;；\s]/.test(t))return false; // 残缺符号开头的碎片（hundred→"：一百"事故）
 if(t.toLowerCase()===k.toLowerCase())return false;if(/MYMEMORY WARNING|QUERY LENGTH|%s|ALL AVAILABLE FREE TRANSLATIONS/i.test(t))return false;return true}
@@ -180,11 +195,17 @@ async function tryBackup(q){ // 备用链路：Google 移动版接口 + Lingva�
   if(r.ok){const j=await r.json();
   if(j&&j.translation)return j.translation}}catch(e){}
   return ''}
+function sceneSense(m,artIdx){ // 场景义挑选：词条归属文章命中场景义项则用之，否则 any
+  if(typeof artIdx!=='number'||!ART[artIdx])return m.any;
+  const hit=(m.art||[]).find(x=>ART[artIdx].title.includes(x.t));
+  return hit?hit.v:m.any}
 async function translate(k){const cache=getTrans();
-if(MANUAL[k]){if(cache[k]!==MANUAL[k]){cache[k]=MANUAL[k];store.set(TKEY+TVER,cache)}return MANUAL[k]}
+const e=marks[k]||{};
+if(MANUAL[k]){const m=MANUAL[k];const v=(typeof m==='object'&&m.art)?sceneSense(m,e.art):m;
+  if(cache[k]!==v){cache[k]=v;store.set(TKEY+TVER,cache)}return v}
 if(cache[k])return cache[k];
 // 义项过滤需要语境：从词条归属文章里找回该词所在的句子（index.html 是标记时直接传，这里补齐同款行为）
-let ctx='';const e=marks[k]||{};
+let ctx='';
 if(Number.isInteger(e.art)&&ART[e.art]){const first=k.split(' ')[0].toLowerCase();
   ctx=ART[e.art].sentences.find(s=>s.toLowerCase().includes(first))||''}
 let t='';
