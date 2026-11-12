@@ -74,7 +74,10 @@ clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),22
 function speak(text,rate){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||0.9;u.voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u)}
 // ===== 翻译（gtx 主源 + MyMemory 兜底 + 有效性过滤 + 人工义） =====
 const TKEY='translations',TVER='v14';
-function getTrans(){return store.get(TKEY+TVER)}
+function getTrans(){let c=store.get(TKEY+TVER);
+  if(!Object.keys(c).length){ // 新版本缓存为空：迁入旧版本缓存（坏翻译已由 MANUAL 覆盖 + v13 起的过滤器清洗），免去全量重查
+    const prev=store.get(TKEY+'v13');if(Object.keys(prev).length){store.set(TKEY+TVER,prev);return prev}}
+  return c}
 // 格式=标准词典释义（词性：词义），不做单词条的说教式解读（用户 11-07 定版：不要针对某个词强行解释）
 // 关键词预置（用户 11-10 定版）：高频旅行词+近期坏译词直接给人工义，点词秒出不再请求
 const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
@@ -131,7 +134,34 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
   firmly:'副词：坚定地、坚决地',
   reserved:'动词：预订、预留（reserve 的过去式/过去分词）',
   willingness:'名词：意愿、乐意',
-  inwardly:'副词：在心里、暗自地'};
+  inwardly:'副词：在心里、暗自地',
+  // ↓ 11-12 批次（行李延误/换汇）关键词预置：按两篇实际用词铺
+  suitcase:'名词：行李箱、手提箱',
+  detour:'名词：绕路、改道',
+  belt:'名词：（行李）传送带；安全带；腰带',
+  baggage:'名词：行李',
+  apologize:'动词：道歉',
+  scanned:'动词：扫描（scan 的过去式）',
+  nodded:'动词：点头（nod 的过去式）',
+  calmly:'副词：平静地、镇定地',
+  fault:'名词：过错、责任',
+  delivered:'动词：投递、送达（deliver 的过去式）',
+  register:'动词：登记、注册',
+  settled:'动词：解决、办妥（settle 的过去式）',
+  transfer:'名词/动词：中转、转移',
+  exchange:'名词/动词：兑换；交换',
+  counter:'名词：柜台',
+  currency:'名词：货币',
+  charged:'动词：收费（charge 的过去式）',
+  worse:'形容词：更糟的（bad 的比较级）',
+  extra:'形容词：额外的',
+  argue:'动词：争论、辩驳',
+  politely:'副词：礼貌地',
+  percent:'名词：百分之……（eight percent 百分之八）',
+  difference:'名词：差别、差额',
+  trip:'名词：旅程',
+  local:'形容词：当地的',
+  apparently:'副词：看来、显然'};
 function validTrans(t,k){if(!t)return false;if(!/[一-鿿A-Za-z0-9]/.test(t))return false;
 if(/^[：:，,。;；\s]/.test(t))return false; // 残缺符号开头的碎片（hundred→"：一百"事故）
 if(t.toLowerCase()===k.toLowerCase())return false;if(/MYMEMORY WARNING|QUERY LENGTH|%s|ALL AVAILABLE FREE TRANSLATIONS/i.test(t))return false;return true}
@@ -158,7 +188,10 @@ let ctx='';const e=marks[k]||{};
 if(Number.isInteger(e.art)&&ART[e.art]){const first=k.split(' ')[0].toLowerCase();
   ctx=ART[e.art].sentences.find(s=>s.toLowerCase().includes(first))||''}
 let t='';
-try{const j=await tryGtx(k,'bd');
+if(ctx){ // 场景义优先（用户 11-12 定版：复习也展示句子里的意思，不印全义项）
+  try{let cs=await tryGtx(ctx,'t');if(!cs)cs=await tryBackup(ctx);
+    if(validTrans(cs,ctx))t='〔语境〕'+cs}catch(e2){}}
+if(!t)try{const j=await tryGtx(k,'bd');
 if(j&&j.dict){ // 语境句也翻译一下，用于挑出与语义相符的义项
   let ctxT='';if(ctx){try{ctxT=await tryGtx(ctx,'t')||await tryBackup(ctx)}catch(e2){}}
   let d=cleanSense(j.dict.map(d=>d.pos+'：'+d.terms.join('、')).join('；'));
@@ -232,8 +265,28 @@ function rowHtml(k){
   return `<div class="wrow"><span class="w" onclick="speak('${esc(k).replace(/'/g,"\\'")}')">${esc(k)}</span>
   <span class="tr" id="${id}">${getTrans()[k]?esc(getTrans()[k]):'<i style=color:#bbb>查译中…</i>'}</span>${dtag}
   <button class="peek" data-peek="${esc(k)}" onclick="peek('${esc(k).replace(/'/g,"\\'")}')">盖住</button>
-  <span class="del" onclick="delWord('${esc(k).replace(/'/g,"\\'")}')" title="会了，删除">×</span></div>`}
+  <button class="peek" style="background:#eef6f0;color:var(--accent);border-color:#cfe3d6" onclick="toggleDetail('${esc(k).replace(/'/g,"\'")}')">详情</button>
+  <span class="del" onclick="delWord('${esc(k).replace(/'/g,"\\'")}')" title="会了，删除">×</span>
+  <div class="wdetail" id="dt-${id}" style="display:none;flex-basis:100%;background:#f7f7f2;border-radius:6px;padding:8px 12px;font-size:.88rem;color:var(--dim);line-height:1.7"></div></div>`}
 function setDay(d){dayFilter=d;render()}
+
+// 详情：展开该词所在完整句子（原文+整句翻译），点击反复开合
+function toggleDetail(k){
+  const e=marks[k]||{};const wid='tr-'+k.replace(/[^a-z0-9]/gi,'_');
+  const el=document.getElementById('dt-'+wid);if(!el)return;
+  if(el.style.display!=='none'){el.style.display='none';return}
+  let sent='';if(Number.isInteger(e.art)&&ART[e.art]){const first=k.split(' ')[0].toLowerCase();
+    sent=ART[e.art].sentences.find(s=>s.toLowerCase().includes(first))||''}
+  if(!sent){el.innerHTML='（未找到该词的来源句子）';el.style.display='';return}
+  el.innerHTML='<b style="color:var(--ink)">'+esc(sent)+'</b><span id="dtr-'+wid+'"> —— 整句翻译中…</span>';
+  el.style.display='';
+  const cache=getTrans();const ckey='ctx:'+k;
+  if(cache[ckey]){const sp=document.getElementById('dtr-'+wid);if(sp)sp.innerHTML=esc(cache[ckey])}
+  else{tryGtx(sent,'t').then(async cs=>{if(!cs)cs=await tryBackup(sent);
+    if(validTrans(cs,sent)){const c=getTrans();c[ckey]=cs;store.set(TKEY+TVER,c);
+      const sp=document.getElementById('dtr-'+wid);if(sp)sp.innerHTML='—— '+esc(cs)}
+    else{const sp=document.getElementById('dtr-'+wid);if(sp)sp.innerHTML=''}})}}
+
 // ===== 语法点收藏区 =====
 function gramDB(){return store.get('grammar')}
 function renderGram(){

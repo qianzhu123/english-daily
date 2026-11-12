@@ -252,7 +252,10 @@ function restoreMarks(){ // 已标词高亮：只亮你点过的位置（e.locs 
     if(phrase&&home[phrase]===wArt)w.classList.add('inphrase')});}
 // ===== 生词归属与翻译 =====
 const TKEY='translations',TVER='v14'; // v14：MANUAL 扩到 57 词（block/slightly/stroller 坏译+11-11 两篇关键词全预置），清旧在线查询缓存
-function getTrans(){return store.get(TKEY+TVER)}
+function getTrans(){let c=store.get(TKEY+TVER);
+  if(!Object.keys(c).length){ // 新版本缓存为空：迁入旧版本缓存（坏翻译已由 MANUAL 覆盖 + v13 起的过滤器清洗），免去全量重查
+    const prev=store.get(TKEY+'v13');if(Object.keys(prev).length){store.set(TKEY+TVER,prev);return prev}}
+  return c}
 // 人工优先义项：gtx 词典会把高频词核心义埋掉/给冷僻义（article 缺"冠词"、clearance→净空、panicked→恐吓）
 // 格式=标准词典释义（词性：词义），不做单词条的说教式解读（用户 11-07 定版：不要针对某个词强行解释）
 // 关键词预置（用户 11-10 定版）：高频旅行词+近期坏译词直接给人工义，点词秒出不再请求
@@ -310,7 +313,34 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
   firmly:'副词：坚定地、坚决地',
   reserved:'动词：预订、预留（reserve 的过去式/过去分词）',
   willingness:'名词：意愿、乐意',
-  inwardly:'副词：在心里、暗自地'};
+  inwardly:'副词：在心里、暗自地',
+  // ↓ 11-12 批次（行李延误/换汇）关键词预置：按两篇实际用词铺
+  suitcase:'名词：行李箱、手提箱',
+  detour:'名词：绕路、改道',
+  belt:'名词：（行李）传送带；安全带；腰带',
+  baggage:'名词：行李',
+  apologize:'动词：道歉',
+  scanned:'动词：扫描（scan 的过去式）',
+  nodded:'动词：点头（nod 的过去式）',
+  calmly:'副词：平静地、镇定地',
+  fault:'名词：过错、责任',
+  delivered:'动词：投递、送达（deliver 的过去式）',
+  register:'动词：登记、注册',
+  settled:'动词：解决、办妥（settle 的过去式）',
+  transfer:'名词/动词：中转、转移',
+  exchange:'名词/动词：兑换；交换',
+  counter:'名词：柜台',
+  currency:'名词：货币',
+  charged:'动词：收费（charge 的过去式）',
+  worse:'形容词：更糟的（bad 的比较级）',
+  extra:'形容词：额外的',
+  argue:'动词：争论、辩驳',
+  politely:'副词：礼貌地',
+  percent:'名词：百分之……（eight percent 百分之八）',
+  difference:'名词：差别、差额',
+  trip:'名词：旅程',
+  local:'形容词：当地的',
+  apparently:'副词：看来、显然'};
 function validTrans(t,k){ // 翻译结果有效性：空/纯标点符号/回显原文/已知垃圾模式都算无效
   if(!t)return false;
   if(!/[一-鿿A-Za-z0-9]/.test(t))return false; // 必须含汉字/字母/数字（滤掉"。"、"…"等）
@@ -363,8 +393,8 @@ async function translate(k,ctx){ // 主源 gtx → 备用(move/Lingva) → MyMem
   catch(e){}}
   { // 词典义项补上，但多义词只留与语境相符的义项（runway 等多义词不再全列）
     const j=await tryGtx(k,'bd');
-    if(j&&j.dict){const d=filterSenses(cleanSense(j.dict.map(x=>x.pos+'：'+x.terms.join('、')).join('；')),ctxT);
-      if(validTrans(d,k))t=t?t+'\n〔词典〕'+d:d}
+    if(j&&j.dict&&!ctx){const d=filterSenses(cleanSense(j.dict.map(x=>x.pos+'：'+x.terms.join('、')).join('；')),ctxT);
+      if(validTrans(d,k))t=d}
     else if(!t){
       const s2=await tryBackup(k);
       if(validTrans(s2,k))t=s2}}
@@ -404,7 +434,7 @@ const TASKS={
   '2026-11-08':'①读本批 2 篇（B1+ 难度档：自助结账/民宿沟通，读的时候留意 have been doing 的持续感）②【主任务·训练】11-08 训练页 4 场景（退换货+排队抱怨，与文章零重叠），写完导出作答发我批改；11-03/11-04/11-05 三天的批改标记已回填到训练页对应场景下（✅/❌ 条），先回看再写今天的',
   '2026-11-09':'①读本批 2 篇（B1+：出租车纠纷/手机没电求助，重点句式 should have done 本该…却没）②【主任务·训练】11-09 训练页 4 场景（理发店+错过班车，与文章零重叠），写完导出作答发我批改',
   '2026-11-11':'①读本批 2 篇（B1+：药店三问/插队事件——if 虚拟过去式 + would have done 本该…实际没有）②【主任务·训练】11-10 雅思练一练 5 题还没做的先做（判断+选择即时判分）；读完点「✓ 读完了」我会发下一批',
-  '2026-11-12':'①读本批 2 篇（B1+：行李延误/换汇陷阱——if 虚拟 + would have done 二现，留意 DCC 换汇Always选当地货币）②【主任务·训练】11-12 训练页 4 场景（丢钱包+求助，与文章零重叠），写完导出作答发我批改；11-10 练一练 5 题没做完的补上'
+  '2026-11-12':'①读本批 2 篇（B1+：行李延误/换汇陷阱——if 虚拟 + would have done 二现，换汇 Always 选当地货币）②【主任务·训练】11-12 雅思练一练 5 题（判断+选择即时判分，就用这两篇做载体）；11-10 练一练没做完的补上'
 };
 function renderTask(list){
   let el=document.getElementById('taskcard');

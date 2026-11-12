@@ -63,23 +63,36 @@ const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e)
 const TRAIN=[
 {
   day:'2026-11-12',
-  title:'开口产出 · 丢钱包与求助（从零写）',
-  brief:'场景继续与文章零重叠（阅读今天讲行李延误和换汇，训练走丢钱包/求助）。回考重点：过去的事用过去式（丢=lost，不是 lose）；have been doing 持续感二盯。规则不变：中文场景自己写，写完才看参考。',
-  daily:[ // 输入材料·听读用，别抄进答案
-    {en:'I\'ve lost my wallet.',zh:'我的钱包丢了——have lost：丢了且现在还没找到，用现在完成时'},
-    {en:'Could you help me, please?',zh:'能帮我一下吗？——万能求助句（第三次出现，要形成条件反射）'},
-    {en:'Someone took my bag.',zh:'有人拿走了我的包——过去的事用过去式 took'},
-    {en:'Where is the nearest police station?',zh:'最近的派出所在哪？——the nearest + 名词，问"最近的"专用'}
-  ],
-  items:[
-    {q:'你发现钱包不见了（在咖啡馆坐了半小时才摸口袋）。向店员说明情况并求助（1-2 句）。',
-     ref:'Excuse me, I can\'t find my wallet. I think I lost it here. Could you help me look for it?\n（找不到=can\'t find；丢了的事用 lost 过去式；求助 Could you help me）'},
-    {q:'店员帮你找了但没有。你说出丢的可能地点（你记得付钱时在收银台掏过），请她再看看收银台附近（1-2 句）。',
-     ref:'I remember taking it out at the counter when I paid. Could you check near the counter again?\n（remember doing=记得做过某事；check=查看）'},
-    {q:'店员建议你先挂失银行卡。你打给银行客服，说明卡丢了并要求冻结（1-2 句）。',
-     ref:'Hello, I\'ve lost my credit card. Could you freeze it for me, please?\n（freeze=冻结；卡丢了先冻结是标准动作）'},
-    {q:'补做：如果你刚才在出租车上也坐过，懊恼地复盘一句——早知道该下车前检查口袋（用 should have done 句式）。',
-     ref:'I should have checked my pockets before I got out of the taxi.\n（should have done=本该做实际没做，复盘专用；二现回考）'}
+  title:'雅思练一练 · 判断与选择（即时反馈）',
+  brief:'继续题型日：判断 TRUE/FALSE/NOT GIVEN + 单选，点选项即时判分。用新文章（行李延误/换汇）做阅读载体。考点：not 否定定位 + if 虚拟「与事实相反」的读法。',
+  daily:[],
+  items:[],
+  quiz:[
+    {passage:'The man at the baggage desk did not apologize first; he scanned the tag, nodded calmly, and said, "It\'s still in Frankfurt. It will be on the next flight."',
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The desk clerk apologized before checking the bag tag.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:1,
+     why:'原文 did not apologize first（没有先道歉）→ FALSE。雅思判断题考点：not + 动词 的直接否定，扫描标签在先'},
+    {passage:"I asked all the wrong questions at first — How long? Why? Whose fault is it? — and then I asked the right one: what happens to it if I change hotels tomorrow?",
+     type:'单选',
+     q:'Why did the writer\'s final question "change the conversation"?',
+     opts:['It blamed the airline for the delay','It was about a real problem that would affect the writer later','It was asked in a louder voice'],ans:1,
+     why:'行李明天要送到，而作者要换酒店——这是真实的后续问题，所以工作人员抬头了。雅思考点：识别"问题真正的价值"而非表面措辞'},
+    {passage:'He explained that the bag would be delivered to my address, not my airline, and that if I had known to register the hotel first, the whole thing would have been settled in one step.',
+     type:'单选',
+     q:'What does "if I had known to register the hotel first" tell us?',
+     opts:['The writer did register the hotel first','The writer did not register it first, so it took more steps','The hotel refused to be registered'],ans:1,
+     why:'if + had done 虚拟过去式 = 与事实相反：实际没先登记，所以多走了几步。would have been settled 同款语义——「本会一步办妥，实际没有」'},
+    {passage:'Charging me in my home currency was the shop doing my bank\'s job badly and charging me extra for it: a worse exchange rate dressed up as a service.',
+     type:'单选',
+     q:'According to the writer, choosing "home currency" at the exchange counter...',
+     opts:['Is the safer choice for travellers','Costs extra because of a worse exchange rate','Is required by most banks'],ans:1,
+     why:'charging me extra + a worse exchange rate dressed up as a service——DCC 多收钱。dressed up as（装扮成）是"伪装"信号词'},
+    {passage:'The polite question costs nothing, and the polite mistake costs about eight percent.',
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The writer believes asking one polite question is free, while not asking can be expensive.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:0,
+     why:'question costs nothing / mistake costs eight percent 的同义改写：问=免费，不问=亏 8%。雅思阅读考的就是这种 paraphrase 识别'}
   ]
 },
 {
