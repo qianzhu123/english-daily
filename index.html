@@ -65,8 +65,8 @@ w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /
 <textarea id="tokin" style="width:100%;height:60px;margin:8px 0;font-size:.75rem" placeholder="粘贴 token（github_pat_...）"></textarea>
 <div style="display:flex;gap:8px"><button onclick="saveToken()" style="flex:1">保存</button><button onclick="clearToken()" style="flex:1">清除</button><button onclick="document.getElementById('tokbox').classList.add('hidden')">关闭</button></div>
 <div id="tokstat" style="color:var(--dim);margin-top:6px;font-size:.78rem"></div></div>
-<script src="articles.js?v=1112e"></script>
-<script src="scenes.js?v=1112e"></script>
+<script src="articles.js?v=1114a"></script>
+<script src="scenes.js?v=1114a"></script>
 <script>
 const A=window.ARTICLES;
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -398,7 +398,41 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
   attack:{any:'名词/动词：攻击',art:[{t:'Noise',v:'名词：（语气上的）攻击性（be read as an attack 被当成挑衅）'}]},
   person:'名词：人',
   lands:{any:'动词：着陆、降落（land 三单）',art:[{t:'Noise',v:'动词：（话）落在……效果如何（sentence lands differently 同一句话效果不同）'}]},
-  differently:'副词：不同地、不一样地'};
+  differently:'副词：不同地、不一样地',
+  // ↓ 11-14 批次（租房看房/健身退款维权）关键词预置：按两篇实际用词铺，场景义优先
+  apartment:'名词：公寓（美式；英式 flat）',
+  agent:{any:'名词：代理人、经纪人',art:[{t:'Apartment',v:'名词：（房产）中介'}]},
+  mirror:'名词：镜子',
+  flat:{any:'形容词：平的；扁平的',art:[{t:'Apartment',v:'名词：（英式）公寓、单元房'}]},
+  facing:'形容词：朝向……的（south-facing 朝南）',
+  breathing:'名词/动词：呼吸（breathe 的动名词）',
+  rent:'名词：房租；动词：租',
+  figure:{any:'名词：数字；身材；人物',art:[{t:'Apartment',v:'名词：（报出的）价格数字'}]},
+  discount:{any:'名词：折扣',art:[{t:'Apartment',v:'名词：折扣（it is a feeling of one 只给折扣的感觉）'}]},
+  reduction:'名词：降低、减少（价格下调）',
+  lease:'名词：租约、租期（one-year lease 一年租约）',
+  upfront:'副词：预付地、 upfront payment 预付款',
+  intends:'动词：打算、意图（intend 三单）',
+  negotiates:'动词：谈判、协商（negotiate 三单）',
+  stronger:'形容词：更强壮的；更有优势的（strong 的比较级）',
+  membership:'名词：会员资格、会员费',
+  refund:{any:'名词/动词：退款',art:[{t:'Refund',v:'名词：退款（标题词；refund department 退款部）'}]},
+  punishment:'名词：惩罚、处罚',
+  branch:'名词：分店、分行；树枝',
+  renovation:'名词：装修、翻新（closed for renovation 装修停业）',
+  receptionist:'名词：前台接待员',
+  sunshine:'名词：阳光',
+  requesting:'动词：请求、要求（request 的动名词，正式书面）',
+  facility:'名词：设施、场所（gym facility 健身设施）',
+  clause:'名词：（合同）条款（clause four 第四条）',
+  contract:'名词：合同、契约',
+  hotline:'名词：热线（电话）',
+  department:'名词：部门',
+  specific:'形容词：具体的、明确的',
+  anchored:'动词：锚定、基于（anchor 的过去式）',
+  mood:'名词：情绪、心情',
+  case:{any:'名词：情况；箱子',art:[{t:'Refund',v:'名词：（有据可依的）案子、案件（a case 有理有据的投诉）'}]},
+  clever:'形容词：聪明的、机灵的'};
 function validTrans(t,k){ // 翻译结果有效性：空/纯标点符号/回显原文/已知垃圾模式都算无效
   if(!t)return false;
   if(!/[一-鿿A-Za-z0-9]/.test(t))return false; // 必须含汉字/字母/数字（滤掉"。"、"…"等）
@@ -498,6 +532,8 @@ const TASKS={
   '2026-11-08':'①读本批 2 篇（B1+ 难度档：自助结账/民宿沟通，读的时候留意 have been doing 的持续感）②【主任务·训练】11-08 训练页 4 场景（退换货+排队抱怨，与文章零重叠），写完导出作答发我批改；11-03/11-04/11-05 三天的批改标记已回填到训练页对应场景下（✅/❌ 条），先回看再写今天的',
   '2026-11-09':'①读本批 2 篇（B1+：出租车纠纷/手机没电求助，重点句式 should have done 本该…却没）②【主任务·训练】11-09 训练页 4 场景（理发店+错过班车，与文章零重叠），写完导出作答发我批改',
   '2026-11-11':'①读本批 2 篇（B1+：药店三问/插队事件——if 虚拟过去式 + would have done 本该…实际没有）②【主任务·训练】11-10 雅思练一练 5 题还没做的先做（判断+选择即时判分）；读完点「✓ 读完了」我会发下一批',
+  '2026-11-14':'①读本批 2 篇新文章（B1+：租房看房/健身退款维权——a feeling of one 话术识破 + as per clause 投诉句式；能走的人谈判地位更高）②【主任务·训练】11-14 雅思练一练 5 题（判断+选择即时判分，就用租房/退款这两篇做载体）；11-12 练一练没做完的补上'
+,
   '2026-11-12':'①读本批 2 篇新文章（B1+：维修砍价/邻里噪音——if 虚拟双联句三现 + no matter how 让步；砍价＝问替代方案，不争对错）②【主任务·训练】11-12 雅思练一练 5 题（判断+选择即时判分，就用维修/噪音这两篇做载体）；没做完的补上'
 };
 function renderTask(list){
@@ -570,6 +606,38 @@ function playArticle(artIdx,btn){
 // ===== 整篇翻译：显示/隐藏本文全文译文（gtx 整篇 → 失败逐句兜底 → MyMemory 兜底） =====
 // ===== 预置全文翻译：本批两篇已人工校好，点「整篇翻译」直接出，不走在线请求 =====
 const PRETR={
+  "The Apartment Viewing That Almost Worked": [
+    "The agent met me at the door with a smile that had been rehearsed in front of a mirror, and said, 'You are lucky — three people called about this flat this morning.'",
+    "中介在门口迎接我，笑容像对着镜子练过一样，还说道：『你运气好——今天早上有三个人打电话问这套房。』",
+    "The flat itself was fine: second floor, south-facing windows, and a kitchen so small that two people would have to take turns breathing.",
+    "房子本身还不错：二楼、朝南的窗，还有一个小得两个人得轮流呼吸的厨房。",
+    "I asked about the rent and he gave me a figure, and then — this is the part worth learning — he added, 'But for you, maybe I can talk to the owner.'",
+    "我问了房租，他给了个数，然后——这是值得学的一招——他补了一句：『不过对你嘛，也许我可以去跟房东谈谈。』",
+    "That sentence costs the agent nothing; it is not a discount, it is a feeling of one, and it has closed more deals than any actual reduction.",
+    "这句话对中介毫无成本；它不是折扣，只是折扣的感觉，而它促成的成交比任何真实的降价都多。",
+    "So I did what the taxi driver taught me and the repair shop confirmed: I asked a calm question about alternatives. 'What would the owner say to a one-year lease, paid upfront, at two hundred less?'",
+    "于是我用了出租车司机教会我、维修店验证过的那招：心平气和地问一句别的选择。『一年租约、租金预付、月租少两百，房东会怎么想？』",
+    "He wrote it down. Agents only write down things they intend to pass on, and the pen moving is worth more than any smile.",
+    "他把它记了下来。中介只会记下他们打算转达的话，笔在动比任何微笑都值钱。",
+    "I have not heard back yet, but that is fine — the flat was good, not perfect, and a person who can walk away always negotiates from the stronger chair.",
+    "我还没等到回音，但这没关系——房子好，但不完美，而能转身就走的人，谈判时永远坐在更有力的一边。"
+  ],
+  "The Gym Membership Refund": [
+    "I signed up for a gym membership in September, back when running every morning still felt like a plan instead of a punishment.",
+    "九月份我办了健身卡，那时候每天晨跑还像是个计划，而不是一种刑罚。",
+    "In October the branch closed 'for renovation' — first for two weeks, then for a month, and the receptionist kept saying next week the way weather forecasts keep saying sunshine.",
+    "十月分店『装修』关了门——先说两周，又说一个月，前台一直说『下周就好』，就像天气预报一直说要出太阳。",
+    "By November I wanted my money back, so I sat down and wrote the email I actually should have written in September, before paying: short, dated, and impossible to misunderstand.",
+    "到十一月我想要回钱，于是坐下来写了那封其实九月付款前就该写的邮件：简短、标明日期、不可能被误解。",
+    "Here is what it said: membership number, the dates the gym was closed, and one sentence — 'I am requesting a refund for the months I could not use the facility, as per clause four of the contract.'",
+    "邮件是这么写的：会员号、健身房关门的日期，加一句话——『依据合同第四条，我要求退还无法使用场馆那几个月的费用。』",
+    "The first reply offered a free month instead of money, which is how companies say no while sounding generous; the second reply, after I mentioned the consumer protection hotline, was a transfer to the refund department.",
+    "第一次回复给了个月卡代替退钱——公司就是这样一边显得大方一边说不的；我提到消费者保护热线后，第二次回复把我转给了退款部。",
+    "Ten days later the money came back. Not because I was clever, but because the request was specific, written down, and anchored to a clause someone else had signed.",
+    "十天后钱退回来了。不是因为我聪明，而是因为请求具体、白纸黑字，并且锚定在对方自己也签过字的条款上。",
+    "A complaint that lives in your head is just a mood; a complaint that lives in an email with dates and a clause number is a case.",
+    "只存在于脑子里的投诉只是一种情绪；写在邮件里、带着日期和条款号的投诉才是一个案子。"
+  ],
   "The Phone That Wasn't Worth Fixing": [
     "The repair shop smelled like solder and burnt coffee, and the owner took one look at my phone and said, 'Screen and battery — that is almost a new phone.'",
     "维修店里一股焊锡和煮过头的咖啡味，老板扫了一眼我的手机就说：『屏幕和电池——这差不多等于换台新手机了。』",

@@ -62,6 +62,40 @@ const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e)
 // ① 题目=纯中文场景，绝不印英文框架/候选句/文章原句 ② 参考答案先写后看（空作答不给看）③ 语音只手动只读英文短句
 const TRAIN=[
 {
+  day:'2026-11-14',
+  title:'雅思练一练 · 判断与选择（即时反馈）',
+  brief:'题型日：判断 TRUE/FALSE/NOT GIVEN + 单选，点选项即时判分。用本批新文章（租房看房/健身退款维权）做阅读载体。考点：NOT GIVEN「没说不等于说了」+ 金句主旨 + while/instead of 对照修辞。',
+  daily:[],
+  items:[],
+  quiz:[
+    {passage:"The agent met me at the door with a smile that had been rehearsed in front of a mirror, and said, 'You are lucky — three people called about this flat this morning.'",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'Three other people had already rented the flat that morning.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:2,
+     why:'原文只说三个人「打电话问过」（called about），没说租下（rented）——NOT GIVEN。雅思经典陷阱：把「有人感兴趣」偷换成「已被租走」'},
+    {passage:"That sentence costs the agent nothing; it is not a discount, it is a feeling of one, and it has closed more deals than any actual reduction.",
+     type:'单选',
+     q:'What does the writer think of the agent\'s promise to "talk to the owner"?',
+     opts:['It is a real discount in disguise','It costs the agent nothing but creates the feeling of getting a deal','It will definitely lead to a price reduction'],ans:1,
+     why:'costs nothing / not a discount but a feeling of one / more deals than actual reduction——三个信号都指向「话术营造感觉，不是真降价」'},
+    {passage:"He wrote it down. Agents only write down things they intend to pass on, and the pen moving is worth more than any smile.",
+     type:'单选',
+     q:'Why does the writer think "the pen moving" matters?',
+     opts:['The agent writes down things he plans to pass to the owner, so it is a real sign of progress','The agent has a habit of writing everything down','Writing looks more professional than smiling'],ans:0,
+     why:'Agents only write down things they intend to pass on——笔动=打算转达=真进展。A 是同义改写，B/C 都是原文没支持的个人发挥'},
+    {passage:"The first reply offered a free month instead of money, which is how companies say no while sounding generous.",
+     type:'单选',
+     q:'The writer describes the offer of a free month as...',
+     opts:['A genuine apology','A generous gift that solved the problem','A polite way of refusing the refund'],ans:2,
+     why:'say no while sounding generous——听着大方地说不。给月卡不给钱=变相拒绝退款。考点：while+doing 的反讽读法'},
+    {passage:"A complaint that lives in your head is just a mood; a complaint that lives in an email with dates and a clause number is a case.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The writer believes a written complaint with specific details is more effective than one that is not written down.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:0,
+     why:'金句同义改写：mood（情绪）vs case（案子）= 心里想想没用，写下来带细节才有效 → TRUE。呼应前文 specific / written down / anchored to a clause'}
+  ]
+},
+{
   day:'2026-11-12',
   title:'雅思练一练 · 判断与选择（即时反馈）',
   brief:'题型日：判断 TRUE/FALSE/NOT GIVEN + 单选，点选项即时判分。用本批新文章（维修砍价/邻里噪音）做阅读载体。考点：if 虚拟「与事实相反」+ no matter how 让步 + more A than B 情绪描写。',

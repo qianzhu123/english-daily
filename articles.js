@@ -695,6 +695,7 @@ window.ARTICLES = [
   {
     title: "The Phone That Wasn't Worth Fixing (B1+)",
     date: "2026-11-12",
+    archived: true,
     level: "B1+ · 购物/维修砍价",
     sentences: [
       "The repair shop smelled like solder and burnt coffee, and the owner took one look at my phone and said, 'Screen and battery — that is almost a new phone.'",
@@ -717,6 +718,7 @@ window.ARTICLES = [
   {
     title: "The Noise Complaint That Ended in Tea (B1+)",
     date: "2026-11-12",
+    archived: true,
     level: "B1+ · 生活/邻里沟通",
     sentences: [
       "At midnight the drilling started again — three floors up, every evening this week, as punctual as a train.",
@@ -734,6 +736,50 @@ window.ARTICLES = [
       "put up shelves —— 固定搭配：安装（put up 搭建）；do the drilling 做钻孔这活",
       "if the noise ever comes from my side again —— 真实条件句（与虚拟句对照）",
       "A note can be read as an attack; a knock is just a person at the door —— 金句：被动语态 can be read as"
+    ]
+  },
+  {
+    title: "The Apartment Viewing That Almost Worked (B1+)",
+    date: "2026-11-14",
+    level: "B1+ · 租房/看房谈判",
+    sentences: [
+      "The agent met me at the door with a smile that had been rehearsed in front of a mirror, and said, 'You are lucky — three people called about this flat this morning.'",
+      "The flat itself was fine: second floor, south-facing windows, and a kitchen so small that two people would have to take turns breathing.",
+      "I asked about the rent and he gave me a figure, and then — this is the part worth learning — he added, 'But for you, maybe I can talk to the owner.'",
+      "That sentence costs the agent nothing; it is not a discount, it is a feeling of one, and it has closed more deals than any actual reduction.",
+      "So I did what the taxi driver taught me and the repair shop confirmed: I asked a calm question about alternatives. 'What would the owner say to a one-year lease, paid upfront, at two hundred less?'",
+      "He wrote it down. Agents only write down things they intend to pass on, and the pen moving is worth more than any smile.",
+      "I have not heard back yet, but that is fine — the flat was good, not perfect, and a person who can walk away always negotiates from the stronger chair."
+    ],
+    notes: [
+      "a smile rehearsed in front of a mirror —— 过去分词作定语；中介话术的画面感开场",
+      "three people called this morning —— 制造稀缺话术（换汇篇 DCC 话术同族）",
+      "a kitchen so small that... —— so...that 结果状语 + 幽默夸张（take turns breathing 轮流呼吸）",
+      "a feeling of one —— 省略修辞：a feeling of a discount，『折扣的感觉』而非折扣本身",
+      "What would the owner say to...? —— would 表试探性提议（比 will 委婉，谈判句式）",
+      "negotiates from the stronger chair —— 金句：能走的人谈判地位更高；chair=地位隐喻"
+    ]
+  },
+  {
+    title: "The Gym Membership Refund (B1+)",
+    date: "2026-11-14",
+    level: "B1+ · 消费维权/写投诉邮件",
+    sentences: [
+      "I signed up for a gym membership in September, back when running every morning still felt like a plan instead of a punishment.",
+      "In October the branch closed 'for renovation' — first for two weeks, then for a month, and the receptionist kept saying next week the way weather forecasts keep saying sunshine.",
+      "By November I wanted my money back, so I sat down and wrote the email I actually should have written in September, before paying: short, dated, and impossible to misunderstand.",
+      "Here is what it said: membership number, the dates the gym was closed, and one sentence — 'I am requesting a refund for the months I could not use the facility, as per clause four of the contract.'",
+      "The first reply offered a free month instead of money, which is how companies say no while sounding generous; the second reply, after I mentioned the consumer protection hotline, was a transfer to the refund department.",
+      "Ten days later the money came back. Not because I was clever, but because the request was specific, written down, and anchored to a clause someone else had signed.",
+      "A complaint that lives in your head is just a mood; a complaint that lives in an email with dates and a clause number is a case."
+    ],
+    notes: [
+      "back when... still felt like a plan instead of a punishment —— instead of 对照修辞；办卡时的豪情",
+      "the way weather forecasts keep saying sunshine —— the way 类比句式；keep doing 一直（敷衍地）",
+      "as per clause four —— 正式书面语：依据合同第四条（投诉邮件核心句式）",
+      "how companies say no while sounding generous —— while+doing 伴随；『听着大方地拒绝』",
+      "anchored to a clause —— anchor 锚定；投诉要钉在对方签过字的条款上",
+      "A complaint that lives in your head is just a mood; ... is a case —— 金句对仗：情绪 vs 案件"
     ]
   },
   /* ===== 预备稿（draft:true 隐藏；界面「🔄 更新下一批」按钮可自助发布） ===== */
