@@ -65,8 +65,8 @@ w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /
 <textarea id="tokin" style="width:100%;height:60px;margin:8px 0;font-size:.75rem" placeholder="粘贴 token（github_pat_...）"></textarea>
 <div style="display:flex;gap:8px"><button onclick="saveToken()" style="flex:1">保存</button><button onclick="clearToken()" style="flex:1">清除</button><button onclick="document.getElementById('tokbox').classList.add('hidden')">关闭</button></div>
 <div id="tokstat" style="color:var(--dim);margin-top:6px;font-size:.78rem"></div></div>
-<script src="articles.js?v=1112d"></script>
-<script src="scenes.js?v=1112d"></script>
+<script src="articles.js?v=1112e"></script>
+<script src="scenes.js?v=1112e"></script>
 <script>
 const A=window.ARTICLES;
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -76,7 +76,11 @@ let showOld=false; // 「看往期」改为临时视图：仅本次生效，刷�
 // ===== 已读管理：次数计数 + 「读完了」收进往期 =====
 function doneDB(){return store.get('doneread')}
 function readCount(title){return (doneDB()[title]&&doneDB()[title].count)||0}
-function isDone(title){return !!doneDB()[title]}
+function isDone(title){const e=doneDB()[title];if(!e)return false;
+  // 批次保护：文章比读完标记新（新批次重发/换文）→ 视为未读，不让旧标记藏新文章
+  const a=(window.ARTICLES||[]).find(x=>x.title===title);
+  if(a&&a.date&&e.date&&a.date>e.date)return false;
+  return !!e}
 function markDone(title){const db=doneDB();
   db[title]={count:(db[title]&&db[title].count||0)+1,date:todayStr()};
   store.set('doneread',db);toastMsg('✓ 第 '+db[title].count+' 遍读完，收进往期（看往期可随时回看）');
