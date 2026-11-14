@@ -375,8 +375,7 @@ function gotoDay(d){view.mode='day';view.day=d;
   const p=d.slice(2).replace(/-/g,'');
   pushURL(d);render()}
 function pushURL(d){const p=d.slice(2).replace(/-/g,'');
-  const base=location.pathname.replace(/\/\d{6}\/?$/,'/');
-  try{history.pushState(null,'',base+p)}catch(e){location.search='?d='+p}}
+  try{history.pushState(null,'',location.pathname+'?d='+p)}catch(e){location.search='?d='+p}}
 function render(){
   const el=document.getElementById('main');
   const db=dayDB();

@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><title>跳转中…</title></head>
+<body>
+<script>
+(function(){
+  var m=location.pathname.match(/\/review\/(\d{6})\/?$/);
+  if(m){location.replace(location.pathname.replace(/\/review\/.*$/,'/review/')+'?d='+m[1]);return}
+  location.replace('/english-daily/');
+})()
+</script>
+<p>页面不存在，<a href="/english-daily/">返回首页</a></p>
+</body></html>
