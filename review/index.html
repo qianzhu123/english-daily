@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>复习 · Daily English</title>
+<style>
+:root{--bg:#fafaf7;--card:#fff;--ink:#1a1a1a;--dim:#6b6b6b;--accent:#2d6a4f;--bad:#e63946;--mark:#ffe08a}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);line-height:1.75}
+.wrap{max-width:720px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:1.4rem;margin:0 0 2px}
+.meta{color:var(--dim);font-size:.85rem;margin-bottom:16px}
+a.back{color:var(--accent);text-decoration:none;font-size:.9rem}
+.card{background:var(--card);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:16px 20px;margin-bottom:14px}
+
+:root{--bg:#fafaf7;--card:#fff;--ink:#1a1a1a;--dim:#6b6b6b;--accent:#2d6a4f;--bad:#e63946;--mark:#ffe08a}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);line-height:1.7}
+.wrap{max-width:760px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:1.4rem;margin:0 0 2px}
+.meta{color:var(--dim);font-size:.85rem;margin-bottom:16px}
+a.back{color:var(--accent);text-decoration:none;font-size:.9rem}
+.dayh{font-size:1.05rem;font-weight:700;margin:26px 0 8px;display:flex;align-items:center;gap:10px}
+.dayh .tag{font-size:.72rem;background:#eef6f0;color:var(--accent);padding:2px 8px;border-radius:10px;font-weight:400}
+.wl{background:var(--card);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:4px 18px}
+.wrow{display:flex;align-items:baseline;gap:10px;padding:9px 0;border-top:1px dashed #e5e5e0;flex-wrap:wrap}
+.wrow:first-child{border-top:none}
+.wrow .w{font-family:Georgia,serif;font-weight:600;color:var(--bad);cursor:pointer;min-width:110px}
+.wrow .w.today{color:var(--ink)}
+.wrow .tr{color:var(--ink);font-size:.92rem;flex:1;min-width:160px}
+.wrow .tr.blank{color:#ccc;font-size:.85rem}
+.wrow .peek{font-size:.72rem;padding:1px 8px;white-space:nowrap}
+.wrow .del{color:#bbb;cursor:pointer;padding:0 4px;font-size:1rem}
+.wrow .del:hover{color:var(--bad)}
+.empty{color:var(--dim);text-align:center;padding:30px 0}
+/* 日期选择条 */
+.days{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.days button{border:1px solid #ccc;background:var(--card);color:var(--ink);padding:4px 12px;border-radius:16px;font-size:.82rem}
+.days button.act{background:var(--accent);color:#fff;border-color:var(--accent)}
+.days button .n{color:inherit;opacity:.6;font-size:.75rem;margin-left:3px}
+/* 语法点收藏区 */
+#gramsec{margin-bottom:10px}
+#gramsec .ghead{font-size:1.05rem;font-weight:700;margin:20px 0 8px;display:flex;align-items:center;gap:10px}
+#gramsec .gl{background:var(--card);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:10px 16px;margin-bottom:8px;font-size:.95rem}
+#gramsec .gl .src{color:var(--dim);font-size:.78rem;margin-top:4px}
+#gramsec .gl .rm{color:#bbb;cursor:pointer;float:right;padding:0 4px}
+#gramsec .gl .rm:hover{color:var(--bad)}
+/* 页面内 toast：替代原生 alert/confirm（长期规则） */
+#toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:#333;color:#fff;
+padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99;max-width:80vw}
+#toast.show{opacity:.95}
+
+
+/* 日历 */
+.cal{background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:14px 16px;margin-bottom:14px}
+.calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.calhead b{font-size:1rem}
+.calnav{border:none;background:#eef6f0;color:var(--accent);border-radius:6px;padding:4px 12px;cursor:pointer;font-size:.9rem}
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.caldow{font-size:.7rem;color:var(--dim);padding:2px 0}
+.calcell{position:relative;border:none;background:none;border-radius:6px;padding:6px 0;font-size:.85rem;cursor:default;color:var(--ink)}
+.calcell.has{background:#eef6f0;color:var(--accent);font-weight:700;cursor:pointer}
+.calcell.has:hover{background:#dcebe0}
+.calcell.today{outline:2px solid var(--accent)}
+.calcell .cnt{position:absolute;top:-4px;right:-2px;background:var(--accent);color:#fff;border-radius:8px;font-size:.6rem;padding:0 4px;line-height:1.4}
+.calcell.dim{color:#ccc}
+.dayhead{display:flex;align-items:baseline;gap:8px;margin:18px 0 8px}
+.dayhead b{font-size:1.05rem}
+.backcal{color:var(--accent);text-decoration:none;font-size:.85rem}
+.gcard{background:#fffbe8;border-left:3px solid #c9a227;border-radius:6px;padding:8px 12px;margin:4px 0;font-size:.9rem}
+.gcard .src{color:var(--dim);font-size:.75rem;margin-top:4px}
+.artfull{background:#f7f7f2;border-radius:8px;padding:12px 16px;margin:8px 0;font-size:.95rem;line-height:2}
+.artfull h3{margin:0 0 6px;font-size:1rem;color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>复习 <a class="back" href="../../index.html">← 返回阅读</a></h1>
+<div class="meta">按天复习：点日历里高亮的日期 → 当天的单词+语法+原文 · 点词朗读 · 「盖住」自测 · 会了点 ×</div>
+<div id="main"></div>
+</div>
+<div id="toast"></div>
+<script src="../articles.js"></script>
+<script>
+
+const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let marks=store.get('vocab');
+const ART=window.ARTICLES||[]; // 按文章分组陈列（用户 10-31 定版：复习=对着读过的文章过词，不是对着操作日期）
+function esc(s){return String(s).replace(/&/g,'&').replace(/</g,'<')}
+function cleanWord(s){return s.replace(/[.,!?;:"'()“”’]/g,'').toLowerCase().trim()}
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+// 旧数据兼容（无 day 字段的旧词条补日期）
+(function(){let ch=false;const c={};const today=todayStr();
+for(const k in marks){const ck=cleanWord(k)||k;let v=marks[k];
+if(typeof v!=='object'||!v)v={n:Number(v)||1,day:/^\d{4}-\d{2}-\d{2}/.test(k)?k.slice(0,10):today};
+if(!v.day){v.day=/^\d{4}-\d{2}-\d{2}/.test(k)?k.slice(0,10):today;ch=true}
+if(c[ck])c[ck].n=Math.max(c[ck].n||1,v.n||1);else c[ck]=v;
+if(ck!==k)ch=true}
+if(ch){marks=c;store.set('vocab',marks)}})();
+// ===== toast（禁原生弹窗长期规则） =====
+let toastTimer=null;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200)}
+function speak(text,rate){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||0.9;u.voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u)}
+// ===== 翻译（gtx 主源 + MyMemory 兜底 + 有效性过滤 + 人工义） =====
+const TKEY='translations',TVER='v14';
+function getTrans(){let c=store.get(TKEY+TVER);
+  if(!Object.keys(c).length){ // 新版本缓存为空：迁入旧版本缓存（坏翻译已由 MANUAL 覆盖 + v13 起的过滤器清洗），免去全量重查
+    const prev=store.get(TKEY+'v13');if(Object.keys(prev).length){store.set(TKEY+TVER,prev);return prev}}
+  return c}
+// 格式=标准词典释义（词性：词义），不做单词条的说教式解读（用户 11-07 定版：不要针对某个词强行解释）
+// 关键词预置（用户 11-10 定版）：高频旅行词+近期坏译词直接给人工义，点词秒出不再请求
+const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
+  properly:'副词：正确地、适当地、得体地',
+  clearance:'名词：放行许可；清关；净空',
+  panicked:'动词：恐慌、惊慌失措（panic 的过去式）',
+  pure:'形容词：纯粹的；完全的；纯的',
+  mattered:'动词：要紧、重要（matter 的过去式）',
+  terminal:'名词：航站楼；终端；终点站',
+  grilled:'动词：烤（grill 的过去分词）；形容词：烤制的',
+  hundred:'数词：一百',
+  instructions:'名词：说明、指示（instruction 的复数）',
+  gracefully:'副词：得体地、从容地；优雅地',
+  meter:'名词：（出租车）计价器；仪表；公尺',
+  technically:'副词：严格来说；名义上',
+  owed:'动词：欠（owe 的过去式/过去分词）；欠（钱/人情）',
+  fare:'名词：车费、票价',
+  overcharge:'动词：多收钱、宰客',
+  tipped:'动词：给小费（tip 的过去式）',
+  guesthouse:'名词：民宿、招待所',
+  pronounce:'动词：发音（……的音）',
+  charger:'名词：充电器',
+  errand:'名词：差事、跑腿',
+  waved:'动词：挥手（wave 的过去式）',
+  commission:'名词：手续费、佣金',
+  rate:'名词：汇率；费率；速度',
+  receipt:'名词：收据、小票',
+  clerk:'名词：职员、店员',
+  laundry:'名词：要洗的衣物；洗衣',
+  instinct:'名词：本能、直觉',
+  suspicion:'名词：怀疑、疑心',
+  villain:'名词：坏人、反派',
+  folded:'动词：折叠（fold 的过去式/过去分词）',
+  dissolved:'动词：消散、化解（dissolve 的过去式）',
+  slightly:'副词：稍微、略微',
+  stroller:'名词：婴儿推车',
+  block:'名词：街区；块；动词：堵塞、挡住',
+  queue:'名词：（排的）队；动词：排队',
+  pharmacy:'名词：药房、药店',
+  pharmacist:'名词：药剂师',
+  syrup:'名词：糖浆（cough syrup 止咳糖浆）',
+  cough:'名词/动词：咳嗽',
+  dose:'名词：剂量、一剂（药）',
+  transaction:'名词：交易',
+  impatient:'形容词：不耐烦的、没耐心的',
+  insult:'名词：侮辱；动词：侮辱',
+  filter:'名词：过滤器；把关者；动词：过滤',
+  insurance:'名词：保险',
+  gap:'名词：缺口、空当；差距',
+  mumbled:'动词：咕哝、嘟囔（mumble 的过去式）',
+  pavement:'名词：（路边的）人行道',
+  applauded:'动词：鼓掌、称赞（applaud 的过去式）',
+  rehearsed:'动词：排练、演练（rehearse 的过去式）',
+  firmly:'副词：坚定地、坚决地',
+  reserved:'动词：预订、预留（reserve 的过去式/过去分词）',
+  willingness:'名词：意愿、乐意',
+  inwardly:'副词：在心里、暗自地',
+  // ↓ 11-12 批次（行李延误/换汇）关键词预置：按两篇实际用词铺
+  suitcase:'名词：行李箱、手提箱',
+  detour:'名词：绕路、改道',
+  belt:{any:'名词：腰带；安全带',art:[{t:'Suitcase',v:'名词：（机场）行李传送带'}]},
+  baggage:'名词：行李',
+  apologize:'动词：道歉',
+  scanned:'动词：扫描（scan 的过去式）',
+  nodded:'动词：点头（nod 的过去式）',
+  calmly:'副词：平静地、镇定地',
+  fault:'名词：过错、责任',
+  delivered:'动词：投递、送达（deliver 的过去式）',
+  register:'动词：登记、注册',
+  settled:'动词：解决、办妥（settle 的过去式）',
+  transfer:'名词/动词：中转、转移',
+  exchange:'名词/动词：兑换；交换',
+  counter:'名词：柜台',
+  currency:'名词：货币',
+  charged:'动词：收费（charge 的过去式）',
+  worse:'形容词：更糟的（bad 的比较级）',
+  extra:'形容词：额外的',
+  argue:'动词：争论、辩驳',
+  politely:'副词：礼貌地',
+  percent:'名词：百分之……（eight percent 百分之八）',
+  difference:'名词：差别、差额',
+  trip:'名词：旅程',
+  local:'形容词：当地的',
+  apparently:'副词：看来、显然',
+  // ↓ 11-12 新批次（维修砍价/邻里噪音）关键词预置：按两篇实际用词铺，场景义优先
+  solder:'名词：焊锡、焊料（维修台的气味）',
+  quoted:'动词：报价（quote 的过去式）',
+  alternatives:'名词：其他选择、替代方案（alternative 的复数）',
+  guarantee:{any:'名词：保证、担保',art:[{t:'Phone',v:'名词：（维修）保修、保修期（ninety-day guarantee 九十天保修）'}]},
+  honesty:'名词：诚实',
+  bargaining:'名词/动词：讨价还价（bargain 的动名词）',
+  punctual:'形容词：准时的、守时的',
+  disturbance:{any:'名词：干扰、骚乱',art:[{t:'Noise',v:'名词：（噪音）扰民'}]},
+  regulations:'名词：规定、条例（regulation 的复数）',
+  embarrassed:'形容词：尴尬的、不好意思的',
+  defensive:'形容词：戒备的、有防备心的',
+  tenant:'名词：租户、房客（tenant rights 租客权益）',
+  drilling:{any:'名词：钻孔、操练（drill 的动名词）',art:[{t:'Noise',v:'名词：（装修）电钻声'}]},
+  shelves:'名词：架子、搁板（shelf 的复数；put up shelves 装架子）',
+  // ↓ 11-12 批次第二轮补铺：覆盖更多文章实际用词，场景义优先
+  repair:{any:'动词/名词：修理、修补',art:[{t:'Phone',v:'名词：维修（repair shop 维修店）'}]},
+  worth:'形容词：值……的、值得……的（be worth + 钱数/doing）',
+  smelled:{any:'动词：闻起来（smell 系动词 + 形容词）；发出气味',art:[{t:'Phone',v:'动词：闻起来（smelled like 有……的味道，中性，不等于发臭）'}]},
+  burnt:{any:'形容词：烧焦的（burn 的过去分词作形容词）',art:[{t:'Phone',v:'形容词：（咖啡）煮过头的、焦苦的'}]},
+  owner:'名词：主人、老板（维修店老板）',
+  battery:'名词：电池',
+  nearly:'副词：几乎、差不多（= almost）',
+  cheating:{any:'动词：欺骗、作弊（cheat 的现在分词）',art:[{t:'Phone',v:'动词：宰客、坑人（I am not cheating you 我没坑你）'}]},
+  argued:{any:'动词：争论、争辩（argue 的过去式）',art:[{t:'Phone',v:'动词：据理力争（argued about alternatives 争的是选择，不是吵架）'}]},
+  angrily:'副词：生气地、愤怒地',
+  offered:{any:'动词：主动提出、提供（offer 的过去式）',art:[{t:'Phone',v:'动词：（卖家）开价、拿出（方案）'}]},
+  dropped:{any:'动词：掉落；下降（drop 的过去式）',art:[{t:'Phone',v:'动词：（价格）降了（dropped by a third 降了三分之一）'}]},
+  third:{any:'数词：第三',art:[{t:'Phone',v:'名词：三分之一（a third）'}]},
+  accepted:'动词：接受（accept 的过去式）',
+  paid:'动词：付钱（pay 的过去式）',
+  photos:'名词：照片（photo 的复数）',
+  calm:{any:'形容词：平静的、镇定的',art:[{t:'Phone',v:'形容词：（谈判）不动怒的、平和的（one calm question）'}]},
+  honest:'形容词：诚实的、老实的',
+  complaint:{any:'名词：抱怨、投诉',art:[{t:'Noise',v:'名词：（噪音）投诉、交涉'}]},
+  midnight:'名词：午夜、半夜',
+  sharp:{any:'形容词：锋利的；急剧的',art:[{t:'Noise',v:'形容词：（措辞）尖锐的、生硬的'}]},
+  official:{any:'形容词：官方的、正式的',art:[{t:'Noise',v:'形容词：一本正经的、公事公办的（words like regulations）'}]},
+  knocking:{any:'名词/动词：敲门（knock 的动名词）',art:[{t:'Noise',v:'名词：敲门（这个动作，与写便条对比）'}]},
+  braver:'形容词：更勇敢的（brave 的比较级）',
+  realize:{any:'动词：意识到、明白（美式拼写，英式 realise）',art:[{t:'Noise',v:'动词：没料到（did not realize how far... 没想到声音传这么远）'}]},
+  travels:{any:'动词：旅行（travel 三单）',art:[{t:'Noise',v:'动词：（声音）传播、传开（sound travels）'}]},
+  speech:'名词：演讲；一段话、说辞',
+  rights:'名词：权利（right 的复数；tenant rights 租客权益）',
+  repeated:'动词：重复说、复述（repeat 的过去式）',
+  knock:{any:'动词/名词：敲；敲门声',art:[{t:'Noise',v:'名词：敲门（一次当面沟通，与便条对照）'}]},
+  instead:'副词：代替、反而（instead of 而不是）',
+  promise:'名词/动词：承诺、答应',
+  silence:'名词：安静、寂静',
+  afternoon:'名词：下午',
+  attack:{any:'名词/动词：攻击',art:[{t:'Noise',v:'名词：（语气上的）攻击性（be read as an attack 被当成挑衅）'}]},
+  person:'名词：人',
+  lands:{any:'动词：着陆、降落（land 三单）',art:[{t:'Noise',v:'动词：（话）落在……效果如何（sentence lands differently 同一句话效果不同）'}]},
+  differently:'副词：不同地、不一样地',
+  // ↓ 11-14 批次（租房看房/健身退款维权）关键词预置：按两篇实际用词铺，场景义优先
+  apartment:'名词：公寓（美式；英式 flat）',
+  agent:{any:'名词：代理人、经纪人',art:[{t:'Apartment',v:'名词：（房产）中介'}]},
+  mirror:'名词：镜子',
+  flat:{any:'形容词：平的；扁平的',art:[{t:'Apartment',v:'名词：（英式）公寓、单元房'}]},
+  facing:'形容词：朝向……的（south-facing 朝南）',
+  breathing:'名词/动词：呼吸（breathe 的动名词）',
+  rent:'名词：房租；动词：租',
+  figure:{any:'名词：数字；身材；人物',art:[{t:'Apartment',v:'名词：（报出的）价格数字'}]},
+  discount:{any:'名词：折扣',art:[{t:'Apartment',v:'名词：折扣（it is a feeling of one 只给折扣的感觉）'}]},
+  reduction:'名词：降低、减少（价格下调）',
+  lease:'名词：租约、租期（one-year lease 一年租约）',
+  upfront:'副词：预付地、 upfront payment 预付款',
+  intends:'动词：打算、意图（intend 三单）',
+  negotiates:'动词：谈判、协商（negotiate 三单）',
+  stronger:'形容词：更强壮的；更有优势的（strong 的比较级）',
+  membership:'名词：会员资格、会员费',
+  refund:{any:'名词/动词：退款',art:[{t:'Refund',v:'名词：退款（标题词；refund department 退款部）'}]},
+  punishment:'名词：惩罚、处罚',
+  branch:'名词：分店、分行；树枝',
+  renovation:'名词：装修、翻新（closed for renovation 装修停业）',
+  receptionist:'名词：前台接待员',
+  sunshine:'名词：阳光',
+  requesting:'动词：请求、要求（request 的动名词，正式书面）',
+  facility:'名词：设施、场所（gym facility 健身设施）',
+  clause:'名词：（合同）条款（clause four 第四条）',
+  contract:'名词：合同、契约',
+  hotline:'名词：热线（电话）',
+  department:'名词：部门',
+  specific:'形容词：具体的、明确的',
+  anchored:'动词：锚定、基于（anchor 的过去式）',
+  mood:'名词：情绪、心情',
+  case:{any:'名词：情况；箱子',art:[{t:'Refund',v:'名词：（有据可依的）案子、案件（a case 有理有据的投诉）'}]},
+  clever:'形容词：聪明的、机灵的'};
+function validTrans(t,k){if(!t)return false;if(!/[一-鿿A-Za-z0-9]/.test(t))return false;
+if(/^[：:，,。;；\s]/.test(t))return false; // 残缺符号开头的碎片（hundred→"：一百"事故）
+if(t.toLowerCase()===k.toLowerCase())return false;if(/MYMEMORY WARNING|QUERY LENGTH|%s|ALL AVAILABLE FREE TRANSLATIONS/i.test(t))return false;return true}
+async function tryGtx(q,dt){try{
+  const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt='+dt+(dt==='t'?'':'&dj=1')+'&q='+encodeURIComponent(q));
+  if(!r.ok)return '';
+  const j=await r.json();
+  if(dt==='t')return j.sentences?j.sentences.map(s=>s.trans||'').join(''):'';
+  return j&&j.dict&&j.dict.length?j:(j&&j.sentences&&j.sentences[0]?j:null)
+}catch(e){return ''}}
+async function tryBackup(q){ // 备用链路：Google 移动版接口 + Lingva（Cloudflare 反代，无需 key）
+  try{const r=await fetch('https://translate.googleapis.com/translate_a/one?client=one&sl=en&tl=zh-CN&dt=t&q='+encodeURIComponent(q));
+  if(r.ok){const j=await r.json();
+  if(j&&j.sentences&&j.sentences[0]&&j.sentences[0].trans)return j.sentences.map(s=>s.trans||'').join('')}}catch(e){}
+  try{const r=await fetch('https://lingva.ml/api/v1/en/zh/'+encodeURIComponent(q));
+  if(r.ok){const j=await r.json();
+  if(j&&j.translation)return j.translation}}catch(e){}
+  return ''}
+function sceneSense(m,artIdx){ // 场景义挑选：词条归属文章命中场景义项则用之，否则 any
+  if(typeof artIdx!=='number'||!ART[artIdx])return m.any;
+  const hit=(m.art||[]).find(x=>ART[artIdx].title.includes(x.t));
+  return hit?hit.v:m.any}
+async function translate(k){const cache=getTrans();
+const e=marks[k]||{};
+if(MANUAL[k]){const m=MANUAL[k];const v=(typeof m==='object'&&m.art)?sceneSense(m,e.art):m;
+  if(cache[k]!==v){cache[k]=v;store.set(TKEY+TVER,cache)}return v}
+if(cache[k])return cache[k];
+// 义项过滤需要语境：从词条归属文章里找回该词所在的句子（index.html 是标记时直接传，这里补齐同款行为）
+let ctx='';
+if(Number.isInteger(e.art)&&ART[e.art]){const first=k.split(' ')[0].toLowerCase();
+  ctx=ART[e.art].sentences.find(s=>s.toLowerCase().includes(first))||''}
+let t='';
+if(ctx){ // 场景义优先（用户 11-12 定版：复习也展示句子里的意思，不印全义项）
+  try{let cs=await tryGtx(ctx,'t');if(!cs)cs=await tryBackup(ctx);
+    if(validTrans(cs,ctx))t='〔语境〕'+cs}catch(e2){}}
+if(!t)try{const j=await tryGtx(k,'bd');
+if(j&&j.dict){ // 语境句也翻译一下，用于挑出与语义相符的义项
+  let ctxT='';if(ctx){try{ctxT=await tryGtx(ctx,'t')||await tryBackup(ctx)}catch(e2){}}
+  let d=cleanSense(j.dict.map(d=>d.pos+'：'+d.terms.join('、')).join('；'));
+  if(ctxT&&validTrans(ctxT,ctx)){const norm=t=>t.replace(/[的地了着]$/,''); // 义项词带"的/地"后缀，译文是裸词——去尾再比
+    const hit=d.split('；').filter(g=>(g.split('：')[1]||'').split('、').some(term=>term&&ctxT.indexOf(norm(term))>=0));
+    if(hit.length)d=hit.join('；')} // 全没命中就保留全部（宁多勿错杀）
+  if(validTrans(d,k))t=d}
+else if(j&&j.sentences&&j.sentences[0]&&validTrans(j.sentences[0].trans,k))t=j.sentences[0].trans}catch(e){}
+if(!t){const s=await tryBackup(k);if(validTrans(s,k))t=s}
+if(!validTrans(t,k)){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(k)+'&langpair=en|zh-CN');
+const j=await r.json();let m=j&&j.responseData&&j.responseData.translatedText||'';
+if(validTrans(m,k))t=m}catch(e){}}
+if(validTrans(t,k)){const c=getTrans();c[k]=t;store.set(TKEY+TVER,c);return t}
+return '（暂无释义）'}
+function cleanSense(d){return d.split('；').map(g=>{const [pos,terms]=g.split('：');if(!terms)return g;
+const keep=terms.split('、').filter(t=>t.length>=2||['他','她','它','在','有','的','了'].includes(t));
+return keep.length?pos+'：'+keep.join('、'):''}).filter(Boolean).join('；')}
+// ===== 陈列与交互：按文章分组（词条自带 art 字段；无 art 的按首词回扫 articles.js 定位） =====
+let dayFilter=null; // 保留变量兼容旧调用；null=全部
+function wordHomeIdx(k){ // art 可信时优先（标记时写入的原索引，十一起就是对的）；验证不过才回扫重猜
+  const e=marks[k];
+  const first=k.split(' ')[0].toLowerCase();
+  const cands=[];
+  for(let i=0;i<ART.length;i++){
+    const text=ART[i].sentences.join(' ').toLowerCase();
+    let p=text.indexOf(first);
+    while(p>=0){
+      const b=p===0?true:/[^a-z0-9]/.test(text[p-1]);
+      const a2=p+first.length>=text.length?true:/[^a-z0-9]/.test(text[p+first.length]);
+      if(b&&a2){cands.push(i);break}
+      p=text.indexOf(first,p+1)}}
+  if(!cands.length)return ART.length-1;
+  if(cands.length===1)return cands[0];
+  // 多篇命中：先信词条自带的 art（要求 art 文章确含该词，防旧坏值）；跨午夜标记 day 会变"明天"，
+  // 按日期猜会把词判给新批次同词文章（trick/checkout 误归 11-02 事故根因）——日期消歧只做最后兜底
+  if(e&&typeof e==='object'&&Number.isInteger(e.art)&&ART[e.art]&&cands.includes(e.art))return e.art;
+  const day=e&&typeof e==='object'?e.day:null;
+  if(day){
+    const dated=cands.map(i=>({i,date:ART[i].date})).filter(x=>x.date<=day).sort((x,y)=>y.date.localeCompare(x.date));
+    if(dated.length)return dated[0].i}
+  return cands[0]}
+// ===== 日历与按日视图 =====
+let view={mode:'cal',ym:null,day:null}; // ym='2026-11'; day='2026-11-13'
+function dayDB(){ // 词+语法按日期归并 {day:{words:[],grams:[]}}
+  const db={};
+  Object.keys(marks).forEach(k=>{const d=(marks[k]&&marks[k].day)||todayStr();
+    (db[d]=db[d]||{words:[],grams:[]}).words.push(k)});
+  const g=gramDB();
+  Object.keys(g).forEach(gid=>{const d=(g[gid]&&g[gid].date)||todayStr();
+    (db[d]=db[d]||{words:[],grams:[]}).grams.push(gid)});
+  return db}
+function parsePath(){ // /english-daily/review/261113 或 ?d=261113
+  let m=location.pathname.match(/review\/(\d{6})\/?$/);
+  if(!m)m=location.search.match(/[?&]d=(\d{6})/);
+  if(!m)return null;
+  const v=m[1];return '20'+v.slice(0,2)+'-'+v.slice(2,4)+'-'+v.slice(4,6)}
+function gotoDay(d){view.mode='day';view.day=d;
+  const p=d.slice(2).replace(/-/g,'');
+  pushURL(d);render()}
+function pushURL(d){const p=d.slice(2).replace(/-/g,'');
+  const base=location.pathname.replace(/\/\d{6}\/?$/,'/');
+  try{history.pushState(null,'',base+p)}catch(e){location.search='?d='+p}}
+function render(){
+  const el=document.getElementById('main');
+  const db=dayDB();
+  if(view.mode==='cal'){el.innerHTML=calHtml(db);wireCal(db)}
+  else{el.innerHTML=dayHtml(db);wireDay(db)}}
+function calHtml(db){ // 月历:有词/语法的日期高亮
+  const now=new Date();
+  if(!view.ym)view.ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const [y,mth]=view.ym.split('-').map(Number);
+  const first=new Date(y,mth-1,1);
+  const startDow=first.getDay(); // 0=日
+  const daysIn=new Date(y,mth,0).getDate();
+  const today=todayStr();
+  let cells='';
+  for(let i=0;i<startDow;i++)cells+='<div class="calcell dim"></div>';
+  for(let d=1;d<=daysIn;d++){
+    const ds=y+'-'+String(mth).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const e=db[ds];
+    const n=e?(e.words.length+e.grams.length):0;
+    cells+=`<button class="calcell${e?' has':''}${ds===today?' today':''}" data-d="${ds}" ${e?'':'disabled'}>${d}${e?`<span class="cnt">${n}</span>`:''}</button>`}
+  const ymName=y+' 年 '+mth+' 月';
+  return `<div class="cal"><div class="calhead"><button class="calnav" data-nav="-1">‹ 上月</button><b>${ymName}</b><button class="calnav" data-nav="1">下月 ›</button></div>
+  <div class="calgrid"><div class="caldow">日</div><div class="caldow">一</div><div class="caldow">二</div><div class="caldow">三</div><div class="caldow">四</div><div class="caldow">五</div><div class="caldow">六</div>${cells}</div></div>
+  <div style="color:var(--dim);font-size:.85rem">共 ${Object.keys(db).length} 天有学习记录 · 高亮日期可点入</div>`}
+function wireCal(db){
+  document.querySelectorAll('.calnav').forEach(b=>b.onclick=()=>{
+    const [y,m]=view.ym.split('-').map(Number);
+    const d2=new Date(y,m-1+Number(b.dataset.nav),1);
+    view.ym=d2.getFullYear()+'-'+String(d2.getMonth()+1).padStart(2,'0');render()});
+  document.querySelectorAll('.calcell.has').forEach(b=>b.onclick=()=>gotoDay(b.dataset.d))}
+function dayHtml(db){ // 单日:单词+语法+当日原文
+  const d=view.day;const e=db[d]||{words:[],grams:[]};
+  const g=gramDB();
+  // 当日文章:词/语法点挂的文章 + 标题日期匹配
+  const artIdxs=new Set();
+  e.words.forEach(k=>{const i2=wordHomeIdx(k);if(ART[i2])artIdxs.add(i2)});
+  e.grams.forEach(gid=>{const t=(g[gid].title||'');const i2=ART.findIndex(a=>a.title===t);if(i2>=0)artIdxs.add(i2)});
+  const arts=[...artIdxs].map(i2=>ART[i2]).filter(a=>a.date===d||true); // 当日学习过的文章(不强制 date 过滤,词挂哪篇展示哪篇)
+  let html=`<div class="dayhead"><a class="backcal" href="#" onclick="view={mode:'cal',ym:null,day:null};history.pushState(null,'',location.pathname.replace(/\/\d{6}\/?$/,'/'));render();return false">← 日历</a><b>${d}</b><span class="tag">${e.words.length} 词 · ${e.grams.length} 语法</span></div>`;
+  if(e.words.length){
+    const byArt={};
+    e.words.forEach(k=>{const i2=wordHomeIdx(k);const key=ART[i2]?i2:'loose';(byArt[key]=byArt[key]||[]).push(k)});
+    for(const key of Object.keys(byArt)){
+      const title=key==='loose'?'其他':esc(ART[key].title);
+      html+=`<div class="dayh">${title} <span class="tag">${byArt[key].length} 词</span></div><div class="wl">${byArt[key].sort((a,b)=>((marks[a]&&marks[a].seq)||0)-((marks[b]&&marks[b].seq)||0)).map(k=>rowHtml(k)).join('')}</div>`}}
+  if(e.grams.length){
+    html+=`<div class="dayh">⭐ 语法点 <span class="tag">${e.grams.length} 条</span></div>`+
+      e.grams.map(gid=>`<div class="gcard"><span class="rm" data-gid="${esc(gid)}" style="float:right;cursor:pointer;color:var(--bad)" title="取消收藏">×</span>${esc(g[gid].text||gid)}<div class="src">来自：${esc(g[gid].title||'')}</div></div>`).join('')}
+  if(arts.length){
+    html+=`<div class="dayh">📄 当日文章 <span class="tag">${arts.length} 篇</span></div>`+
+      arts.map(a=>`<div class="artfull"><h3>${esc(a.title)}</h3><div style="color:var(--dim);font-size:.78rem;margin-bottom:6px">${esc(a.date)} · ${esc(a.level||'')}</div>${a.sentences.map(x=>'<p style="margin:4px 0">'+esc(x)+'</p>').join('')}</div>`).join('')}
+  if(!e.words.length&&!e.grams.length)html+='<div class="empty">这一天没有学习记录。</div>';
+  return html}
+function wireDay(){
+  document.querySelectorAll('.rm').forEach(b=>b.onclick=()=>{const db2=gramDB();delete db2[b.dataset.gid];store.set('grammar',db2);render();toast('已取消收藏')})}
+window.onpopstate=()=>{const d=parsePath();if(d){view.mode='day';view.day=d;render()}else{view.mode='cal';render()}};
+function rowHtml(k){
+  const id='tr-'+k.replace(/[^a-z0-9]/gi,'_');
+  const e=marks[k]||{};
+  const dtag=e.day&&e.day!==todayStr()?`<span style="color:#bbb;font-size:.68rem">${e.day.slice(5)} </span>`:'';
+  return `<div class="wrow"><span class="w" onclick="speak('${esc(k).replace(/'/g,"\\'")}')">${esc(k)}</span>
+  <span class="tr" id="${id}">${getTrans()[k]?esc(getTrans()[k]):'<i style=color:#bbb>查译中…</i>'}</span>${dtag}
+  <button class="peek" data-peek="${esc(k)}" onclick="peek('${esc(k).replace(/'/g,"\\'")}')">盖住</button>
+  <button class="peek" style="background:#eef6f0;color:var(--accent);border-color:#cfe3d6" onclick="toggleDetail('${esc(k).replace(/'/g,"\'")}')">详情</button>
+  <span class="del" onclick="delWord('${esc(k).replace(/'/g,"\\'")}')" title="会了，删除">×</span>
+  <div class="wdetail" id="dt-${id}" style="display:none;flex-basis:100%;background:#f7f7f2;border-radius:6px;padding:8px 12px;font-size:.88rem;color:var(--dim);line-height:1.7"></div></div>`}
+function setDay(d){dayFilter=d;render()}
+
+// 详情：展开该词所在完整句子（原文+整句翻译），点击反复开合
+function toggleDetail(k){
+  const e=marks[k]||{};const wid='tr-'+k.replace(/[^a-z0-9]/gi,'_');
+  const el=document.getElementById('dt-'+wid);if(!el)return;
+  if(el.style.display!=='none'){el.style.display='none';return}
+  let sent='';if(Number.isInteger(e.art)&&ART[e.art]){const first=k.split(' ')[0].toLowerCase();
+    sent=ART[e.art].sentences.find(s=>s.toLowerCase().includes(first))||''}
+  if(!sent){el.innerHTML='（未找到该词的来源句子）';el.style.display='';return}
+  el.innerHTML='<b style="color:var(--ink)">'+esc(sent)+'</b><span id="dtr-'+wid+'"> —— 整句翻译中…</span>';
+  el.style.display='';
+  const cache=getTrans();const ckey='ctx:'+k;
+  if(cache[ckey]){const sp=document.getElementById('dtr-'+wid);if(sp)sp.innerHTML=esc(cache[ckey])}
+  else{tryGtx(sent,'t').then(async cs=>{if(!cs)cs=await tryBackup(sent);
+    if(validTrans(cs,sent)){const c=getTrans();c[ckey]=cs;store.set(TKEY+TVER,c);
+      const sp=document.getElementById('dtr-'+wid);if(sp)sp.innerHTML='—— '+esc(cs)}
+    else{const sp=document.getElementById('dtr-'+wid);if(sp)sp.innerHTML=''}})}}
+
+// ===== 语法点收藏区 =====
+function gramDB(){return store.get('grammar')}
+function renderGram(){
+  const db=gramDB();const ks=Object.keys(db);
+  const el=document.getElementById('gramsec');
+  if(!ks.length){el.innerHTML='';return}
+  el.innerHTML='<div class="ghead">⭐ 收藏的语法点 <span class="tag" style="font-size:.72rem;background:#eef6f0;color:var(--accent);padding:2px 8px;border-radius:10px;font-weight:400">'+ks.length+' 条</span></div>'+
+    ks.map(gid=>`<div class="gl"><span class="rm" data-gid="${esc(gid)}" title="取消收藏">×</span>${esc(db[gid].text||gid)}<div class="src">来自：${esc(db[gid].title||'')} · ${esc(db[gid].date||'')}</div></div>`).join('');
+  el.querySelectorAll('.rm').forEach(b=>b.onclick=()=>{const db2=gramDB();delete db2[b.dataset.gid];store.set('grammar',db2);renderGram()})}
+let hTimer=null;function renderQuiet(){clearTimeout(hTimer);hTimer=setTimeout(render,400)}
+// 单词级自测：盖住/显示该词自己的翻译，反复切换
+function peek(k){
+  const id='tr-'+k.replace(/[^a-z0-9]/gi,'_');const el=document.getElementById(id);if(!el)return;
+  const btn=document.querySelector(`button[data-peek="${CSS.escape(k)}"]`);
+  const covered=el.dataset.covered==='1';
+  if(covered){ // 当前盖着 → 显示答案
+    el.textContent=getTrans()[k]||'（暂无释义）';el.classList.remove('blank');el.dataset.covered='';
+    if(btn)btn.textContent='盖住';
+  }else{ // 显示着 → 盖住（自测回忆）
+    el.textContent='· · ·';el.classList.add('blank');el.dataset.covered='1';
+    if(btn)btn.textContent='显示';
+    speak(k,0.9)}}
+function delWord(k){ // 自由复习：会了直接删，无确认弹窗（禁原生弹窗规则）
+  delete marks[k];store.set('vocab',marks);render();toast('已删除「'+k+'」')}
+const _d0=parsePath();
+if(_d0){view.mode='day';view.day=_d0}
+render();
+
+</script>
+</body>
+</html>
