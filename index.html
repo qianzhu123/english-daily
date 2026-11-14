@@ -65,8 +65,8 @@ w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /
 <textarea id="tokin" style="width:100%;height:60px;margin:8px 0;font-size:.75rem" placeholder="粘贴 token（github_pat_...）"></textarea>
 <div style="display:flex;gap:8px"><button onclick="saveToken()" style="flex:1">保存</button><button onclick="clearToken()" style="flex:1">清除</button><button onclick="document.getElementById('tokbox').classList.add('hidden')">关闭</button></div>
 <div id="tokstat" style="color:var(--dim);margin-top:6px;font-size:.78rem"></div></div>
-<script src="articles.js?v=1112c"></script>
-<script src="scenes.js?v=1112c"></script>
+<script src="articles.js?v=1112d"></script>
+<script src="scenes.js?v=1112d"></script>
 <script>
 const A=window.ARTICLES;
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -355,7 +355,46 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
   defensive:'形容词：戒备的、有防备心的',
   tenant:'名词：租户、房客（tenant rights 租客权益）',
   drilling:{any:'名词：钻孔、操练（drill 的动名词）',art:[{t:'Noise',v:'名词：（装修）电钻声'}]},
-  shelves:'名词：架子、搁板（shelf 的复数；put up shelves 装架子）'};
+  shelves:'名词：架子、搁板（shelf 的复数；put up shelves 装架子）',
+  // ↓ 11-12 批次第二轮补铺：覆盖更多文章实际用词，场景义优先
+  repair:{any:'动词/名词：修理、修补',art:[{t:'Phone',v:'名词：维修（repair shop 维修店）'}]},
+  worth:'形容词：值……的、值得……的（be worth + 钱数/doing）',
+  smelled:{any:'动词：闻起来（smell 系动词 + 形容词）；发出气味',art:[{t:'Phone',v:'动词：闻起来（smelled like 有……的味道，中性，不等于发臭）'}]},
+  burnt:{any:'形容词：烧焦的（burn 的过去分词作形容词）',art:[{t:'Phone',v:'形容词：（咖啡）煮过头的、焦苦的'}]},
+  owner:'名词：主人、老板（维修店老板）',
+  battery:'名词：电池',
+  nearly:'副词：几乎、差不多（= almost）',
+  cheating:{any:'动词：欺骗、作弊（cheat 的现在分词）',art:[{t:'Phone',v:'动词：宰客、坑人（I am not cheating you 我没坑你）'}]},
+  argued:{any:'动词：争论、争辩（argue 的过去式）',art:[{t:'Phone',v:'动词：据理力争（argued about alternatives 争的是选择，不是吵架）'}]},
+  angrily:'副词：生气地、愤怒地',
+  offered:{any:'动词：主动提出、提供（offer 的过去式）',art:[{t:'Phone',v:'动词：（卖家）开价、拿出（方案）'}]},
+  dropped:{any:'动词：掉落；下降（drop 的过去式）',art:[{t:'Phone',v:'动词：（价格）降了（dropped by a third 降了三分之一）'}]},
+  third:{any:'数词：第三',art:[{t:'Phone',v:'名词：三分之一（a third）'}]},
+  accepted:'动词：接受（accept 的过去式）',
+  paid:'动词：付钱（pay 的过去式）',
+  photos:'名词：照片（photo 的复数）',
+  calm:{any:'形容词：平静的、镇定的',art:[{t:'Phone',v:'形容词：（谈判）不动怒的、平和的（one calm question）'}]},
+  honest:'形容词：诚实的、老实的',
+  complaint:{any:'名词：抱怨、投诉',art:[{t:'Noise',v:'名词：（噪音）投诉、交涉'}]},
+  midnight:'名词：午夜、半夜',
+  sharp:{any:'形容词：锋利的；急剧的',art:[{t:'Noise',v:'形容词：（措辞）尖锐的、生硬的'}]},
+  official:{any:'形容词：官方的、正式的',art:[{t:'Noise',v:'形容词：一本正经的、公事公办的（words like regulations）'}]},
+  knocking:{any:'名词/动词：敲门（knock 的动名词）',art:[{t:'Noise',v:'名词：敲门（这个动作，与写便条对比）'}]},
+  braver:'形容词：更勇敢的（brave 的比较级）',
+  realize:{any:'动词：意识到、明白（美式拼写，英式 realise）',art:[{t:'Noise',v:'动词：没料到（did not realize how far... 没想到声音传这么远）'}]},
+  travels:{any:'动词：旅行（travel 三单）',art:[{t:'Noise',v:'动词：（声音）传播、传开（sound travels）'}]},
+  speech:'名词：演讲；一段话、说辞',
+  rights:'名词：权利（right 的复数；tenant rights 租客权益）',
+  repeated:'动词：重复说、复述（repeat 的过去式）',
+  knock:{any:'动词/名词：敲；敲门声',art:[{t:'Noise',v:'名词：敲门（一次当面沟通，与便条对照）'}]},
+  instead:'副词：代替、反而（instead of 而不是）',
+  promise:'名词/动词：承诺、答应',
+  silence:'名词：安静、寂静',
+  afternoon:'名词：下午',
+  attack:{any:'名词/动词：攻击',art:[{t:'Noise',v:'名词：（语气上的）攻击性（be read as an attack 被当成挑衅）'}]},
+  person:'名词：人',
+  lands:{any:'动词：着陆、降落（land 三单）',art:[{t:'Noise',v:'动词：（话）落在……效果如何（sentence lands differently 同一句话效果不同）'}]},
+  differently:'副词：不同地、不一样地'};
 function validTrans(t,k){ // 翻译结果有效性：空/纯标点符号/回显原文/已知垃圾模式都算无效
   if(!t)return false;
   if(!/[一-鿿A-Za-z0-9]/.test(t))return false; // 必须含汉字/字母/数字（滤掉"。"、"…"等）
@@ -455,7 +494,7 @@ const TASKS={
   '2026-11-08':'①读本批 2 篇（B1+ 难度档：自助结账/民宿沟通，读的时候留意 have been doing 的持续感）②【主任务·训练】11-08 训练页 4 场景（退换货+排队抱怨，与文章零重叠），写完导出作答发我批改；11-03/11-04/11-05 三天的批改标记已回填到训练页对应场景下（✅/❌ 条），先回看再写今天的',
   '2026-11-09':'①读本批 2 篇（B1+：出租车纠纷/手机没电求助，重点句式 should have done 本该…却没）②【主任务·训练】11-09 训练页 4 场景（理发店+错过班车，与文章零重叠），写完导出作答发我批改',
   '2026-11-11':'①读本批 2 篇（B1+：药店三问/插队事件——if 虚拟过去式 + would have done 本该…实际没有）②【主任务·训练】11-10 雅思练一练 5 题还没做的先做（判断+选择即时判分）；读完点「✓ 读完了」我会发下一批',
-  '2026-11-12':'①读本批 2 篇新文章（B1+：维修砍价/邻里噪音——if 虚拟双联句三现 + no matter how 让步；砍价＝问替代方案，不争对错）②【主任务·训练】11-12 雅思练一练 5 题（判断+选择即时判分，行李/换汇旧篇做载体）；没做完的补上'
+  '2026-11-12':'①读本批 2 篇新文章（B1+：维修砍价/邻里噪音——if 虚拟双联句三现 + no matter how 让步；砍价＝问替代方案，不争对错）②【主任务·训练】11-12 雅思练一练 5 题（判断+选择即时判分，就用维修/噪音这两篇做载体）；没做完的补上'
 };
 function renderTask(list){
   let el=document.getElementById('taskcard');
@@ -525,6 +564,41 @@ function playArticle(artIdx,btn){
   btn.onclick=()=>{speechSynthesis.cancel();sentEls.forEach(e=>e.classList.remove('active'));btn.textContent='▶ 整篇朗读';btn.onclick=()=>playArticle(artIdx,btn)};
   next()}
 // ===== 整篇翻译：显示/隐藏本文全文译文（gtx 整篇 → 失败逐句兜底 → MyMemory 兜底） =====
+// ===== 预置全文翻译：本批两篇已人工校好，点「整篇翻译」直接出，不走在线请求 =====
+const PRETR={
+  "The Phone That Wasn't Worth Fixing": [
+    "The repair shop smelled like solder and burnt coffee, and the owner took one look at my phone and said, 'Screen and battery — that is almost a new phone.'",
+    "维修店里一股焊锡和煮过头的咖啡味，老板扫了一眼我的手机就说：『屏幕和电池——这差不多等于换台新手机了。』",
+    "He quoted a number that was nearly the price of a new one, and then, seeing my face, added: 'I am not cheating you. The part alone costs this much.'",
+    "他报了个几乎赶上新机价的数，然后看到我的表情，补了一句：『我没坑你，光零件就要这个价。』",
+    "I did not argue about honesty; I argued about alternatives. 'What can you do for two hundred?' I asked — not angrily, the way you ask a taxi driver whether the meter is on.",
+    "我没有在诚信问题上纠缠，而是争别的选择。『两百块你能怎么弄？』我问——不带火气，就像你问出租车司机计价器开了没有那样平常。",
+    "He thought for a moment, then offered a used screen with a ninety-day guarantee, and the price dropped by a third, just like that.",
+    "他想了想，给出一个带九十天保修的二手屏，价格应声降了三分之一，就这么简单。",
+    "If I had accepted the first number, I would have paid for a new part I did not need; if I had walked out, I would have kept my money and lost my photos.",
+    "要是当初接受了第一个报价，我会为一个根本不需要的新零件买单；要是扭头就走，钱是省下了，照片却没了。",
+    "The middle path — one calm question about alternatives — is what bargaining actually is. It is not fighting; it is asking what else is possible.",
+    "中间这条路——就一句心平气和的『还有别的方案吗』——才是讨价还价的本质。它不是吵架，而是问一句：还有什么别的可能。",
+    "No matter how honest the shop, the first number is a starting point, not a price.",
+    "无论店多老实，第一个报价都只是起点，不是最终价格。"
+  ],
+  "The Noise Complaint That Ended in Tea": [
+    "At midnight the drilling started again — three floors up, every evening this week, as punctual as a train.",
+    "半夜，电钻声又响了——楼上三层，这周天天晚上，准时得像列车。",
+    "My first plan was the note under the door, sharp and official, full of words like disturbance and regulations; my second plan was knocking, which felt braver and far more likely to work.",
+    "我的第一套方案是门缝里塞张纸条，措辞尖锐、一本正经，满是『扰民』『规定』这类字眼；第二套方案是直接敲门——这需要更大的勇气，但成功得多。",
+    "The man who opened the door looked more embarrassed than defensive. 'I am so sorry,' he said, 'I am putting up shelves, and I did not realize how far the sound travels.'",
+    "开门的人与其说是戒备，不如说更多的是尴尬。『真不好意思，』他说，『我在装架子，没想到声音传得这么远。』",
+    "I had prepared a whole speech about tenant rights; what I actually said was, 'Could you do the drilling before ten? I start work early.'",
+    "我原本准备好一整段关于租客权益的说辞；实际说出口的却是：『能不能十点前打孔？我上班早。』",
+    "'Before ten,' he repeated, 'done. And please — if the noise ever comes from my side again, knock instead of writing.'",
+    "『十点前，』他重复道，『没问题。还有拜托——要是下次吵到你的反过来是我，直接敲门，别写字条。』",
+    "We ended the conversation with tea I had not planned to stay for, and a promise that cost him nothing: shelves in the afternoon, silence at night.",
+    "谈话最后以一杯我本没打算留下喝的茶收尾，外加一个对他毫无成本的承诺：白天装架子，夜里保安静。",
+    "A note can be read as an attack; a knock is just a person at the door. The same sentence lands differently when your face comes with it.",
+    "纸条可能被读成挑衅；敲门只是门口站着一个人。同样一句话，带着你的脸一起出现，落在对方耳中就不一样了。"
+  ]
+};
 const atrTKEY='arttr';
 const atrVer='v3'; // v3：缓存 key 从序号改标题（批次轮换后序号漂移串文章）+ 全文必须含中文
 function hasChinese(s){return /[一-鿿]/.test(s)}
@@ -554,6 +628,9 @@ async function toggleArticleTr(artIdx,btn){
   const cache=store.get(atrTKEY+atrVer);
   const key='t'+window.ARTICLES[artIdx].title; // key 用标题：序号会随批次轮换漂移
   let full=cache[key];
+  if(!full){ // 预置翻译优先（本批人工校对版），逐句对齐原文
+    const pre=PRETR[Object.keys(PRETR).find(t=>window.ARTICLES[artIdx].title.includes(t))];
+    if(pre)full=pre.join('\n');}
   if(!full){
     const sentences=window.ARTICLES[artIdx].sentences;
     try{full=await translateArticle(sentences)}catch(e){full=''}
