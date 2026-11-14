@@ -33,6 +33,7 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /* 词组成员：下划线提示（不整块高亮，避免误导连读范围） */
 @media(max-width:900px){.vpanel{width:min(70vw,280px);height:300px;bottom:16px;top:auto!important}.vpanel.folded{height:auto;max-height:36px;overflow:hidden}} /* 手机端：固定右下角，可折叠不挡正文 */
 .hidden{display:none}
+.sent.keysent{border-left:3px solid #c9a227;background:#fffbe8;padding-left:6px;border-radius:4px}
 .sent{transition:background .3s}.sent.active{background:#eef6f0}
 .notes{background:#eef6f0;padding:14px 18px;border-radius:8px;font-size:.95rem;margin-top:12px}
 .notes b{color:var(--accent)}
@@ -65,8 +66,8 @@ w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /
 <textarea id="tokin" style="width:100%;height:60px;margin:8px 0;font-size:.75rem" placeholder="粘贴 token（github_pat_...）"></textarea>
 <div style="display:flex;gap:8px"><button onclick="saveToken()" style="flex:1">保存</button><button onclick="clearToken()" style="flex:1">清除</button><button onclick="document.getElementById('tokbox').classList.add('hidden')">关闭</button></div>
 <div id="tokstat" style="color:var(--dim);margin-top:6px;font-size:.78rem"></div></div>
-<script src="articles.js?v=1114b"></script>
-<script src="scenes.js?v=1114b"></script>
+<script src="articles.js?v=1115a"></script>
+<script src="scenes.js?v=1115a"></script>
 <script>
 const A=window.ARTICLES;
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -108,7 +109,7 @@ function render(){
     d.className='art-wrap';d.style.position='relative';d.dataset.ai=i; // data-ai=原索引：positionPanels 按 DOM 位置配对用（原索引≠DOM 序，旧版卡死根因）
     d.innerHTML=`<h2>${n+1}. ${esc(a.title)}</h2><div class="meta">${esc(a.date)} · 第 ${readCount(a.title)+1} 遍 · ${esc(a.level)} <button onclick="markDone('${esc(a.title).replace(/'/g,"\\'")}',this)" style="padding:1px 8px;font-size:.72rem;margin-left:6px">✓ 读完了</button><button onclick="playArticle(${i},this)" style="padding:1px 8px;font-size:.72rem">▶ 整篇朗读</button><button onclick="toggleArticleTr(${i},this)" style="padding:1px 8px;font-size:.72rem">整篇翻译</button></div>`;    const box=document.createElement('div');box.className='article';
     const p=document.createElement('p');
-    a.sentences.forEach((s,j)=>{const sp=document.createElement('span');sp.className='sent';sp.dataset.i=i+'-'+j;
+    a.sentences.forEach((s,j)=>{const sp=document.createElement('span');sp.className='sent'+((a.key||[]).includes(j)?' keysent':'');sp.dataset.i=i+'-'+j;
       // 标点放 <w> 外：点击高亮只盖住词本身，不带标点（À-ɏ=带变音符字母，résumé 可点）
       let wi=0; // 句内词序：data-i=定位词的精确位置（同词多处只亮点过的那个）
       const tokHtml=t=>{const m=t.match(/^([^A-Za-z0-9À-ɏ]*)([A-Za-z0-9À-ɏ'’-]+)([\s\S]*)$/);
@@ -432,7 +433,36 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
   anchored:'动词：钉在、依托于（anchor 的过去式；anchored to a clause 依据条款）',
   mood:'名词：情绪、心情',
   case:{any:'名词：情况；案例',art:[{t:'Refund',v:'名词：（有据可依的）案子（a case 有理有据的投诉）'}]},
-  clever:'形容词：聪明的、机灵的'};
+  clever:'形容词：聪明的、机灵的',
+  // ↓ 11-15 批次（海关问询/外卖客服）关键词预置：按两篇实际用词铺，场景义优先
+  customs:{any:'名词：海关；关税',art:[{t:'Customs',v:'名词：海关（入境检查处）'}]},
+  officer:{any:'名词：官员、警官',art:[{t:'Customs',v:'名词：（海关）官员、检查员'}]},
+  passport:'名词：护照',
+  signature:'名词：签名、签字',
+  politeness:'名词：礼貌（polite 的名词）',
+  staying:'动词：停留、暂住（stay 的现在分词；How long are you staying 待多久）',
+  trap:{any:'名词：陷阱',art:[{t:'Customs',v:'名词：（问答的）圈套——多说的每句都是把柄'}]},
+  overstayed:'动词：逾期停留（overstay 的过去式；overstayed a visa 签证过期还滞留）',
+  visa:'名词：签证',
+  stamped:'动词：盖章（stamp 的过去式；stamped my passport 在护照上盖章）',
+  lane:{any:'名词：（高速）车道；小路',art:[{t:'Customs',v:'名词：（海关）通道、查验口'}]},
+  checklists:'名词：清单、核对单（checklist 的复数）',
+  uniform:{any:'名词：制服',art:[{t:'Customs',v:'名词：制服（checklists wearing a uniform 穿制服的清单——拟人海关）'}]},
+  pressed:'动词：按、按下（press 的过去式；pressed refund 点了退款）',
+  apology:'名词：道歉、道歉信',
+  coupon:{any:'名词：优惠券',art:[{t:'Refund',v:'名词：优惠券（客服用券代替退钱的挡箭牌）'}]},
+  dashboard:'名词：（后台）仪表盘、数据面板',
+  complaining:'名词/动词：投诉、抱怨（complain 的动名词）',
+  numbered:'形容词：编号的、标了序号的',
+  shift:{any:'名词：轮班、轮班时间',art:[{t:'Refund',v:'名词：（客服）班次（the next shift 下一班客服）'}]},
+  forwarded:{any:'动词：转发、转交（forward 的过去式）',art:[{t:'Refund',v:'动词：（工单）转交给下一班'}]},
+  dish:'名词：菜、菜肴',
+  coordinated:'形容词：协同的、串通好的（coordinate 的过去分词）',
+  generated:'动词：生成（generate 的过去分词；机器生成的）',
+  hungry:'形容词：饿的',
+  promised:'动词：承诺（promise 的过去式/过去分词）',
+  firm:'形容词：坚定的、不让步的（firm tone 强硬语气）',
+  prepared:'形容词：准备好的、做好……打算的'};
 function validTrans(t,k){ // 翻译结果有效性：空/纯标点符号/回显原文/已知垃圾模式都算无效
   if(!t)return false;
   if(!/[一-鿿A-Za-z0-9]/.test(t))return false; // 必须含汉字/字母/数字（滤掉"。"、"…"等）
@@ -532,6 +562,8 @@ const TASKS={
   '2026-11-08':'①读本批 2 篇（B1+ 难度档：自助结账/民宿沟通，读的时候留意 have been doing 的持续感）②【主任务·训练】11-08 训练页 4 场景（退换货+排队抱怨，与文章零重叠），写完导出作答发我批改；11-03/11-04/11-05 三天的批改标记已回填到训练页对应场景下（✅/❌ 条），先回看再写今天的',
   '2026-11-09':'①读本批 2 篇（B1+：出租车纠纷/手机没电求助，重点句式 should have done 本该…却没）②【主任务·训练】11-09 训练页 4 场景（理发店+错过班车，与文章零重叠），写完导出作答发我批改',
   '2026-11-11':'①读本批 2 篇（B1+：药店三问/插队事件——if 虚拟过去式 + would have done 本该…实际没有）②【主任务·训练】11-10 雅思练一练 5 题还没做的先做（判断+选择即时判分）；读完点「✓ 读完了」我会发下一批',
+  '2026-11-15':'①读本批 2 篇新文章（B1+：海关问询/外卖客服——回答问题的边界「nothing but the question」+ 投诉要 short/numbered）②【主任务·训练】11-15 雅思阅读实战：独立长文混合题型（判断+单选+段落标题匹配+摘要填空）；11-14 练一练没做完的补上'
+,
   '2026-11-14':'①读本批 2 篇新文章（B1+：租房看房/健身退款维权——a feeling of one 话术识破 + as per clause 投诉句式；能走的人谈判地位更高）②【主任务·训练】11-14 雅思练一练 5 题（判断+选择即时判分，就用租房/退款这两篇做载体）；11-12 练一练没做完的补上'
 ,
   '2026-11-12':'①读本批 2 篇新文章（B1+：维修砍价/邻里噪音——if 虚拟双联句三现 + no matter how 让步；砍价＝问替代方案，不争对错）②【主任务·训练】11-12 雅思练一练 5 题（判断+选择即时判分，就用维修/噪音这两篇做载体）；没做完的补上'
@@ -606,6 +638,38 @@ function playArticle(artIdx,btn){
 // ===== 整篇翻译：显示/隐藏本文全文译文（gtx 整篇 → 失败逐句兜底 → MyMemory 兜底） =====
 // ===== 预置全文翻译：本批两篇已人工校好，点「整篇翻译」直接出，不走在线请求 =====
 const PRETR={
+  "The Customs Question That Wasn't a Question": [
+    "The officer at customs did not look up when I put my passport on the counter; he read it the way a bank clerk reads a signature — slowly, and with more attention than politeness.",
+    "我把护照放到柜台上时，海关官员头都没抬；他核对我的护照，就像银行柜员核对签名——慢慢地，审慎多于客气。",
+    "How long are you staying? Where? Who pays for this trip? The questions came flat, one after another, like items on a list he had read a thousand times.",
+    "待几天？去哪？这趟谁出钱？问题一个接一个地平铺过来，像一份他念过一千遍的清单。",
+    "I answered each one and waited, and the silence after my answers did more work than any question: it was where people talked themselves into trouble.",
+    "我逐个回答然后等着，而回答之后的沉默比任何提问都更『有效』：人们就是在那段沉默里把自己说进麻烦的。",
+    "Because that is the trap — the question is short, but your answer does not have to be, and every extra fact you offer is a door you have just opened for him.",
+    "因为这就是圈套——问题很短，但你的回答未必短，你多提供的每一个事实，都是你刚替他打开的一扇门。",
+    "I said I was staying five days. I did not mention that my return ticket was open, that a friend had offered me a job lead, or that I had once overstayed a visa in another country — none of which he asked about, and all of which I was ready to explain before I remembered the first rule of borders: answer the question, the whole question, and nothing but the question.",
+    "我说我待五天。我没有提我的返程票是不定日期的，没有提有朋友给过我一个工作机会，也没有提我曾在一个国家签证逾期滞留过——这些他都没问，而我原本全都准备好了解释，直到我想起边境的第一条铁律：只回答问题，回答完整的问题，只回答被问的问题。",
+    "He stamped my passport and waved me through, and only then did the officer in the next lane call out that the system was down again — proving that after all my rehearsing, the real decision had been made by a machine with a headache.",
+    "他在我护照上盖了章，挥手放行；紧接着旁边通道的官员喊了一嗓子：系统又宕机了——这说明我演练了半天，真正的决定其实是一个『正头疼的机器』做的。",
+    "Borders are not conversations; they are checklists wearing a uniform.",
+    "边境不是对话；它们是穿着制服的清单。"
+  ],
+  "The Refund That Took Eleven Messages": [
+    "The order arrived forty minutes late, cold, and missing the one dish I had actually wanted, which by then felt less like bad luck and more like a coordinated effort.",
+    "外卖迟到了四十分钟，送到时是凉的，还偏偏少了我真正想点的那道菜——到那时候，这已经不像运气差，更像是一场串通好的行动。",
+    "I opened the app and pressed refund, and the app replied the way apps reply: with a form that offered me five yuan and an apology generated by something that has never been hungry.",
+    "我打开应用点了退款，应用的回复也一如应用的风格：一张表单，给我五块钱，外加一句道歉——道歉来自某个从来没饿过的东西。",
+    "So I typed a message to a human — or to whatever answers as one — and laid out the facts in order: order number, promised time, actual time, and a photo of the missing dish, which was also missing.",
+    "于是我给『人工』——或者说给那个冒充人工的东西——发了消息，把事实按顺序列清楚：订单号、承诺送达时间、实际送达时间，还有一张缺菜的照片——照片里的菜，自然也是缺的。",
+    "The first reply asked me to rate my experience with the refund process so far. The second, eleven minutes later, asked for the order number I had already sent. The third offered me a coupon.",
+    "第一条回复让我给『退款流程体验』打分。第二条，十一分钟后，向我要我已经发过的订单号。第三条给了我一张优惠券。",
+    "I wrote back one sentence: 'I do not want a coupon, I want the eleven yuan back, and this is message number four of what I am prepared to make a very long conversation.'",
+    "我回了一句话：『我不要优惠券，我要回那十一块钱，这是我发的第四条消息——我做好了把这场对话变得非常漫长的准备。』",
+    "The refund arrived in nine minutes. I would like to tell you it was my firm tone, but the truth is probably simpler: somewhere a dashboard turned red, and red costs a company more than eleven yuan.",
+    "退款九分钟后到账。我很想说是我语气强硬的功劳，但真相可能更简单：某个后台的仪表盘变红了，而红色对一家公司来说，比十一块钱贵得多。",
+    "The lesson is not that complaining works — it is that complaining works when it is short, numbered, and impossible to forward to the next shift without answering.",
+    "教训不是『投诉有用』——而是投诉只有在简短、编号、且不处理就没法转交下一班的时候才有用。"
+  ],
   "The Apartment Viewing That Almost Worked": [
     "The agent met me at the door with a smile that had been rehearsed in front of a mirror, and said, 'You are lucky — three people called about this flat this morning.'",
     "中介在门口迎接我，笑容像对着镜子练过一样，还说道：『你运气好——今天早上有三个人打电话问这套房。』",

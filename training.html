@@ -60,7 +60,40 @@ const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e)
 // ===== 每日训练（Claude 更新；新的在上）=====
 // 2026-11-03 定版规则（用户原话）："我阅读能力和说话能力不是一个层级"＋"不要直接给出具体内容供我直接填写"：
 // ① 题目=纯中文场景，绝不印英文框架/候选句/文章原句 ② 参考答案先写后看（空作答不给看）③ 语音只手动只读英文短句
-const TRAIN=[
+const TRAIN=[{
+  day:'2026-11-15',
+  title:'雅思阅读实战 · 独立长文混合题型（即时反馈）',
+  brief:'题型轮换日：本日是雅思 A 类阅读真实组合——判断+单选+段落标题匹配+摘要填空，做一篇独立长文（不与本批阅读文章挂钩）。注意：答案全是同义改写，原词照抄的多半是陷阱；NOT GIVEN 是「文章没说」，不是「我找不到」。',
+  daily:[],
+  items:[],
+  quiz:[
+    {passage:"The post-pandemic city has a new kind of migrant: the remote worker who moves not for a job but away from an office. Lisbon, Mexico City and Chiang Mai now compete for them the way seaside towns once competed for holidaymakers.",
+     type:'段落标题匹配（Matching Headings）',
+     q:'为上面段落选小标题：',
+     opts:['Cities now market themselves to mobile workers','Remote workers move because they hate cities','Holidaymakers have stopped travelling'],ans:0,
+     why:'段落主线：城市在争夺远程工作者（compete for them）——正是「城市营销自己」的同义改写。B 因果颠倒（不是逃离城市），C 无中生有'},
+    {passage:"Economists are divided on whether these workers help. Rents rise for everyone, but the money they spend lands in cafés, gyms and language schools — businesses that locals, not landlords, own.",
+     type:'单选（Multiple Choice）',
+     q:'What point does the passage make about remote workers\'s economic impact?',
+     opts:['They only benefit landlords','Their spending supports local businesses even as rents rise','Economists agree they harm host cities','They spend nothing locally'],ans:1,
+     why:'双向信息：房租涨（成本）+ 钱进咖啡馆/健身房/语言学校（本地人的生意）——干扰项 A 只取一半，C 说「一致」而原文是 divided，D 与原文相反'},
+    {passage:"Some governments have gone further and offered digital nomad visas — one-year permits with tax breaks, provided applicants earn above a threshold abroad. Critics call this a competition to give away public services to people who will never vote there.",
+     type:'段落标题匹配（Matching Headings）',
+     q:'为上面段落选小标题：',
+     opts:['Governments compete to attract remote workers with special visas','Digital nomads refuse to pay tax','Voting rights are the main attraction of nomad visas'],ans:0,
+     why:'段落两端：政府发签证（优惠+门槛）→ 批评者称之为竞争（competition）。B 税收细节未提拒缴，C 篡改批评点——「选举权」是被批评缺位的，不是吸引力'},
+    {passage:"A quiet problem has followed the boom: the schools. In Chiang Mai, international schools report waiting lists three times longer than before, and some have begun charging overseas applicants a separate, higher fee band — a practice that would have been unthinkable when their clients were mostly children of local professionals.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'International schools in Chiang Mai charge local children less than overseas applicants.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:0,
+     why:'a separate, higher fee band for overseas applicants + 客户曾是本地专业人士子女 → 本地孩子交的是原价（较低）。这是需要两步推理的 TRUE，不是原词照抄'},
+    {passage:"The boom has also changed schools: waiting lists are longer and overseas applicants pay a higher fee band.",
+     type:'摘要填空（Summary Completion）',
+     q:'填空：Overseas applicants must pay a higher ______ than local families.',
+     opts:['waiting list','fee band','rent','salary'],ans:1,
+     why:'摘要填空的答案必须与原文词性一致：higher fee band（费用档）。waiting list 是「更长」的搭配对象，rent/salary 原文未与 higher 连用——排除法+词性线索并用'}
+  ]
+},
 {
   day:'2026-11-14',
   title:'雅思练一练 · 判断与选择（即时反馈）',
