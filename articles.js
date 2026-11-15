@@ -787,6 +787,7 @@ window.ARTICLES = [
   {
     title: "The Customs Question That Wasn't a Question (B1+)",
     date: "2026-11-15",
+    archived: true,
     level: "B1+ · 海关/入境问询",
     sentences: [
       "The officer at customs did not look up when I put my passport on the counter; he read it the way a bank clerk reads a signature — slowly, and with more attention than politeness.",
@@ -809,6 +810,7 @@ window.ARTICLES = [
   {
     title: "The Refund That Took Eleven Messages (B1+)",
     date: "2026-11-15",
+    archived: true,
     level: "B1+ · 外卖/平台客服",
     sentences: [
       "The order arrived forty minutes late, cold, and missing the one dish I had actually wanted, which by then felt less like bad luck and more like a coordinated effort.",
@@ -873,6 +875,51 @@ window.ARTICLES = [
       "so full that...（太挤以至于...）—— so...that 复现（Interview 篇刚学）",
       "in that order（按这个顺序）—— 幽默列举收尾，口语加分",
       "soaked（湿透的）—— 比 very wet 高级；more fondly than...（比...更温情地记得）"
+    ]
+  },
+  {
+    title: "The Parcel That Needed a Password (B1+)",
+    date: "2026-11-16",
+    level: "B1+ · 快递取件/验证码",
+    sentences: [
+      "The notification said my parcel was waiting at the pickup point around the corner, and gave me a code that looked less like a password and more like a riddle: four letters, two digits, and one symbol the font made almost invisible.",
+      "At the counter the clerk asked for the code, and I read it out the way you recite a phone number — confidently, and therefore wrongly.",
+      "The screen rejected it twice; on the third try I stopped reading from memory and read the characters one by one, and the difference between a letter that looked like a one and a digit that was actually a one turned out to be the whole story.",
+      "The drawer popped open with a small mechanical sigh, and my parcel sat there among strangers' boxes, each of them also waiting for someone to get six characters right.",
+      "What struck me was not the technology but the etiquette: the machine trusted me exactly as far as the code, no further, and it did not care that I was in a hurry, that the receipt had my name on it, or that I could describe every item inside.",
+      "I used to find that cold, and I have come to think of it as fair — a system that makes exceptions for persuasive people is a system that eventually makes them for thieves.",
+      "Outside, I tore the tape open right there on the pavement, which no password protects, and which is where the real world begins."
+    ],
+    notes: [
+      "less like a password and more like a riddle —— less A and more B 对照句式：与其说…不如说",
+      "the way you recite a phone number —— the way 类比；confidently, and therefore wrongly 转折修辞",
+      "the difference between A and B turned out to be the whole story —— turned out 结果是；the whole story 关键所在",
+      "trusted me exactly as far as the code, no further —— as far as…no further 精确限定；机器的边界",
+      "a system that makes exceptions for persuasive people is a system that eventually makes them for thieves —— 顶真+对仗金句",
+      "which no password protects, and which is where the real world begins —— 双定语从句收尾"
+    ]
+  },
+  {
+    title: "The Haircut Number (B1+)",
+    date: "2026-11-16",
+    level: "B1+ · 理发店/沟通误差",
+    sentences: [
+      "I asked for a trim, which in my head means two millimetres off the ends, and which in the barber's head apparently means a number between one and three, chosen by feel.",
+      "He nodded the way professionals nod when they have already decided, spun the chair away from the mirror, and started — and only the first snip told me which number he had in mind.",
+      "Here is the problem with hair: it is the only purchase where the feedback arrives after the payment and cannot be returned, so every misunderstanding is final by design.",
+      "I said nothing while the clippers worked, partly because interrupting a man holding scissors seemed unwise, and partly because I did not have the vocabulary to say 'shorter at the back, but not that much shorter' in any language, including my own.",
+      "When he spun the chair back, the mirror showed a haircut that was perfectly even, meticulously done, and not what I had ordered — a sentence that describes half the things I have ever bought.",
+      "I paid, tipped, and thanked him, because the work was good; I simply walked out wearing someone else's idea of my hair, and the queue of customers behind me watched me go with the sympathy of people reading their own future.",
+      "A week later it grew back into exactly what I had wanted, which is the only refund this industry offers, and it arrives on nobody's schedule but its own."
+    ],
+    notes: [
+      "which in my head means… and which in the barber's head means —— 双定语从句对照：同一词两种理解",
+      "the way professionals nod when they have already decided —— the way 类比；先斩后奏的神态",
+      "the only purchase where the feedback arrives after the payment —— where 定语从句修饰 purchase；by design 刻意如此",
+      "partly because… and partly because… —— 双重原因并列",
+      "perfectly even, meticulously done, and not what I had ordered —— 三联排比，最后反转；表语从句",
+      "with the sympathy of people reading their own future —— 现在分词后置定语；排队者感同身受",
+      "the only refund this industry offers —— 省略 that 的定语从句；头发长回来=唯一退款"
     ]
   }
 ];

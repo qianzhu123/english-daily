@@ -33,7 +33,8 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /* 词组成员：下划线提示（不整块高亮，避免误导连读范围） */
 @media(max-width:900px){.vpanel{width:min(70vw,280px);height:300px;bottom:16px;top:auto!important}.vpanel.folded{height:auto;max-height:36px;overflow:hidden}} /* 手机端：固定右下角，可折叠不挡正文 */
 .hidden{display:none}
-.ukstar{cursor:pointer;margin-left:6px;font-size:.85rem;color:#c9a227;user-select:none}
+.ukstar{cursor:pointer;margin-left:6px;font-size:.85rem;color:#c9a227;user-select:none;opacity:.35}
+.ukstar.on{opacity:1}
 .sent.keysent{border-left:3px solid #c9a227;background:#fffbe8;padding-left:6px;border-radius:4px}
 .sent{transition:background .3s}.sent.active{background:#eef6f0}
 .notes{background:#eef6f0;padding:14px 18px;border-radius:8px;font-size:.95rem;margin-top:12px}
@@ -67,8 +68,8 @@ w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /
 <textarea id="tokin" style="width:100%;height:60px;margin:8px 0;font-size:.75rem" placeholder="粘贴 token（github_pat_...）"></textarea>
 <div style="display:flex;gap:8px"><button onclick="saveToken()" style="flex:1">保存</button><button onclick="clearToken()" style="flex:1">清除</button><button onclick="document.getElementById('tokbox').classList.add('hidden')">关闭</button></div>
 <div id="tokstat" style="color:var(--dim);margin-top:6px;font-size:.78rem"></div></div>
-<script src="articles.js?v=1115b"></script>
-<script src="scenes.js?v=1115b"></script>
+<script src="articles.js?v=1116a"></script>
+<script src="scenes.js?v=1116a"></script>
 <script>
 const A=window.ARTICLES;
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -90,15 +91,18 @@ function markDone(title){const db=doneDB();
 function toggleOld(){showOld=!showOld;render()}
 function esc(s){return s.replace(/&/g,'&').replace(/</g,'<')}
 // ===== 重点句(用户自己画):点句末☆标/取消,按学习日入库,复习页按日展示 =====
+function clearArtKeys(ai){const db=ukDB();
+  if(!db[ai]||!db[ai].length){toast('本篇没有重点句');return}
+  delete db[ai];store.set('userkeys',db);render();toast('已清空本篇重点句')}
 function ukDB(){return store.get('userkeys')}
 function isUserKey(ai,j){const db=ukDB();return (db[ai]||[]).some(x=>x.j===j)}
 function studyDay(){const d=new Date();if(d.getHours()<4)d.setDate(d.getDate()-1); // 凌晨4点前算前一天
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-function toggleUserKey(ai,j,star){const db=ukDB();db[ai]=db[ai]||[];
-  const hit=db[ai].find(x=>x.j===j);
-  if(hit){db[ai]=db[ai].filter(x=>x.j!==j);star.textContent='☆';star.style.opacity=.35;toast('已取消重点句')}
-  else{db[ai].push({j:j,sent:A[ai].sentences[j],day:studyDay()});star.textContent='★';star.style.opacity=1;toast('⭐ 已画重点句，复习页按日可看')}
-  store.set('userkeys',db)}
+function toggleUserKey(ai,j){const db=ukDB();db[ai]=db[ai]||[];
+  const hit=db[ai].find(x=>Number(x.j)===Number(j));
+  if(hit){db[ai]=db[ai].filter(x=>Number(x.j)!==Number(j));toast('已取消重点句')}
+  else{db[ai].push({j:Number(j),sent:A[Number(ai)].sentences[Number(j)],day:studyDay()});toast('⭐ 已画重点句，复习页按日可看')}
+  store.set('userkeys',db);render()}
 // ===== 语法点收藏 =====
 function gramDB(){return store.get('grammar')}
 function isGram(gid){return !!gramDB()[gid]}
@@ -118,7 +122,7 @@ function render(){
   list.forEach(({a,i},n)=>{ // i=A 原索引（data-a/面板 id 用它——稳定不随批次漂移）；n+1 仅作显示编号
     const d=document.createElement('div');
     d.className='art-wrap';d.style.position='relative';d.dataset.ai=i; // data-ai=原索引：positionPanels 按 DOM 位置配对用（原索引≠DOM 序，旧版卡死根因）
-    d.innerHTML=`<h2>${n+1}. ${esc(a.title)}</h2><div class="meta">${esc(a.date)} · 第 ${readCount(a.title)+1} 遍 · ${esc(a.level)} <button onclick="markDone('${esc(a.title).replace(/'/g,"\\'")}',this)" style="padding:1px 8px;font-size:.72rem;margin-left:6px">✓ 读完了</button><button onclick="playArticle(${i},this)" style="padding:1px 8px;font-size:.72rem">▶ 整篇朗读</button><button onclick="toggleArticleTr(${i},this)" style="padding:1px 8px;font-size:.72rem">整篇翻译</button></div>`;    const box=document.createElement('div');box.className='article';
+    d.innerHTML=`<h2>${n+1}. ${esc(a.title)}</h2><div class="meta">${esc(a.date)} · 第 ${readCount(a.title)+1} 遍 · ${esc(a.level)} <button onclick="markDone('${esc(a.title).replace(/'/g,"\\'")}',this)" style="padding:1px 8px;font-size:.72rem;margin-left:6px">✓ 读完了</button><button onclick="playArticle(${i},this)" style="padding:1px 8px;font-size:.72rem">▶ 整篇朗读</button><button onclick="toggleArticleTr(${i},this)" style="padding:1px 8px;font-size:.72rem">整篇翻译</button><button onclick="clearArtKeys(${i},this)" style="padding:1px 8px;font-size:.72rem">清空重点句</button></div>`;    const box=document.createElement('div');box.className='article';
     const p=document.createElement('p');
     a.sentences.forEach((s,j)=>{const sp=document.createElement('span');sp.className='sent'+(isUserKey(i,j)?' keysent':'');sp.dataset.i=i+'-'+j;
       // 标点放 <w> 外：点击高亮只盖住词本身，不带标点（À-ɏ=带变音符字母，résumé 可点）
@@ -127,7 +131,7 @@ function render(){
         if(!m)return esc(t);
         return esc(m[1])+`<w data-w="${esc(m[2].toLowerCase())}" data-a="${i}" data-i="${j}-${wi++}">${esc(m[2])}</w>`+esc(m[3])};
       sp.innerHTML=s.split(/\s+/).map(tokHtml).join(' ');
-      const star=document.createElement('span');star.className='ukstar';star.textContent=isUserKey(i,j)?'★':'☆';star.style.opacity=isUserKey(i,j)?1:.35;star.title='画重点句/取消';star.onclick=()=>toggleUserKey(i,j,star);sp.appendChild(star);
+      const star=document.createElement('span');star.className='ukstar'+(isUserKey(i,j)?' on':'');star.textContent=isUserKey(i,j)?'★':'☆';star.title='画重点句/取消';star.dataset.ai=i;star.dataset.j=j;sp.appendChild(star);
       p.appendChild(sp);p.appendChild(document.createTextNode(' '));sentEls.push(sp);sentTexts.push(s)});
     box.appendChild(p);
     if(a.notes&&a.notes.length){const n=document.createElement('div');n.className='notes';
@@ -194,6 +198,8 @@ function positionPanels(){ // 面板驻右空白垂直居中；活动区间锁�
 }
 const MIN_TOP=10; // 面板顶不允许高于此线
 document.addEventListener('click',e=>{
+    const st=e.target.closest('.ukstar');
+    if(st){toggleUserKey(st.dataset.ai,st.dataset.j);return}
     const w=e.target.closest('w');if(!w)return;
     const k=cleanWord(w.dataset.w);
     if(selState){ // 词组模式
@@ -474,7 +480,48 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
   hungry:'形容词：饿的',
   promised:'动词：承诺（promise 的过去式/过去分词）',
   firm:'形容词：坚定的、不让步的（firm tone 强硬语气）',
-  prepared:'形容词：准备好的、做好……打算的'};
+  prepared:'形容词：准备好的、做好……打算的',
+  notification:'名词：通知、提示（手机/系统推送）',
+  parcel:'名词：包裹、邮包（英式；美式 package）',
+  pickup:{"any":"名词：提取、接取","art":[{"t":"Parcel","v":"名词：（快递）自提点（pickup point）"}]},
+  corner:'名词：拐角、角落（around the corner 在附近；即将到来）',
+  riddle:'名词：谜语、费解之事',
+  digit:'名词：数字（0-9 的单个数字）；手指',
+  symbol:'名词：符号、标志',
+  font:'名词：字体、字型',
+  invisible:'形容词：看不见的、几乎不可见的',
+  recite:'动词：背诵、背出',
+  confidently:'副词：自信地、有把握地',
+  therefore:'副词：因此、所以（正式）',
+  wrongly:'副词：错误地',
+  rejected:'动词：拒绝、不受理（reject 的过去式）',
+  characters:'名词：字符；角色（character 的复数）',
+  drawer:'名词：抽屉',
+  popped:'动词：弹出、突然打开（pop 的过去式；pop open 弹开）',
+  mechanical:'形容词：机械的；（声音）机械似的',
+  sigh:'名词/动词：叹气、叹息',
+  among:'介词：在……之中（三者及以上）',
+  etiquette:'名词：礼仪、规矩（不成文的）',
+  persuasive:'形容词：有说服力的、能说会道的',
+  eventually:'副词：最终、终究',
+  thieves:'名词：小偷（thief 的复数）',
+  tore:'动词：撕开（tear 的过去式；tore open 撕开）',
+  tape:'名词：胶带；磁带',
+  trim:{"any":"动词/名词：修剪、修剪量","art":[{"t":"Haircut","v":"名词：略剪、修一下（just a trim 只剪短一点点）"}]},
+  millimetres:'名词：毫米（millimetre 的复数，英式拼写）',
+  barber:'名词：（男式）理发师；理发店',
+  professionals:'名词：专业人士（professional 的复数）',
+  nod:'动词/名词：点头',
+  spun:'动词：旋转、使转动（spin 的过去式；spun the chair 转椅子）',
+  snip:'名词/动词：咔嚓一剪、剪（的声音）',
+  clippers:'名词：理发推子、剪刀（clipper 的复数）',
+  interrupting:'动词：打断（说话/做事）（interrupt 的现在分词）',
+  unwise:'形容词：不明智的',
+  scissors:'名词：剪刀（复数形式）',
+  meticulously:'副词：一丝不苟地、极其细致地',
+  sympathy:'名词：同情、共鸣',
+  industry:'名词：行业、产业',
+  schedule:'名词：日程、时间表（on nobody\'s schedule 不按任何人的时间表）'};
 function validTrans(t,k){ // 翻译结果有效性：空/纯标点符号/回显原文/已知垃圾模式都算无效
   if(!t)return false;
   if(!/[一-鿿A-Za-z0-9]/.test(t))return false; // 必须含汉字/字母/数字（滤掉"。"、"…"等）
@@ -574,6 +621,7 @@ const TASKS={
   '2026-11-08':'①读本批 2 篇（B1+ 难度档：自助结账/民宿沟通，读的时候留意 have been doing 的持续感）②【主任务·训练】11-08 训练页 4 场景（退换货+排队抱怨，与文章零重叠），写完导出作答发我批改；11-03/11-04/11-05 三天的批改标记已回填到训练页对应场景下（✅/❌ 条），先回看再写今天的',
   '2026-11-09':'①读本批 2 篇（B1+：出租车纠纷/手机没电求助，重点句式 should have done 本该…却没）②【主任务·训练】11-09 训练页 4 场景（理发店+错过班车，与文章零重叠），写完导出作答发我批改',
   '2026-11-11':'①读本批 2 篇（B1+：药店三问/插队事件——if 虚拟过去式 + would have done 本该…实际没有）②【主任务·训练】11-10 雅思练一练 5 题还没做的先做（判断+选择即时判分）；读完点「✓ 读完了」我会发下一批',
+  '2026-11-16':'①读本批 2 篇新文章（B1+：快递取件验证码/理发店沟通误差——机器的规矩「trusted me exactly as far as the code」+ 头发是唯一不能退货的商品）②【主任务·训练】11-16 雅思阅读实战：独立长文混合题型（判断+单选+段落标题匹配+摘要填空），本日所有答案都是同义改写——原词照抄多半是陷阱；训练页文章里的生词点一下就能进生词本',
   '2026-11-15':'①读本批 2 篇新文章（B1+：海关问询/外卖客服——回答问题的边界「nothing but the question」+ 投诉要 short/numbered）②【主任务·训练】11-15 雅思阅读实战：独立长文混合题型（判断+单选+段落标题匹配+摘要填空）；11-14 练一练没做完的补上'
 ,
   '2026-11-14':'①读本批 2 篇新文章（B1+：租房看房/健身退款维权——a feeling of one 话术识破 + as per clause 投诉句式；能走的人谈判地位更高）②【主任务·训练】11-14 雅思练一练 5 题（判断+选择即时判分，就用租房/退款这两篇做载体）；11-12 练一练没做完的补上'
@@ -650,6 +698,39 @@ function playArticle(artIdx,btn){
 // ===== 整篇翻译：显示/隐藏本文全文译文（gtx 整篇 → 失败逐句兜底 → MyMemory 兜底） =====
 // ===== 预置全文翻译：本批两篇已人工校好，点「整篇翻译」直接出，不走在线请求 =====
 const PRETR={
+  "The Parcel That Needed a Password": [
+    "The notification said my parcel was waiting at the pickup point around the corner, and gave me a code that looked less like a password and more like a riddle: four letters, two digits, and one symbol the font made almost invisible.",
+    "取件通知说我的包裹就在街角的自提点等着我，还给了我一个验证码——与其说像密码，不如说像道谜题：四个字母、两个数字，外加一个被字体渲染得几乎看不见的符号。",
+    "At the counter the clerk asked for the code, and I read it out the way you recite a phone number — confidently, and therefore wrongly.",
+    "柜台职员要验证码，我像背电话号码一样背了出来——信心十足，因此也错得彻底。",
+    "The screen rejected it twice; on the third try I stopped reading from memory and read the characters one by one, and the difference between a letter that looked like a one and a digit that was actually a one turned out to be the whole story.",
+    "屏幕拒收了两次；第三次我不再凭记忆念，而是一个字符一个字符地核对，结果发现：那个长得像数字 1 的字母，和那个真正的数字 1，两者的区别就是全部问题所在。",
+    "The drawer popped open with a small mechanical sigh, and my parcel sat there among strangers' boxes, each of them also waiting for someone to get six characters right.",
+    "抽屉伴着一声轻微的机械叹息弹开，我的包裹躺在陌生人的箱子中间——每一个箱子也都在等某个人把六位字符输对。",
+    "What struck me was not the technology but the etiquette: the machine trusted me exactly as far as the code, no further, and it did not care that I was in a hurry, that the receipt had my name on it, or that I could describe every item inside.",
+    "让我触动的不 是技术，而是规矩：机器对我的信任恰好止于验证码，不多一分；它不管我赶时间，不管单据上写着我的名字，也不管我能说清里面的每件东西。",
+    "I used to find that cold, and I have come to think of it as fair — a system that makes exceptions for persuasive people is a system that eventually makes them for thieves.",
+    "我从前觉得这很冷漠，如今却认为这很公平——一个会为能说会道的人开例外的系统，最终也会为小偷开例外。",
+    "Outside, I tore the tape open right there on the pavement, which no password protects, and which is where the real world begins.",
+    "走到外面，我就在人行道上撕开了胶带——这里没有密码保护，而真实世界正是从这里开始的。"
+  ],
+  "The Haircut Number": [
+    "I asked for a trim, which in my head means two millimetres off the ends, and which in the barber's head apparently means a number between one and three, chosen by feel.",
+    "我说要修一修（a trim），在我脑子里这意味着发梢剪掉两毫米；而在理发师脑子里，这显然意味着一个一到三之间的数字，凭手感选。",
+    "He nodded the way professionals nod when they have already decided, spun the chair away from the mirror, and started — and only the first snip told me which number he had in mind.",
+    "他点点头，那种专业人士拿定主意后的点头，然后把椅子转得背对镜子，动起手来——直到剪下第一声咔嚓，我才知道他心里选的是哪个数字。",
+    "Here is the problem with hair: it is the only purchase where the feedback arrives after the payment and cannot be returned, so every misunderstanding is final by design.",
+    "头发的问题就在这里：它是唯一一种反馈在付款之后才到、且无法退货的商品，所以每一次误会都注定不可挽回。",
+    "I said nothing while the clippers worked, partly because interrupting a man holding scissors seemed unwise, and partly because I did not have the vocabulary to say 'shorter at the back, but not that much shorter' in any language, including my own.",
+    "推子工作的时候我一言不发，一半是因为打断一个手持剪刀的人似乎不明智，另一半是因为无论用哪种语言——包括我自己的母语——我都说不出「后面短一点，但别短那么多」。",
+    "When he spun the chair back, the mirror showed a haircut that was perfectly even, meticulously done, and not what I had ordered — a sentence that describes half the things I have ever bought.",
+    "他把椅子转回来时，镜子里是一个剪得极其整齐、一丝不苟、却不是我点的那款发型——这句话可以形容我买过的东西的一半。",
+    "I paid, tipped, and thanked him, because the work was good; I simply walked out wearing someone else's idea of my hair, and the queue of customers behind me watched me go with the sympathy of people reading their own future.",
+    "我付了钱、给了小费、道了谢，因为手艺确实好；我只是在离开时顶着一头别人对我头发的想象，而身后的顾客队伍目送我走远，眼神里满是读到自身命运般的同情。",
+    "A week later it grew back into exactly what I had wanted, which is the only refund this industry offers, and it arrives on nobody's schedule but its own.",
+    "一周之后，它长回了我原本想要的样子——这是这个行业唯一提供的退款，而且到货时间只听它自己的。"
+  ],
+
   "The Customs Question That Wasn't a Question": [
     "The officer at customs did not look up when I put my passport on the counter; he read it the way a bank clerk reads a signature — slowly, and with more attention than politeness.",
     "我把护照放到柜台上时，海关官员头都没抬；他核对我的护照，就像银行柜员核对签名——慢慢地，审慎多于客气。",

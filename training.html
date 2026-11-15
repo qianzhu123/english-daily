@@ -61,6 +61,45 @@ const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e)
 // 2026-11-03 定版规则（用户原话）："我阅读能力和说话能力不是一个层级"＋"不要直接给出具体内容供我直接填写"：
 // ① 题目=纯中文场景，绝不印英文框架/候选句/文章原句 ② 参考答案先写后看（空作答不给看）③ 语音只手动只读英文短句
 const TRAIN=[{
+  day:'2026-11-16',
+  title:'雅思阅读实战 · 独立长文混合题型（同义改写专练）',
+  brief:'题型轮换日：判断+单选+段落标题匹配+摘要填空。本日专项：雅思阅读的核心机关是同义改写（paraphrase）——正确答案几乎从不照抄原文原词；凡是与原文长得一模一样的选项，出题人多半拿它当陷阱。另：训练页文章里的生词现在点一下就能收进生词本。',
+  daily:[],
+  items:[],
+  quiz:[
+    {passage:"When the city announced that its public libraries would stay open until midnight during exam season, the newspapers praised the council for its generosity. The librarians said nothing in public, but pointed out privately that the extra hours had come with no extra staff: the same twelve people were now covering the evenings that two shifts had once covered.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The council hired additional librarians for the extended hours.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:1,
+     why:'原文 no extra staff + the same twelve people = 没有增员 → FALSE（直接矛盾）。注意题干 additional librarians 改写自 extra staff——同义改写在题干里，不在原文里'},
+    {passage:"Attendance figures told a quieter story. Visits rose by a fifth, but almost all of the increase came after ten at night, and most of those visitors were not reading at all: they were sitting in the warm, charging their phones, and treating the building as what one regular called 'a living room for people who do not have one'.",
+     type:'单选（Multiple Choice）',
+     q:'What do the attendance figures mainly suggest?',
+     opts:['Late-night visitors come mainly to study for exams','The libraries are used as a place to rest rather than to read','Reading overall has declined by twenty percent'],ans:1,
+     why:'they were sitting in the warm / a living room = 把图书馆当作休憩之处。A 与 "most were not reading at all" 矛盾；C 偷换概念——涨了五分之一，不是读书量降两成'},
+    {passage:"Some councillors now argue that the scheme should end when exams finish, calling it an expensive gesture. Others reply that the figures prove a need the city has ignored for years, and that closing the doors at midnight will not make that need disappear.",
+     type:'段落标题匹配（Matching Headings）',
+     q:'为上面段落选小标题：',
+     opts:['A debate over whether the scheme should continue','How to attract more students to libraries','The rising cost of hiring librarians'],ans:0,
+     why:'should end vs. prove a need = 延续与否的争论。B 无中生有；C 原文只说 expensive gesture，没谈招聘成本'},
+    {passage:"The librarians themselves have made one quiet request: not more money, but a word. They want the council to state publicly whether warm shelter counts as a library service — because at present they are being measured on lending figures while their real work has become something no one has agreed to name.",
+     type:'摘要填空（Summary Completion）',
+     q:'填空（每空一词）：The librarians are judged by ______ figures, although their actual work has no agreed name.',
+     opts:['lending','attendance','midnight','staff'],ans:0,
+     why:'原文 being measured on lending figures → 空格填 lending。注意原文没出现「judged by ___ figures」这个短语原句——是 measured→judged 的改写；attendance 虽在文中出现（attendance figures）但那是访问量数据，不是考核依据——长得像原文的词恰是干扰项'},
+    {passage:"A study of remote work found that employees who moved to smaller towns reported saving eleven hours a week — time that had previously been spent commuting. What the study did not ask was who now spent those hours: the workers said household chores quietly became theirs, in a redistribution that nobody negotiated and nobody announced.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'Remote workers in the study gained free time that they fully controlled.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:1,
+     why:'saved eleven hours 但 hours became theirs (chores) = 时间被家务占走，并非 fully controlled → FALSE。题干 fully controlled 改写自「谁花这些时间」，答案没有原词'},
+    {passage:"The researchers concluded that remote work does not create free time; it relocates it. The commute disappears from the diary and reappears, itemised, in the evening — folded into laundry, cooking and the school run, tasks that once arrived with a salary and now arrive with a home.",
+     type:'段落标题匹配（Matching Headings）',
+     q:'为上面段落选小标题：',
+     opts:['Free time is moved rather than made','The end of the daily commute','Housework should be paid work'],ans:0,
+     why:'relocates = moved rather than made 的改写；主旨句就是结论句。B 只是段落细节（commute 消失是一半，另一半是家务）；C 无中生有'}
+  ]
+},
+{
   day:'2026-11-15',
   title:'雅思阅读实战 · 独立长文混合题型（即时反馈）',
   brief:'题型轮换日：本日是雅思 A 类阅读真实组合——判断+单选+段落标题匹配+摘要填空，做一篇独立长文（不与本批阅读文章挂钩）。注意：答案全是同义改写，原词照抄的多半是陷阱；NOT GIVEN 是「文章没说」，不是「我找不到」。',
@@ -346,6 +385,17 @@ ${esc(it.ref)}</div></div>`}).join('');
 }
 function pick(day){curDay=day;render()}
 // 雅思练一练渲染 + 判分（quizdone 记 {day#qn: {pick, ok}}，防止重渲染丢状态）
+// 训练页生词:passage 词可点,点即入 vocab(day=studyDay,art=-1 归「其他」)
+function studyDay(){const d=new Date();if(d.getHours()<4)d.setDate(d.getDate()-1);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function w2tok(t){const m=t.match(/^([^A-Za-z0-9À-ɏ]*)([A-Za-z0-9À-ɏ'’-]+)([\s\S]*)$/);
+  if(!m)return esc(t);
+  return esc(m[1])+`<w data-w="${esc(m[2].toLowerCase())}" style="cursor:pointer" onclick="addTrainWord('${esc(m[2].toLowerCase()).replace(/'/g,"\\'")}',this)">${esc(m[2])}</w>`+esc(m[3])}
+function addTrainWord(k,el){const marks=store.get('vocab');
+  if(marks[k]){toast('「'+k+'」已在生词本');return}
+  marks[k]={n:1,day:studyDay(),art:-1,due:studyDay(),ease:1,lapses:0};
+  store.set('vocab',marks);if(el)el.style.background='#ffe08a';toast('「'+k+'」已加入生词本，复习页可见')}
+
 function quizHtml(day,qn,qz,saved){
   const key=day+'#q'+qn;
   const done=saved[key];
@@ -357,7 +407,7 @@ function quizHtml(day,qn,qz,saved){
     return `<button class="${cls}" ${done?'disabled':''} onclick="answerQuiz('${day}',${qn},${i})">${'ABCD'[i]}. ${esc(o)}</button>`}).join('');
   const res=done?`<div class="qdone ${done.ok?'ok':'no'}">${done.ok?'✓ 答对了':'✗ 答错了——正确答案：'+'ABCD'[qz.ans]}</div>`:'';
   return `<div style="margin-top:14px"><div style="font-size:.72rem;color:var(--dim)">${esc(qz.type)}</div>
-  <div class="passage">${esc(qz.passage)}</div>
+  <div class="passage">${qz.passage.split(/\\s+/).map(w2tok).join(' ')} <span style="color:var(--dim);font-size:.7rem">（点生词加入复习）</span></div>
   <p style="font-weight:700;margin:6px 0">${esc(qz.q)}</p>${opts}${res}
   <div class="qwhy ${done?'show':''}" id="why-${qn}">💡 ${esc(qz.why)}</div></div>`}
 function answerQuiz(day,qn,pickIdx){
