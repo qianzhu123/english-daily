@@ -33,6 +33,7 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /* 词组成员：下划线提示（不整块高亮，避免误导连读范围） */
 @media(max-width:900px){.vpanel{width:min(70vw,280px);height:300px;bottom:16px;top:auto!important}.vpanel.folded{height:auto;max-height:36px;overflow:hidden}} /* 手机端：固定右下角，可折叠不挡正文 */
 .hidden{display:none}
+.ukstar{cursor:pointer;margin-left:6px;font-size:.85rem;color:#c9a227;user-select:none}
 .sent.keysent{border-left:3px solid #c9a227;background:#fffbe8;padding-left:6px;border-radius:4px}
 .sent{transition:background .3s}.sent.active{background:#eef6f0}
 .notes{background:#eef6f0;padding:14px 18px;border-radius:8px;font-size:.95rem;margin-top:12px}
@@ -66,8 +67,8 @@ w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /
 <textarea id="tokin" style="width:100%;height:60px;margin:8px 0;font-size:.75rem" placeholder="粘贴 token（github_pat_...）"></textarea>
 <div style="display:flex;gap:8px"><button onclick="saveToken()" style="flex:1">保存</button><button onclick="clearToken()" style="flex:1">清除</button><button onclick="document.getElementById('tokbox').classList.add('hidden')">关闭</button></div>
 <div id="tokstat" style="color:var(--dim);margin-top:6px;font-size:.78rem"></div></div>
-<script src="articles.js?v=1115a"></script>
-<script src="scenes.js?v=1115a"></script>
+<script src="articles.js?v=1115b"></script>
+<script src="scenes.js?v=1115b"></script>
 <script>
 const A=window.ARTICLES;
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -83,11 +84,21 @@ function isDone(title){const e=doneDB()[title];if(!e)return false;
   if(a&&a.date&&e.date&&a.date>e.date)return false;
   return !!e}
 function markDone(title){const db=doneDB();
-  db[title]={count:(db[title]&&db[title].count||0)+1,date:todayStr()};
+  db[title]={count:(db[title]&&db[title].count||0)+1,date:studyDay()};
   store.set('doneread',db);toastMsg('✓ 第 '+db[title].count+' 遍读完，收进往期（看往期可随时回看）');
   render()}
 function toggleOld(){showOld=!showOld;render()}
 function esc(s){return s.replace(/&/g,'&').replace(/</g,'<')}
+// ===== 重点句(用户自己画):点句末☆标/取消,按学习日入库,复习页按日展示 =====
+function ukDB(){return store.get('userkeys')}
+function isUserKey(ai,j){const db=ukDB();return (db[ai]||[]).some(x=>x.j===j)}
+function studyDay(){const d=new Date();if(d.getHours()<4)d.setDate(d.getDate()-1); // 凌晨4点前算前一天
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function toggleUserKey(ai,j,star){const db=ukDB();db[ai]=db[ai]||[];
+  const hit=db[ai].find(x=>x.j===j);
+  if(hit){db[ai]=db[ai].filter(x=>x.j!==j);star.textContent='☆';star.style.opacity=.35;toast('已取消重点句')}
+  else{db[ai].push({j:j,sent:A[ai].sentences[j],day:studyDay()});star.textContent='★';star.style.opacity=1;toast('⭐ 已画重点句，复习页按日可看')}
+  store.set('userkeys',db)}
 // ===== 语法点收藏 =====
 function gramDB(){return store.get('grammar')}
 function isGram(gid){return !!gramDB()[gid]}
@@ -95,7 +106,7 @@ function toggleGram(st){const gid=st.dataset.gid;const db=gramDB();
   if(db[gid]){delete db[gid];st.textContent='☆';st.classList.remove('on');toastMsg('已取消收藏')}
   else{ // 收藏时把语法点全文一起存，复习页不依赖 articles 原文
     const [t,j]=gid.split('#');const art=A.find(a=>a.title===t);
-    db[gid]={text:art&&art.notes?art.notes[Number(j)]:'',date:todayStr(),title:t};
+    db[gid]={text:art&&art.notes?art.notes[Number(j)]:'',date:studyDay(),title:t};
     st.textContent='★';st.classList.add('on');toastMsg('已收藏，复习页可回看')}
   store.set('grammar',db)}
 function render(){
@@ -109,13 +120,14 @@ function render(){
     d.className='art-wrap';d.style.position='relative';d.dataset.ai=i; // data-ai=原索引：positionPanels 按 DOM 位置配对用（原索引≠DOM 序，旧版卡死根因）
     d.innerHTML=`<h2>${n+1}. ${esc(a.title)}</h2><div class="meta">${esc(a.date)} · 第 ${readCount(a.title)+1} 遍 · ${esc(a.level)} <button onclick="markDone('${esc(a.title).replace(/'/g,"\\'")}',this)" style="padding:1px 8px;font-size:.72rem;margin-left:6px">✓ 读完了</button><button onclick="playArticle(${i},this)" style="padding:1px 8px;font-size:.72rem">▶ 整篇朗读</button><button onclick="toggleArticleTr(${i},this)" style="padding:1px 8px;font-size:.72rem">整篇翻译</button></div>`;    const box=document.createElement('div');box.className='article';
     const p=document.createElement('p');
-    a.sentences.forEach((s,j)=>{const sp=document.createElement('span');sp.className='sent'+((a.key||[]).includes(j)?' keysent':'');sp.dataset.i=i+'-'+j;
+    a.sentences.forEach((s,j)=>{const sp=document.createElement('span');sp.className='sent'+(isUserKey(i,j)?' keysent':'');sp.dataset.i=i+'-'+j;
       // 标点放 <w> 外：点击高亮只盖住词本身，不带标点（À-ɏ=带变音符字母，résumé 可点）
       let wi=0; // 句内词序：data-i=定位词的精确位置（同词多处只亮点过的那个）
       const tokHtml=t=>{const m=t.match(/^([^A-Za-z0-9À-ɏ]*)([A-Za-z0-9À-ɏ'’-]+)([\s\S]*)$/);
         if(!m)return esc(t);
         return esc(m[1])+`<w data-w="${esc(m[2].toLowerCase())}" data-a="${i}" data-i="${j}-${wi++}">${esc(m[2])}</w>`+esc(m[3])};
       sp.innerHTML=s.split(/\s+/).map(tokHtml).join(' ');
+      const star=document.createElement('span');star.className='ukstar';star.textContent=isUserKey(i,j)?'★':'☆';star.style.opacity=isUserKey(i,j)?1:.35;star.title='画重点句/取消';star.onclick=()=>toggleUserKey(i,j,star);sp.appendChild(star);
       p.appendChild(sp);p.appendChild(document.createTextNode(' '));sentEls.push(sp);sentTexts.push(s)});
     box.appendChild(p);
     if(a.notes&&a.notes.length){const n=document.createElement('div');n.className='notes';
@@ -204,10 +216,10 @@ document.addEventListener('click',e=>{
 function cleanWord(s){return s.replace(/[.,!?;:"'()“”’]/g,'').toLowerCase().trim()}
 function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function addWord(k,ctx,artIdx,loc){if(!k)return;
-  if(marks[k]){const e=normEntry(marks[k]);e.n=(e.n||1)+1;if(!e.day)e.day=todayStr();if(typeof artIdx==='number')e.art=artIdx;
+  if(marks[k]){const e=normEntry(marks[k]);e.n=(e.n||1)+1;if(!e.day)e.day=studyDay();if(typeof artIdx==='number')e.art=artIdx;
     if(loc){e.locs=e.locs||[];if(!e.locs.includes(loc))e.locs.push(loc)} // 多处出现：记录每次点的位置
     marks[k]=e}
-  else{const e=normEntry(1);e.day=todayStr();if(typeof artIdx==='number')e.art=artIdx;
+  else{const e=normEntry(1);e.day=studyDay();if(typeof artIdx==='number')e.art=artIdx;
     if(loc)e.locs=[loc];
     e.seq=(Number(store.get('seq'))||0)+1;store.set('seq',e.seq); // 显式序号：生词本顺序的唯一定据，合并/刷新都不乱
     marks[k]=e;translate(k,ctx,artIdx)}
@@ -218,7 +230,7 @@ function confirmPhrase(){
   const artIdx=startW&&startW.dataset&&startW.dataset.a?Number(startW.dataset.a):wordHomeIdx(phrase);
   selState=null;document.querySelectorAll('w.sel').forEach(x=>x.classList.remove('sel'));
   const pb=document.getElementById('phraseBtn');if(pb)pb.textContent='+ 词组';
-  if(phrase&&!marks[phrase]){const en=normEntry(1);en.day=todayStr();if(artIdx!=null)en.art=artIdx;
+  if(phrase&&!marks[phrase]){const en=normEntry(1);en.day=studyDay();if(artIdx!=null)en.art=artIdx;
     en.seq=(Number(store.get('seq'))||0)+1;store.set('seq',en.seq);
     marks[phrase]=en;translate(phrase);speak(phrase,0.9);store.set('vocab',marks);renderVocab();restoreMarks()}
   else if(phrase){toastMsg('生词本已有：'+phrase)}}

@@ -59,6 +59,8 @@ const ART=window.ARTICLES||[]; // 按文章分组陈列（用户 10-31 定版：
 function esc(s){return String(s).replace(/&/g,'&').replace(/</g,'<')}
 function cleanWord(s){return s.replace(/[.,!?;:"'()“”’]/g,'').toLowerCase().trim()}
 function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function studyDay(){const d=new Date();if(d.getHours()<4)d.setDate(d.getDate()-1);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 // 旧数据兼容（无 day 字段的旧词条补日期）
 (function(){let ch=false;const c={};const today=todayStr();
 for(const k in marks){const ck=cleanWord(k)||k;let v=marks[k];
@@ -384,7 +386,7 @@ function render(){
 function rowHtml(k){
   const id='tr-'+k.replace(/[^a-z0-9]/gi,'_');
   const e=marks[k]||{};
-  const dtag=e.day&&e.day!==todayStr()?`<span style="color:#bbb;font-size:.68rem">${e.day.slice(5)} </span>`:'';
+  const dtag=e.day&&e.day!==studyDay()?`<span style="color:#bbb;font-size:.68rem">${e.day.slice(5)} </span>`:'';
   return `<div class="wrow"><span class="w" onclick="speak('${esc(k).replace(/'/g,"\\'")}')">${esc(k)}</span>
   <span class="tr" id="${id}">${getTrans()[k]?esc(getTrans()[k]):'<i style=color:#bbb>查译中…</i>'}</span>${dtag}
   <button class="peek" data-peek="${esc(k)}" onclick="peek('${esc(k).replace(/'/g,"\\'")}')">盖住</button>

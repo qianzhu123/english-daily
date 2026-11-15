@@ -74,7 +74,7 @@ padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:no
 </head>
 <body>
 <div class="wrap">
-<h1>复习 <a class="back" href="../../index.html">← 返回阅读</a></h1>
+<h1>复习 <a class="back" href="../index.html">← 返回阅读</a></h1>
 <div class="meta">按天复习：点日历里高亮的日期 → 当天的单词+语法+原文 · 点词朗读 · 「盖住」自测 · 会了点 ×</div>
 <div id="main"></div>
 </div>
@@ -88,6 +88,8 @@ const ART=window.ARTICLES||[]; // 按文章分组陈列（用户 10-31 定版：
 function esc(s){return String(s).replace(/&/g,'&').replace(/</g,'<')}
 function cleanWord(s){return s.replace(/[.,!?;:"'()“”’]/g,'').toLowerCase().trim()}
 function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function studyDay(){const d=new Date();if(d.getHours()<4)d.setDate(d.getDate()-1);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 // 旧数据兼容（无 day 字段的旧词条补日期）
 (function(){let ch=false;const c={};const today=todayStr();
 for(const k in marks){const ck=cleanWord(k)||k;let v=marks[k];
@@ -358,12 +360,14 @@ function wordHomeIdx(k){ // art 可信时优先（标记时写入的原索引，
   return cands[0]}
 // ===== 日历与按日视图 =====
 let view={mode:'cal',ym:null,day:null}; // ym='2026-11'; day='2026-11-13'
+function doneDB(){return store.get('doneread')}
+function ukDB(){return store.get('userkeys')}
 function dayDB(){ // 词+语法按日期归并 {day:{words:[],grams:[]}}
   const db={};
-  Object.keys(marks).forEach(k=>{const d=(marks[k]&&marks[k].day)||todayStr();
+  Object.keys(marks).forEach(k=>{const d=(marks[k]&&marks[k].day)||studyDay();
     (db[d]=db[d]||{words:[],grams:[]}).words.push(k)});
   const g=gramDB();
-  Object.keys(g).forEach(gid=>{const d=(g[gid]&&g[gid].date)||todayStr();
+  Object.keys(g).forEach(gid=>{const d=(g[gid]&&g[gid].date)||studyDay();
     (db[d]=db[d]||{words:[],grams:[]}).grams.push(gid)});
   return db}
 function parsePath(){ // /english-daily/review/261113 或 ?d=261113
@@ -376,6 +380,9 @@ function gotoDay(d){view.mode='day';view.day=d;
   pushURL(d);render()}
 function pushURL(d){const p=d.slice(2).replace(/-/g,'');
   try{history.pushState(null,'',location.pathname+'?d='+p)}catch(e){location.search='?d='+p}}
+function backCal(){view={mode:'cal',ym:null,day:null};
+  try{history.pushState(null,'',location.pathname.replace(/\?.*$/,''))}catch(e){}
+  render()}
 function render(){
   const el=document.getElementById('main');
   const db=dayDB();
@@ -388,7 +395,7 @@ function calHtml(db){ // 月历:有词/语法的日期高亮
   const first=new Date(y,mth-1,1);
   const startDow=first.getDay(); // 0=日
   const daysIn=new Date(y,mth,0).getDate();
-  const today=todayStr();
+  const today=studyDay();
   let cells='';
   for(let i=0;i<startDow;i++)cells+='<div class="calcell dim"></div>';
   for(let d=1;d<=daysIn;d++){
@@ -411,10 +418,11 @@ function dayHtml(db){ // 单日:单词+语法+当日原文
   const g=gramDB();
   // 当日文章:词/语法点挂的文章 + 标题日期匹配
   const artIdxs=new Set();
-  e.words.forEach(k=>{const i2=wordHomeIdx(k);if(ART[i2])artIdxs.add(i2)});
+  const done=doneDB();
+  Object.keys(done).forEach(t=>{if(done[t]&&done[t].date===d){const i2=ART.findIndex(a=>a.title===t);if(i2>=0)artIdxs.add(i2)}});
   e.grams.forEach(gid=>{const t=(g[gid].title||'');const i2=ART.findIndex(a=>a.title===t);if(i2>=0)artIdxs.add(i2)});
-  const arts=[...artIdxs].map(i2=>ART[i2]).filter(a=>a.date===d||true); // 当日学习过的文章(不强制 date 过滤,词挂哪篇展示哪篇)
-  let html=`<div class="dayhead"><a class="backcal" href="#" onclick="view={mode:'cal',ym:null,day:null};history.pushState(null,'',location.pathname.replace(/\/\d{6}\/?$/,'/'));render();return false">← 日历</a><b>${d}</b><span class="tag">${e.words.length} 词 · ${e.grams.length} 语法</span></div>`;
+  const arts=[...artIdxs].map(i2=>ART[i2]).filter(Boolean);
+  let html=`<div class="dayhead"><a class="backcal" href="#" onclick="backCal();return false">← 日历</a><b>${d}</b><span class="tag">${e.words.length} 词 · ${e.grams.length} 语法</span></div>`;
   if(e.words.length){
     const byArt={};
     e.words.forEach(k=>{const i2=wordHomeIdx(k);const key=ART[i2]?i2:'loose';(byArt[key]=byArt[key]||[]).push(k)});
@@ -424,6 +432,20 @@ function dayHtml(db){ // 单日:单词+语法+当日原文
   if(e.grams.length){
     html+=`<div class="dayh">⭐ 语法点 <span class="tag">${e.grams.length} 条</span></div>`+
       e.grams.map(gid=>`<div class="gcard"><span class="rm" data-gid="${esc(gid)}" style="float:right;cursor:pointer;color:var(--bad)" title="取消收藏">×</span>${esc(g[gid].text||gid)}<div class="src">来自：${esc(g[gid].title||'')}</div></div>`).join('')}
+  const uk=ukDB();const sentKeys=[];
+  Object.keys(uk).forEach(ai=>{const i2=Number(ai);if(ART[i2])uk[ai].forEach(x=>{if(x.day===d)sentKeys.push({ai:i2,j:x.j,sent:x.sent})})});
+  if(sentKeys.length){
+    html+=`<div class="dayh">✏️ 重点句 <span class="tag">${sentKeys.length} 句</span></div>`+
+      sentKeys.map(x=>{const a=ART[x.ai];
+        return `<div class="gcard"><div style="color:var(--dim);font-size:.75rem;margin-bottom:2px">${esc(a.title)}</div><b>${esc(x.sent)}</b><div class="src" id="uktr-${x.ai}-${x.j}"> —— 整句翻译中…</div></div>`}).join('');
+    // 批量补翻译(缓存 arttr 或逐句 gtx)
+    sentKeys.forEach(x=>{const id='uktr-'+x.ai+'-'+x.j;
+      const sp=document.getElementById(id);if(!sp)return;
+      const full=store.get('arttrv3');
+      const key='t'+ART[x.ai].title;
+      if(full&&full[key]){const lines=full[key].split('\n');const tr=lines[x.j*2+1];if(tr){sp.textContent='—— '+tr;return}}
+      sp.textContent=''; // 无缓存留空(不额外请求,点阅读页「整篇翻译」后即有)
+    })}
   if(arts.length){
     html+=`<div class="dayh">📄 当日文章 <span class="tag">${arts.length} 篇</span></div>`+
       arts.map(a=>`<div class="artfull"><h3>${esc(a.title)}</h3><div style="color:var(--dim);font-size:.78rem;margin-bottom:6px">${esc(a.date)} · ${esc(a.level||'')}</div>${a.sentences.map(x=>'<p style="margin:4px 0">'+esc(x)+'</p>').join('')}</div>`).join('')}
@@ -435,7 +457,7 @@ window.onpopstate=()=>{const d=parsePath();if(d){view.mode='day';view.day=d;rend
 function rowHtml(k){
   const id='tr-'+k.replace(/[^a-z0-9]/gi,'_');
   const e=marks[k]||{};
-  const dtag=e.day&&e.day!==todayStr()?`<span style="color:#bbb;font-size:.68rem">${e.day.slice(5)} </span>`:'';
+  const dtag=e.day&&e.day!==studyDay()?`<span style="color:#bbb;font-size:.68rem">${e.day.slice(5)} </span>`:'';
   return `<div class="wrow"><span class="w" onclick="speak('${esc(k).replace(/'/g,"\\'")}')">${esc(k)}</span>
   <span class="tr" id="${id}">${getTrans()[k]?esc(getTrans()[k]):'<i style=color:#bbb>查译中…</i>'}</span>${dtag}
   <button class="peek" data-peek="${esc(k)}" onclick="peek('${esc(k).replace(/'/g,"\\'")}')">盖住</button>
