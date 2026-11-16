@@ -33,8 +33,6 @@ select{padding:6px;border-radius:6px;border:1px solid #ccc}
 w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /* 词组成员：下划线提示（不整块高亮，避免误导连读范围） */
 @media(max-width:900px){.vpanel{width:min(70vw,280px);height:300px;bottom:16px;top:auto!important}.vpanel.folded{height:auto;max-height:36px;overflow:hidden}} /* 手机端：固定右下角，可折叠不挡正文 */
 .hidden{display:none}
-.ukstar{cursor:pointer;margin-left:6px;font-size:.85rem;color:#c9a227;user-select:none;opacity:.35}
-.ukstar.on{opacity:1}
 .sent.keysent{border-left:3px solid #c9a227;background:#fffbe8;padding-left:6px;border-radius:4px}
 .sent{transition:background .3s}.sent.active{background:#eef6f0}
 .notes{background:#eef6f0;padding:14px 18px;border-radius:8px;font-size:.95rem;margin-top:12px}
@@ -68,12 +66,14 @@ w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /
 <textarea id="tokin" style="width:100%;height:60px;margin:8px 0;font-size:.75rem" placeholder="粘贴 token（github_pat_...）"></textarea>
 <div style="display:flex;gap:8px"><button onclick="saveToken()" style="flex:1">保存</button><button onclick="clearToken()" style="flex:1">清除</button><button onclick="document.getElementById('tokbox').classList.add('hidden')">关闭</button></div>
 <div id="tokstat" style="color:var(--dim);margin-top:6px;font-size:.78rem"></div></div>
-<script src="articles.js?v=1116a"></script>
-<script src="scenes.js?v=1116a"></script>
+<script src="articles.js?v=1116b"></script>
+<script src="scenes.js?v=1116b"></script>
 <script>
 const A=window.ARTICLES;
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 let marks=store.get('vocab'),sentEls=[],sentTexts=[],selState=null;
+let keyMode={}; // keyMode[ai]=1 时点词=选句子首/末词（画重点句新模式，用户 11-16 定版：废弃句尾☆点击）
+let keySel=null; // {ai,j,firstW,firstEl} 首词已点，等末词
 // ===== 批次发布制：显示所有已发布文章；新增文章等我发布（无日期过滤）。「看往期」=收起/展开旧批次 =====
 let showOld=false; // 「看往期」改为临时视图：仅本次生效，刷新回落（不再持久化——旧文章"赖着不走"的根因）
 // ===== 已读管理：次数计数 + 「读完了」收进往期 =====
@@ -89,7 +89,7 @@ function markDone(title){const db=doneDB();
   store.set('doneread',db);toastMsg('✓ 第 '+db[title].count+' 遍读完，收进往期（看往期可随时回看）');
   render()}
 function toggleOld(){showOld=!showOld;render()}
-function esc(s){return s.replace(/&/g,'&').replace(/</g,'<')}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
 // ===== 重点句(用户自己画):点句末☆标/取消,按学习日入库,复习页按日展示 =====
 function clearArtKeys(ai){const db=ukDB();
   if(!db[ai]||!db[ai].length){toast('本篇没有重点句');return}
@@ -98,6 +98,9 @@ function ukDB(){return store.get('userkeys')}
 function isUserKey(ai,j){const db=ukDB();return (db[ai]||[]).some(x=>x.j===j)}
 function studyDay(){const d=new Date();if(d.getHours()<4)d.setDate(d.getDate()-1); // 凌晨4点前算前一天
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function toggleKeyMode(ai,btn){keyMode[ai]=!keyMode[ai];keySel=null;
+  btn.style.background=keyMode[ai]?'#ffe08a':'';
+  toast(keyMode[ai]?'✏️ 画重点句：先点句子第一个词，再点最后一个词':'已退出画重点句')}
 function toggleUserKey(ai,j){const db=ukDB();db[ai]=db[ai]||[];
   const hit=db[ai].find(x=>Number(x.j)===Number(j));
   if(hit){db[ai]=db[ai].filter(x=>Number(x.j)!==Number(j));toast('已取消重点句')}
@@ -122,7 +125,7 @@ function render(){
   list.forEach(({a,i},n)=>{ // i=A 原索引（data-a/面板 id 用它——稳定不随批次漂移）；n+1 仅作显示编号
     const d=document.createElement('div');
     d.className='art-wrap';d.style.position='relative';d.dataset.ai=i; // data-ai=原索引：positionPanels 按 DOM 位置配对用（原索引≠DOM 序，旧版卡死根因）
-    d.innerHTML=`<h2>${n+1}. ${esc(a.title)}</h2><div class="meta">${esc(a.date)} · 第 ${readCount(a.title)+1} 遍 · ${esc(a.level)} <button onclick="markDone('${esc(a.title).replace(/'/g,"\\'")}',this)" style="padding:1px 8px;font-size:.72rem;margin-left:6px">✓ 读完了</button><button onclick="playArticle(${i},this)" style="padding:1px 8px;font-size:.72rem">▶ 整篇朗读</button><button onclick="toggleArticleTr(${i},this)" style="padding:1px 8px;font-size:.72rem">整篇翻译</button><button onclick="clearArtKeys(${i},this)" style="padding:1px 8px;font-size:.72rem">清空重点句</button></div>`;    const box=document.createElement('div');box.className='article';
+    d.innerHTML=`<h2>${n+1}. ${esc(a.title)}</h2><div class="meta">${esc(a.date)} · 第 ${readCount(a.title)+1} 遍 · ${esc(a.level)} <button onclick="markDone('${esc(a.title).replace(/'/g,"\\'")}',this)" style="padding:1px 8px;font-size:.72rem;margin-left:6px">✓ 读完了</button><button onclick="playArticle(${i},this)" style="padding:1px 8px;font-size:.72rem">▶ 整篇朗读</button><button onclick="toggleArticleTr(${i},this)" style="padding:1px 8px;font-size:.72rem">整篇翻译</button><button onclick="toggleKeyMode(${i},this)" style="padding:1px 8px;font-size:.72rem">✏️ 画重点句</button><button onclick="clearArtKeys(${i},this)" style="padding:1px 8px;font-size:.72rem">清空重点句</button></div>`;    const box=document.createElement('div');box.className='article';
     const p=document.createElement('p');
     a.sentences.forEach((s,j)=>{const sp=document.createElement('span');sp.className='sent'+(isUserKey(i,j)?' keysent':'');sp.dataset.i=i+'-'+j;
       // 标点放 <w> 外：点击高亮只盖住词本身，不带标点（À-ɏ=带变音符字母，résumé 可点）
@@ -131,7 +134,7 @@ function render(){
         if(!m)return esc(t);
         return esc(m[1])+`<w data-w="${esc(m[2].toLowerCase())}" data-a="${i}" data-i="${j}-${wi++}">${esc(m[2])}</w>`+esc(m[3])};
       sp.innerHTML=s.split(/\s+/).map(tokHtml).join(' ');
-      const star=document.createElement('span');star.className='ukstar'+(isUserKey(i,j)?' on':'');star.textContent=isUserKey(i,j)?'★':'☆';star.title='画重点句/取消';star.dataset.ai=i;star.dataset.j=j;sp.appendChild(star);
+      // 句尾☆已废弃（toast 未定义致点击静默失败）：改「✏️ 画重点句」模式，点首词+末词即成句
       p.appendChild(sp);p.appendChild(document.createTextNode(' '));sentEls.push(sp);sentTexts.push(s)});
     box.appendChild(p);
     if(a.notes&&a.notes.length){const n=document.createElement('div');n.className='notes';
@@ -198,9 +201,23 @@ function positionPanels(){ // 面板驻右空白垂直居中；活动区间锁�
 }
 const MIN_TOP=10; // 面板顶不允许高于此线
 document.addEventListener('click',e=>{
-    const st=e.target.closest('.ukstar');
-    if(st){toggleUserKey(st.dataset.ai,st.dataset.j);return}
     const w=e.target.closest('w');if(!w)return;
+    // ✏️ 画重点句模式：点首词→记住；点末词→成句（同句首末再点=取消）
+    if(w.dataset.a!==undefined&&keyMode[w.dataset.a]){
+      const ai=Number(w.dataset.a);const sentEl=w.closest('.sent');
+      if(!sentEl)return;
+      const j=Number(sentEl.dataset.i.split('-')[1]);
+      if(!keySel||keySel.ai!==ai||keySel.j!==j){
+        document.querySelectorAll('w.ksel').forEach(x=>x.classList.remove('ksel'));
+        keySel={ai:ai,j:j,firstW:cleanWord(w.dataset.w),firstEl:w};w.classList.add('ksel');
+        toast('已选首词「'+keySel.firstW+'」，再点本句末词');return}
+      // 同句再点（末词或任何词）：完成/取消
+      const db=ukDB();db[ai]=db[ai]||[];
+      const hit=db[ai].find(x=>Number(x.j)===Number(j));
+      document.querySelectorAll('w.ksel').forEach(x=>x.classList.remove('ksel'));keySel=null;
+      if(hit){db[ai]=db[ai].filter(x=>Number(x.j)!==Number(j));toast('已取消重点句')}
+      else{db[ai].push({j:j,sent:A[ai].sentences[j],day:studyDay()});toast('⭐ 已画重点句，复习页按日可看')}
+      store.set('userkeys',db);render();return}
     const k=cleanWord(w.dataset.w);
     if(selState){ // 词组模式
       if(selState.key==='__start__'){ // 模式刚开启，点第一个词
@@ -241,6 +258,7 @@ function confirmPhrase(){
     marks[phrase]=en;translate(phrase);speak(phrase,0.9);store.set('vocab',marks);renderVocab();restoreMarks()}
   else if(phrase){toastMsg('生词本已有：'+phrase)}}
 let toastTimer=null;
+const toast=toastMsg; // 兼容别名：重点句等新函数用 toast（此前 toast 未定义→点击静默失败）
 function toastMsg(m){let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';
   t.style.cssText='position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99;max-width:80vw';
   document.body.appendChild(t)}

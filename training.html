@@ -83,10 +83,25 @@ const TRAIN=[{
      opts:['A debate over whether the scheme should continue','How to attract more students to libraries','The rising cost of hiring librarians'],ans:0,
      why:'should end vs. prove a need = 延续与否的争论。B 无中生有；C 原文只说 expensive gesture，没谈招聘成本'},
     {passage:"The librarians themselves have made one quiet request: not more money, but a word. They want the council to state publicly whether warm shelter counts as a library service — because at present they are being measured on lending figures while their real work has become something no one has agreed to name.",
+     type:'段落标题匹配（Matching Headings）',
+     q:'为上面段落选小标题：',
+     opts:['Librarians seek an official definition of their changing role','The council refuses to give libraries more funding','Late-night opening should become permanent'],ans:0,
+     why:'段落主线：图书管理员要的不是钱，是「一句话」——官方确认温暖庇护所算不算图书馆服务（no one has agreed to name = 角色未被定义）。B 只对一半（not more money 是让步不是诉求主体）；C 无中生有——标题匹配的正确项是全段主旨的同义概括，不是段落里某个词'},
+    {passage:"The librarians themselves have made one quiet request: not more money, but a word. They want the council to state publicly whether warm shelter counts as a library service — because at present they are being measured on lending figures while their real work has become something no one has agreed to name.",
      type:'摘要填空（Summary Completion）',
-     q:'填空（每空一词）：The librarians are judged by ______ figures, although their actual work has no agreed name.',
-     opts:['lending','attendance','midnight','staff'],ans:0,
-     why:'原文 being measured on lending figures → 空格填 lending。注意原文没出现「judged by ___ figures」这个短语原句——是 measured→judged 的改写；attendance 虽在文中出现（attendance figures）但那是访问量数据，不是考核依据——长得像原文的词恰是干扰项'},
+     q:'填空（每空一词，句式已整体改写，禁止照抄原文短语）：The librarians are currently ______ on how many items people borrow, yet their true role has never been officially defined.',
+     opts:['measured','judged','lent','counted'],ans:0,
+     why:'原文 being measured on lending figures。空格从「figures 前的名词位」移到了「动词位」——先判词性（被动语态动词），再回原文找 being measured on。lending/lent 是借阅动词的形态陷阱，counted 原文没有——照抄原短语者必错'},
+    {passage:"The librarians themselves have made one quiet request: not more money, but a word. They want the council to state publicly whether warm shelter counts as a library service — because at present they are being measured on lending figures while their real work has become something no one has agreed to name.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The council has officially recognized warm shelter as part of the library service.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:1,
+     why:'管理员正请求官方表态（want the council to state publicly）→ 说明尚未认定 → FALSE（与题干 directly 矛盾）。这不是「文章没说」，是「文章说了还没做」——FALSE 与 NOT GIVEN 的分界题'},
+    {passage:"The librarians themselves have made one quiet request: not more money, but a word. They want the council to state publicly whether warm shelter counts as a library service — because at present they are being measured on lending figures while their real work has become something no one has agreed to name.",
+     type:'单选（Multiple Choice）',
+     q:'What is the librarians\' main concern in this paragraph?',
+     opts:['They are asked to do unrecorded work while being graded on a different metric','They want warmer shelters built inside library buildings','They dislike working late during exam season'],ans:0,
+     why:'measured on lending figures（考核借阅量）vs real work has become something no one has agreed to name（真实工作无人定义/不计入）= 考核错位。B 偷换 warm shelter 字面义；C 原文未提'},
     {passage:"A study of remote work found that employees who moved to smaller towns reported saving eleven hours a week — time that had previously been spent commuting. What the study did not ask was who now spent those hours: the workers said household chores quietly became theirs, in a redistribution that nobody negotiated and nobody announced.",
      type:'判断 TRUE/FALSE/NOT GIVEN',
      q:'Remote workers in the study gained free time that they fully controlled.',
@@ -407,7 +422,7 @@ function quizHtml(day,qn,qz,saved){
     return `<button class="${cls}" ${done?'disabled':''} onclick="answerQuiz('${day}',${qn},${i})">${'ABCD'[i]}. ${esc(o)}</button>`}).join('');
   const res=done?`<div class="qdone ${done.ok?'ok':'no'}">${done.ok?'✓ 答对了':'✗ 答错了——正确答案：'+'ABCD'[qz.ans]}</div>`:'';
   return `<div style="margin-top:14px"><div style="font-size:.72rem;color:var(--dim)">${esc(qz.type)}</div>
-  <div class="passage">${qz.passage.split(/\\s+/).map(w2tok).join(' ')} <span style="color:var(--dim);font-size:.7rem">（点生词加入复习）</span></div>
+  <div class="passage">${qz.passage.split(/\s+/).map(w2tok).join(' ')} <span style="color:var(--dim);font-size:.7rem">（点生词加入复习）</span></div>
   <p style="font-weight:700;margin:6px 0">${esc(qz.q)}</p>${opts}${res}
   <div class="qwhy ${done?'show':''}" id="why-${qn}">💡 ${esc(qz.why)}</div></div>`}
 function answerQuiz(day,qn,pickIdx){
