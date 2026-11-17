@@ -969,4 +969,51 @@ window.ARTICLES = [
       "which is how most victories are actually built —— 非限制性定语从句点题：胜利的真相=合同到期"
     ]
   }
+,
+  {
+    title: "The Library That Charged for Silence (B1+)",
+    date: "2026-11-18",
+    level: "B1+ · 公共服务/隐性收费",
+    sentences: [
+      "The new library charged nothing for books, nothing for borrowing, and nothing for sitting — and then it introduced a study room that cost four pounds an hour, and half the neighbourhood quietly learned that silence had become a subscription.",
+      "The free reading hall stayed open, of course, but it had been arranged so that every table faced the entrance, where the door announced each arrival and the coffee machine performed its small concert every nine minutes.",
+      "The paid rooms, by contrast, had thick walls, soft chairs, and a kind of lighting that made you want to finish your thesis rather than your coffee.",
+      "When a student complained to the front desk that the free option was designed to be unendurable, the librarian smiled and said the study rooms simply paid for themselves, which was true, and also completely beside the point.",
+      "Nobody had decided to make the free hall unusable; it had merely been designed by someone whose job was foot traffic, and nobody whose job was concentration had been invited to the meeting.",
+      "The cost of a public service is printed on the wall; the cost of its design is hidden in the floor plan, and you pay the second one every single day without a receipt.",
+      "By winter the city added two free quiet rooms in the old post office across the street — same funding, same staff, different department — and the coffee machine, suddenly exposed to actual competition, was moved to the basement."
+    ],
+    notes: [
+      "quietly learned that silence had become a subscription —— that 宾语从句+暗喻：安静=订阅服务",
+      "every table faced the entrance, where the door announced... —— 非限制性定语从句 where；桌子朝向=设计意图",
+      "performed its small concert —— 拟物/反讽：咖啡机=定时演出",
+      "a kind of lighting that made you want to finish your thesis rather than your coffee —— rather than 对比；灯光=生产力",
+      "which was true, and also completely beside the point —— 非限制性定语从句；真话≠相关的话（金句）",
+      "designed by someone whose job was foot traffic, and nobody... had been invited —— whose 定语从句+被动语态：部门目标冲突",
+      "you pay the second one every single day without a receipt —— 隐性成本=无收据的账单（结尾金句）"
+    ]
+  },
+  {
+    title: "The Neighbor's Refund (B1+)",
+    date: "2026-11-18",
+    level: "B1+ · 邻里纠纷/讲道理的分寸",
+    sentences: [
+      "The washing machine arrived on Tuesday, damaged on one corner, and by Wednesday evening the whole building had an opinion about what my neighbor should say to the delivery company.",
+      "One faction argued for outrage: shout first, escalate, threaten the reviews; the other believed in sweetness, as if the corner dent were a misunderstanding that politeness could dissolve.",
+      "My neighbor did neither; she photographed the corner, found the order number, and wrote two sentences — the machine arrived damaged, and she would like a replacement before Friday — and sent them through the official form, then went to bed.",
+      "The next morning a reply offered her a partial refund, which she declined in one more sentence, and by noon a courier had booked the swap; the entire war had lasted thirty-nine hours and consisted of four sentences.",
+      "What surprised the building was not the outcome but the tone: everyone had been arguing about whether to be loud or lovely, and the answer had quietly been neither — it was to be specific.",
+      "Anger tells the company that you are a risk; sweetness tells it that you will go away; specificity tells it exactly what to do, and companies do what is written down.",
+      "She framed the first email, not because it was elegant, but because it was the first time any of us had watched someone win an argument by refusing to have one."
+    ],
+    notes: [
+      "the whole building had an opinion —— 拟人夸张：全楼都成了谈判顾问",
+      "as if the corner dent were a misunderstanding that politeness could dissolve —— as if 虚拟+that 定语从句；礼貌 dissolves 误会？",
+      "then went to bed —— 末位短句收尾：发完就睡=不焦虑（节奏对比）",
+      "which she declined in one more sentence —— 非限制性定语从句；拒绝也只花一句",
+      "the entire war had lasted thirty-nine hours and consisted of four sentences —— past perfect+数字对仗；战役=四句话",
+      "Anger tells... sweetness tells... specificity tells... —— 三段排比；金句：具体=让公司照做",
+      "win an argument by refusing to have one —— by+动名词悖论：不吵架=赢（点题）"
+    ]
+  }
 ];
