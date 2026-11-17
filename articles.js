@@ -880,6 +880,7 @@ window.ARTICLES = [
   {
     title: "The Parcel That Needed a Password (B1+)",
     date: "2026-11-16",
+    archived: true,
     level: "B1+ · 快递取件/验证码",
     sentences: [
       "The notification said my parcel was waiting at the pickup point around the corner, and gave me a code that looked less like a password and more like a riddle: four letters, two digits, and one symbol the font made almost invisible.",
@@ -902,6 +903,7 @@ window.ARTICLES = [
   {
     title: "The Haircut Number (B1+)",
     date: "2026-11-16",
+    archived: true,
     level: "B1+ · 理发店/沟通误差",
     sentences: [
       "I asked for a trim, which in my head means two millimetres off the ends, and which in the barber's head apparently means a number between one and three, chosen by feel.",
@@ -920,6 +922,51 @@ window.ARTICLES = [
       "perfectly even, meticulously done, and not what I had ordered —— 三联排比，最后反转；表语从句",
       "with the sympathy of people reading their own future —— 现在分词后置定语；排队者感同身受",
       "the only refund this industry offers —— 省略 that 的定语从句；头发长回来=唯一退款"
+    ]
+  }
+,  {
+    title: "The Interview That Ran Backwards (B1+)",
+    date: "2026-11-17",
+    level: "B1+ · 求职面试/反向提问",
+    sentences: [
+      "The interview was going exactly as I had feared: I answered everything perfectly, and I could feel the whole conversation forgetting me before it had even finished.",
+      "Every candidate before me would say the same — that they were hard-working, that they loved teamwork, that failure had secretly made them stronger — and the interviewer's pen moved across the page like it was copying, not writing.",
+      "Then she put the pen down and asked the question nobody prepares for: 'What do you want to ask us?'",
+      "I had spent three weeks rehearsing answers, and zero minutes deciding what I actually wanted to know, so for the first time that morning I said something true: 'What happens to people here who admit they were wrong?'",
+      "The pen stayed down. She thought for a moment — actually thought, the way you pause when a question reaches something real — and told me about a project that had failed publicly, and the engineer who had reported the failure himself, and the promotion that came eighteen months later.",
+      "I walked out not knowing whether I had the job, but knowing that I had asked the only question with my own handwriting on it, and that the answer was the first thing in that building that sounded like it belonged to someone.",
+      "The rejection email arrived two days later, polite and standard, and I filed it next to the one thing I kept from that morning: a question I now ask at every interview, which costs me nothing and has already paid for itself twice."
+    ],
+    notes: [
+      "the whole conversation forgetting me —— 拟人：完美的回答反而让人记不住；feared 前置铺垫",
+      "as if it was copying, not writing —— not A but B 对照修辞：抄模板 vs 真记录",
+      "the question nobody prepares for —— 定语从句压缩修饰；反向提问的转折点",
+      "actually thought, the way you pause when a question reaches something real —— the way 类比 + when 从句",
+      "the only question with my own handwriting on it —— 隐喻金句：自己的笔迹=真实的自己",
+      "which costs me nothing and has already paid for itself twice —— 非限制性定语从句收尾；成本/回报双关"
+    ]
+  },
+  {
+    title: "The Bridge That Closed at Five (B1+)",
+    date: "2026-11-17",
+    level: "B1+ · 城市规则/时间政治",
+    sentences: [
+      "The pedestrian bridge over the river closed at five o'clock sharp, which would have been reasonable if the city had remembered that most people finish work at five, not before it.",
+      "The sign explained everything except the reason: CLOSED DAILY 17:00-07:00, BY ORDER OF THE COUNCIL, as if capital letters were a kind of argument.",
+      "So every evening a small crowd gathered at the closed gate, looked at the bridge they could clearly see on the other side, and then began the forty-minute walk to the nearest crossing — a detour so regular that the shortcut paths beside it had been worn into the grass like a second opinion.",
+      "The council's reasoning, when someone finally obtained it through a records request, turned out to be maintenance: the bridge needed nightly inspections, and the inspection company charged by the hour, and it was cheaper to close the bridge for fourteen hours than to pay for a night crew.",
+      "Nobody had asked whether the inspections could happen at seven in the morning, or whether the company might be persuaded to change its schedule, because the decision had never been about the bridge at all — it was about whichever option required the fewest conversations.",
+      "The rules that shape a city are rarely the grand ones; they are the quiet agreements between an office and a clock, signed by nobody you will ever meet, and they decide where you may walk long before you have any say in the matter.",
+      "In spring the council finally moved the closing time to ten at night, and the local paper called it a victory; the maintenance contract had simply expired, and the new one cost less — which is how most victories are actually built."
+    ],
+    notes: [
+      "which would have been reasonable if... —— 虚拟过去：本可合理（实际不合理）",
+      "as if capital letters were a kind of argument —— as if + 虚拟语气；大写字母≠论证的讽刺",
+      "worn into the grass like a second opinion —— 分词状语+明喻：踩出来的小路=民间的反对票",
+      "it was about whichever option required the fewest conversations —— 名词性从句作表语；金句：决策=最少对话",
+      "signed by nobody you will ever meet —— 过去分词后置修饰 agreements；you will ever meet 插入定语",
+      "long before you have any say in the matter —— say 作名词：发言权",
+      "which is how most victories are actually built —— 非限制性定语从句点题：胜利的真相=合同到期"
     ]
   }
 ];

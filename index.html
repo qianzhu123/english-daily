@@ -66,8 +66,8 @@ w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /
 <textarea id="tokin" style="width:100%;height:60px;margin:8px 0;font-size:.75rem" placeholder="粘贴 token（github_pat_...）"></textarea>
 <div style="display:flex;gap:8px"><button onclick="saveToken()" style="flex:1">保存</button><button onclick="clearToken()" style="flex:1">清除</button><button onclick="document.getElementById('tokbox').classList.add('hidden')">关闭</button></div>
 <div id="tokstat" style="color:var(--dim);margin-top:6px;font-size:.78rem"></div></div>
-<script src="articles.js?v=1116b"></script>
-<script src="scenes.js?v=1116b"></script>
+<script src="articles.js?v=1117a"></script>
+<script src="scenes.js?v=1117a"></script>
 <script>
 const A=window.ARTICLES;
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -539,7 +539,62 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
   meticulously:'副词：一丝不苟地、极其细致地',
   sympathy:'名词：同情、共鸣',
   industry:'名词：行业、产业',
-  schedule:'名词：日程、时间表（on nobody\'s schedule 不按任何人的时间表）'};
+  schedule:'名词：日程、时间表（on nobody\'s schedule 不按任何人的时间表）',
+  interview:{"any":"名词/动词：面试；采访","art":[{"t":"Interview","v":"名词：面试（求职场景）"}]},
+  perfectly:'副词：完美地、无可挑剔地',
+  conversation:'名词：对话、交谈',
+  forgetting:'动词：遗忘、记不住（forget 的现在分词）',
+  candidate:'名词：候选人、应聘者；（考试）考生',
+  teamwork:'名词：团队合作、协作',
+  failure:'名词：失败；失败者；（机器）故障',
+  secretly:'副词：偷偷地、暗地里',
+  copying:'动词：复制、抄写（copy 的现在分词）',
+  prepares:'动词：准备（prepare 三单；prepare for 为…准备）',
+  rehearsing:'动词：排练、预演（rehearse 的现在分词）',
+  rehearsed:'动词：排练过（rehearse 的过去式/过去分词）',
+  deciding:'动词：决定（decide 的现在分词）',
+  happens:'动词：发生（happen 三单；what happens to… …身上会怎样）',
+  admit:'动词：承认、坦白',
+  publicly:'副词：公开地、当众地',
+  engineer:'名词：工程师',
+  promotion:'名词：晋升、升职；促销',
+  handwriting:'名词：笔迹、手写',
+  sounded:'动词：听起来（sound 系动词过去式）',
+  belonged:'动词：属于（belong 的过去式；belong to 属于）',
+  rejection:'名词：拒绝、拒信（reject 的名词）',
+  filed:'动词：归档、存档（file 的过去式；file away 收好）',
+  pedestrian:'形容词：行人的、步行的；名词：行人',
+  bridge:'名词：桥；动词：架桥、弥合',
+  reasonable:'形容词：合理的、讲得通的',
+  council:'名词：（市政）委员会、议会；（英）地方议会',
+  capital:'形容词：大写的；首都的；资本的',
+  argument:'名词：论点、论证；争吵',
+  crowd:'名词：人群；动词：聚集、拥挤',
+  gathered:'动词：聚集（gather 的过去式）',
+  gate:'名词：大门、闸口',
+  crossing:'名词：过境处、交叉口；人行横道',
+  shortcut:'名词：捷径、近路',
+  worn:'形容词：磨损的（wear 的过去分词；worn into 踩出/磨出）',
+  reasoning:'名词：推理、理由（reason 的动名词）',
+  obtained:'动词：获得、取得（obtain 的过去式，正式）',
+  records:'名词：记录、档案（record 的复数）',
+  maintenance:'名词：维护、保养、维修',
+  nightly:'形容词/副词：每夜的、夜间（进行）的',
+  inspections:'名词：检查、巡查（inspection 的复数）',
+  crew:'名词：（工作）班组、全体工作人员',
+  persuaded:'动词：说服、劝说（persuade 的过去式）',
+  whichever:'代词/限定词：无论哪个；（…中）随便哪个',
+  required:'动词：需要、要求（require 的过去式）',
+  fewest:'形容词：最少的（few 的最高级）',
+  conversations:'名词：对话、交谈（conversation 的复数）',
+  rarely:'副词：很少、难得（否定副词）',
+  grand:'形容词：宏大的、盛大的',
+  agreements:'名词：协议、约定（agreement 的复数）',
+  signed:'动词：签署（sign 的过去式/过去分词）',
+  victory:'名词：胜利',
+  expired:'动词：到期、失效（expire 的过去式；合同/证件过期）',
+  victories:'名词：胜利（victory 的复数）',
+};
 function validTrans(t,k){ // 翻译结果有效性：空/纯标点符号/回显原文/已知垃圾模式都算无效
   if(!t)return false;
   if(!/[一-鿿A-Za-z0-9]/.test(t))return false; // 必须含汉字/字母/数字（滤掉"。"、"…"等）
@@ -639,6 +694,7 @@ const TASKS={
   '2026-11-08':'①读本批 2 篇（B1+ 难度档：自助结账/民宿沟通，读的时候留意 have been doing 的持续感）②【主任务·训练】11-08 训练页 4 场景（退换货+排队抱怨，与文章零重叠），写完导出作答发我批改；11-03/11-04/11-05 三天的批改标记已回填到训练页对应场景下（✅/❌ 条），先回看再写今天的',
   '2026-11-09':'①读本批 2 篇（B1+：出租车纠纷/手机没电求助，重点句式 should have done 本该…却没）②【主任务·训练】11-09 训练页 4 场景（理发店+错过班车，与文章零重叠），写完导出作答发我批改',
   '2026-11-11':'①读本批 2 篇（B1+：药店三问/插队事件——if 虚拟过去式 + would have done 本该…实际没有）②【主任务·训练】11-10 雅思练一练 5 题还没做的先做（判断+选择即时判分）；读完点「✓ 读完了」我会发下一批',
+  '2026-11-17':'①读本批 2 篇新文章（B1+：面试反向提问/天桥关闭时间——完美的回答为何让人忘记你「my own handwriting on it」+ 塑造城市的规则是办公室和钟表的安静协议）②【主任务·训练】11-17 雅思阅读实战：独立长文混合题型（判断+单选+标题匹配+摘要填空），答案全是同义改写；画重点句用「✏️ 画重点句」按钮：点句子首词+末词即成句',
   '2026-11-16':'①读本批 2 篇新文章（B1+：快递取件验证码/理发店沟通误差——机器的规矩「trusted me exactly as far as the code」+ 头发是唯一不能退货的商品）②【主任务·训练】11-16 雅思阅读实战：独立长文混合题型（判断+单选+段落标题匹配+摘要填空），本日所有答案都是同义改写——原词照抄多半是陷阱；训练页文章里的生词点一下就能进生词本',
   '2026-11-15':'①读本批 2 篇新文章（B1+：海关问询/外卖客服——回答问题的边界「nothing but the question」+ 投诉要 short/numbered）②【主任务·训练】11-15 雅思阅读实战：独立长文混合题型（判断+单选+段落标题匹配+摘要填空）；11-14 练一练没做完的补上'
 ,
@@ -716,6 +772,39 @@ function playArticle(artIdx,btn){
 // ===== 整篇翻译：显示/隐藏本文全文译文（gtx 整篇 → 失败逐句兜底 → MyMemory 兜底） =====
 // ===== 预置全文翻译：本批两篇已人工校好，点「整篇翻译」直接出，不走在线请求 =====
 const PRETR={
+  "The Interview That Ran Backwards": [
+    "The interview was going exactly as I had feared: I answered everything perfectly, and I could feel the whole conversation forgetting me before it had even finished.",
+    "面试正一寸一寸滑向我担心的方向：每个问题我都答得完美无缺，而我能感觉到整场对话还没结束就已经在把我忘掉。",
+    "Every candidate before me would say the same — that they were hard-working, that they loved teamwork, that failure had secretly made them stronger — and the interviewer's pen moved across the page like it was copying, not writing.",
+    "我之前的每个候选人都会说一样的话——说自己勤奋刻苦、热爱团队协作、说失败偷偷让他们更强大——面试官的笔在纸上移动，像是在誊抄，而不是在书写。",
+    "Then she put the pen down and asked the question nobody prepares for: 'What do you want to ask us?'",
+    "然后她放下笔，问出了那个没人准备过的问题：「你想问我们什么？」",
+    "I had spent three weeks rehearsing answers, and zero minutes deciding what I actually wanted to know, so for the first time that morning I said something true: 'What happens to people here who admit they were wrong?'",
+    "我花了三个星期排练答案，却花过零分钟决定自己真正想知道什么，于是那天早上我第一次说了一句真话：「在这里，承认自己错了的人后来怎么样了？」",
+    "The pen stayed down. She thought for a moment — actually thought, the way you pause when a question reaches something real — and told me about a project that had failed publicly, and the engineer who had reported the failure himself, and the promotion that came eighteen months later.",
+    "笔没有被拿起来。她想了一会儿——是真的在想，就像问题触到真实之物时人会停顿那样——然后给我讲了一个公开失败的项目，讲了一位主动上报失败的工程师，讲了十八个月之后到来的那次晋升。",
+    "I walked out not knowing whether I had the job, but knowing that I had asked the only question with my own handwriting on it, and that the answer was the first thing in that building that sounded like it belonged to someone.",
+    "我走出大门时不知道自己有没有拿到那份工作，但我知道我问出了唯一一个带着自己笔迹的问题，而那个答案，是那栋楼里第一件听起来像是属于某个真实的人的东西。",
+    "The rejection email arrived two days later, polite and standard, and I filed it next to the one thing I kept from that morning: a question I now ask at every interview, which costs me nothing and has already paid for itself twice.",
+    "拒信两天后到了，客气而标准。我把它归档，和那天上午留下的唯一一样东西放在一起：一个如今我每场面试都会问的问题——它分文不花，却已经两次为我赚回了本钱。"
+  ],
+  "The Bridge That Closed at Five": [
+    "The pedestrian bridge over the river closed at five o'clock sharp, which would have been reasonable if the city had remembered that most people finish work at five, not before it.",
+    "河上的人行天桥五点整关闭——这本来还算合理，如果这座城市还记得大多数人是五点下班、而不是五点之前下班的话。",
+    "The sign explained everything except the reason: CLOSED DAILY 17:00-07:00, BY ORDER OF THE COUNCIL, as if capital letters were a kind of argument.",
+    "告示牌解释了一切，唯独没解释原因：每日 17:00-07:00 关闭，市政委员会令——好像大写字母本身就算一种论证。",
+    "So every evening a small crowd gathered at the closed gate, looked at the bridge they could clearly see on the other side, and then began the forty-minute walk to the nearest crossing — a detour so regular that the shortcut paths beside it had been worn into the grass like a second opinion.",
+    "于是每天傍晚都有一小群人聚在关闭的闸口，望着对岸清晰可见的桥，然后开始走向最近过河点的四十分钟步行——这条绕行路线规律到什么程度呢：旁边的草坪上已经被踩出了一条条小径，像一张投出来的反对票。",
+    "The council's reasoning, when someone finally obtained it through a records request, turned out to be maintenance: the bridge needed nightly inspections, and the inspection company charged by the hour, and it was cheaper to close the bridge for fourteen hours than to pay for a night crew.",
+    "当有人终于通过档案调取拿到委员会的理由时，答案原来是维护：桥需要每夜巡查，巡查公司按小时计费，把桥关上十四个小时，比雇一个夜班组便宜。",
+    "Nobody had asked whether the inspections could happen at seven in the morning, or whether the company might be persuaded to change its schedule, because the decision had never been about the bridge at all — it was about whichever option required the fewest conversations.",
+    "从来没有人问过：巡查能不能改到早上七点？能不能说服那家公司调整排班？因为这项决定压根与桥无关——它只关乎哪个选项需要的对话最少。",
+    "The rules that shape a city are rarely the grand ones; they are the quiet agreements between an office and a clock, signed by nobody you will ever meet, and they decide where you may walk long before you have any say in the matter.",
+    "塑造一座城市的规则很少是那些宏大的；它们只是一个办公室和一只钟表之间的安静协议，签署者你永远不会见到，而它们早在你拥有任何发言权之前，就已经决定了你能走哪条路。",
+    "In spring the council finally moved the closing time to ten at night, and the local paper called it a victory; the maintenance contract had simply expired, and the new one cost less — which is how most victories are actually built.",
+    "开春之后，委员会终于把关闭时间挪到了晚上十点，本地报纸称之为一次胜利；其实只是旧维护合同到期了，新合同更便宜——大多数胜利，实际上就是这样建成的。"
+  ],
+
   "The Parcel That Needed a Password": [
     "The notification said my parcel was waiting at the pickup point around the corner, and gave me a code that looked less like a password and more like a riddle: four letters, two digits, and one symbol the font made almost invisible.",
     "取件通知说我的包裹就在街角的自提点等着我，还给了我一个验证码——与其说像密码，不如说像道谜题：四个字母、两个数字，外加一个被字体渲染得几乎看不见的符号。",
