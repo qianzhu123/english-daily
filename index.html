@@ -66,8 +66,8 @@ w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /
 <textarea id="tokin" style="width:100%;height:60px;margin:8px 0;font-size:.75rem" placeholder="粘贴 token（github_pat_...）"></textarea>
 <div style="display:flex;gap:8px"><button onclick="saveToken()" style="flex:1">保存</button><button onclick="clearToken()" style="flex:1">清除</button><button onclick="document.getElementById('tokbox').classList.add('hidden')">关闭</button></div>
 <div id="tokstat" style="color:var(--dim);margin-top:6px;font-size:.78rem"></div></div>
-<script src="articles.js?v=1117a"></script>
-<script src="scenes.js?v=1117a"></script>
+<script src="articles.js?v=1118a"></script>
+<script src="scenes.js?v=1118a"></script>
 <script>
 const A=window.ARTICLES;
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -101,6 +101,8 @@ function studyDay(){const d=new Date();if(d.getHours()<4)d.setDate(d.getDate()-1
 function toggleKeyMode(ai,btn){keyMode[ai]=!keyMode[ai];keySel=null;
   btn.style.background=keyMode[ai]?'#ffe08a':'';
   toast(keyMode[ai]?'✏️ 画重点句：先点句子第一个词，再点最后一个词':'已退出画重点句')}
+function delUserKey(ai,sent){const db=ukDB();db[ai]=(db[ai]||[]).filter(x=>x.sent!==sent);
+  store.set('userkeys',db);render();toast('已删除该片段')}
 function toggleUserKey(ai,j){const db=ukDB();db[ai]=db[ai]||[];
   const hit=db[ai].find(x=>Number(x.j)===Number(j));
   if(hit){db[ai]=db[ai].filter(x=>Number(x.j)!==Number(j));toast('已取消重点句')}
@@ -207,16 +209,19 @@ document.addEventListener('click',e=>{
       const ai=Number(w.dataset.a);const sentEl=w.closest('.sent');
       if(!sentEl)return;
       const j=Number(sentEl.dataset.i.split('-')[1]);
-      if(!keySel||keySel.ai!==ai||keySel.j!==j){
+      const wi=Number((w.dataset.i||'').split('-')[1]||0);
+      if(!keySel||keySel.ai!==ai){
         document.querySelectorAll('w.ksel').forEach(x=>x.classList.remove('ksel'));
-        keySel={ai:ai,j:j,firstW:cleanWord(w.dataset.w),firstEl:w};w.classList.add('ksel');
-        toast('已选首词「'+keySel.firstW+'」，再点本句末词');return}
-      // 同句再点（末词或任何词）：完成/取消
+        keySel={ai:ai,j:j,w1:wi,w2:wi};w.classList.add('ksel');
+        toast('已选起始词「'+cleanWord(w.dataset.w)+'」，再点结束词（片段=首词到末词）');return}
+      // 已有起始：这次点击=结束词（片段按词序从首到末收集）
       const db=ukDB();db[ai]=db[ai]||[];
-      const hit=db[ai].find(x=>Number(x.j)===Number(j));
+      const a0=Math.min(keySel.w1,wi), b0=Math.max(keySel.w1,wi);
+      const frag=A[ai].sentences[j].split(/\s+/).slice(a0,b0+1).join(' ');
+      const hit=db[ai].find(x=>x.sent===frag);
       document.querySelectorAll('w.ksel').forEach(x=>x.classList.remove('ksel'));keySel=null;
-      if(hit){db[ai]=db[ai].filter(x=>Number(x.j)!==Number(j));toast('已取消重点句')}
-      else{db[ai].push({j:j,sent:A[ai].sentences[j],day:studyDay()});toast('⭐ 已画重点句，复习页按日可看')}
+      if(hit){db[ai]=db[ai].filter(x=>x.sent!==frag);toast('已取消该片段')}
+      else{db[ai].push({j:j,sent:frag,day:studyDay()});toast('⭐ 已画重点片段，复习页按日可看')}
       store.set('userkeys',db);render();return}
     const k=cleanWord(w.dataset.w);
     if(selState){ // 词组模式
@@ -645,14 +650,25 @@ async function translate(k,ctx,artIdx){ // 主源 gtx → 备用(move/Lingva) �
     if(cache[k]!==v){cache[k]=v;store.set(TKEY+TVER,cache)}
     return v}
   if(cache[k])return cache[k];
+  // 撇号词修复（用户 11-18）：cleanWord 把 council's→councils、barber's→barbers，词典查不到还错义。
+  // 在线查询前先试变体：去 's 所有格 → 去复数 s；命中原形义即用（缓存回写原词 k）。
+  const variants=[];
+  if(/s$/.test(k)){const base=k.slice(0,-1);if(MANUAL[base])variants.push(base);
+    if(/'s$|’s$/.test(k)){const pos=k.replace(/['’]s$/,'');if(MANUAL[pos])variants.push(pos)}}
+  else if(/'s$|’s$/.test(k)){} // 已被 cleanWord 删除,走上面 s$ 分支
+  for(const v of variants){const m=MANUAL[v];
+    const vv=typeof m==='object'&&m.art?(artIdx!==undefined?sceneSense(m,artIdx):m.any):m;
+    cache[k]=vv;store.set(TKEY+TVER,cache);return vv}
   let t='';let ctxT='';
+  const qk=(variants&&variants.length)?variants[0]:k; // 在线查询用原形（councils→council）
+
   if(ctx){try{ // 语境优先：整句翻译，用户看到的第一个释义来自真实上下文
     let s=await tryGtx(ctx,'t');
     if(!s)s=await tryBackup(ctx);
     if(validTrans(s,ctx)){t='〔语境〕'+s;ctxT=s}} // 语境结果同样过有效性检查；留副本供义项过滤
   catch(e){}}
   { // 词典义项补上，但多义词只留与语境相符的义项（runway 等多义词不再全列）
-    const j=await tryGtx(k,'bd');
+    const j=await tryGtx(qk,'bd');
     if(j&&j.dict&&!ctx){const d=filterSenses(cleanSense(j.dict.map(x=>x.pos+'：'+x.terms.join('、')).join('；')),ctxT);
       if(validTrans(d,k))t=d}
     else if(!t){

@@ -375,6 +375,34 @@ function parsePath(){ // /english-daily/review/261113 或 ?d=261113
   if(!m)m=location.search.match(/[?&]d=(\d{6})/);
   if(!m)return null;
   const v=m[1];return '20'+v.slice(0,2)+'-'+v.slice(2,4)+'-'+v.slice(4,6)}
+// 当日语未缓存词：逐个补翻译（此前查译中永远不解决——translate 定义了却没人调用）
+async function fillMissingTrans(e){
+  if(!e||!e.words)return;
+  const cache=getTrans();
+  for(const k of e.words){
+    if(cache[k])continue;
+    if(document.hidden)break; // 页面切走就停
+    try{await translate(k)}catch(err){}
+  }
+}
+// ✏️ 片段翻译（用户 11-18）：重点句现在是首词→末词的片段，整句 PRETR 对不上——直接在线整段翻译
+async function translateFrag(frag){
+  const c=store.get('uktrv1');
+  if(c[frag])return c[frag];
+  let t='';
+  try{t=await tryGtx(frag,'t')}catch(e){t=''}
+  if(!t){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(frag)+'&langpair=en|zh-CN');const j=await r.json();t=(j.responseData&&j.responseData.translatedText)||''}catch(e){t=''}}
+  if(t&&/[一-鿿]/.test(t)){c[frag]=t;store.set('uktrv1',c);return t}
+  return ''}
+// 片段删除（用户 11-18：能单独删一条，不再只能整篇清空）
+function delUserKey(ai,sent){const db=ukDB();
+  db[ai]=(db[ai]||[]).filter(x=>x.sent!==sent);
+  if(!db[ai].length)delete db[ai];
+  store.set('userkeys',db);render()}
+document.addEventListener('click',e=>{
+  const rm=e.target.closest('.rm[data-ukai]');
+  if(rm){delUserKey(rm.dataset.ukai,rm.dataset.uksent)}
+});
 function gotoDay(d){view.mode='day';view.day=d;
   const p=d.slice(2).replace(/-/g,'');
   pushURL(d);render()}
@@ -387,7 +415,7 @@ function render(){
   const el=document.getElementById('main');
   const db=dayDB();
   if(view.mode==='cal'){el.innerHTML=calHtml(db);wireCal(db)}
-  else{el.innerHTML=dayHtml(db);wireDay(db)}}
+  else{el.innerHTML=dayHtml(db);wireDay(db);if(view.day)fillMissingTrans(db[view.day])}}
 function calHtml(db){ // 月历:有词/语法的日期高亮
   const now=new Date();
   if(!view.ym)view.ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');

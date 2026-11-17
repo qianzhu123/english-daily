@@ -436,19 +436,35 @@ function render(){
     ${gbar}
     <div class="answer" id="ans-${n}"><b>参考（一种写法，不是标准答案）</b> <button class="speak" onclick="speak(this.dataset.s)" data-s="${esc(it.refEn||it.ref)}">🔊</button>
 ${esc(it.ref)}</div></div>`}).join('');
+  markTrainWords();
 }
 function pick(day){curDay=day;render()}
 // 雅思练一练渲染 + 判分（quizdone 记 {day#qn: {pick, ok}}，防止重渲染丢状态）
 // 训练页生词:passage 词可点,点即入 vocab(day=studyDay,art=-1 归「其他」)
 function studyDay(){const d=new Date();if(d.getHours()<4)d.setDate(d.getDate()-1);
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-function w2tok(t){const m=t.match(/^([^A-Za-z0-9À-ɏ]*)([A-Za-z0-9À-ɏ'’-]+)([\s\S]*)$/);
+const TR_STOP=new Set('the a an and or but of to in on at for with from by as is are was were be been being it its this that these those i you he she we they them their his her our your my me him us not no do does did done have has had will would can could should may might must so if then than when while which who whom whose what where how why all any some each every more most less least very just only about into over under out up down off again once there here now also too both either neither nor because before after during between among against without within along across behind beyond plus per via say says said get got make makes made take takes took come comes came go goes gone went see saw seen know knew known think thought want wants wanted work works worked need needs needed give gives gave find finds found tell told ask asks asked feel felt seem seems seemed look looks looked use uses used admit admits admitted expect expects expected manage manages managed enjoy enjoys enjoyed agree agrees agreed plan plans planned decide decides decided carry carries carried avoid avoids avoided suggest suggests suggested remain remains remained appear appears appeared offer offers offered afford afforded borrow borrowed reach reaches reached allow allows allowed attract attracts attracted protect protects protected prevent prevents prevented reduce reduces reduced refuse refuses refused complain complained describe described mention mentioned prefer preferred realize realized receive received promise promised improve improved accept accepted invite invited attend attended depend depended familiar convenient expensive available patient polite rude nervous confident comfortable difficult popular various ancient modern tourism tourist tradition traditional culture cultural attitude behaviour behavior resident local visitor passenger commuter citizen community suburb urban rural frequent frequency schedule delay commute fare'.split(' '));
+function w2tok(t){const m=t.match(/^([^A-Za-z0-9À-ɏ]*)([A-Za-z0-9À-ɏ'’-]+)([\\s\\S]*)$/);
   if(!m)return esc(t);
-  return esc(m[1])+`<w data-w="${esc(m[2].toLowerCase())}" style="cursor:pointer" onclick="addTrainWord('${esc(m[2].toLowerCase()).replace(/'/g,"\\'")}',this)">${esc(m[2])}</w>`+esc(m[3])}
+  const w=m[2].toLowerCase();
+  if(TR_STOP.has(w)||w.length<3)return esc(t); // 功能词/超短词不当生词（用户 11-18）
+  return esc(m[1])+`<w data-w="${esc(w)}" style="cursor:pointer" onclick="addTrainWord('${esc(w).replace(/'/g,"\\'")}',this)">${esc(m[2])}</w>`+esc(m[3])}
 function addTrainWord(k,el){const marks=store.get('vocab');
-  if(marks[k]){toast('「'+k+'」已在生词本');return}
+  if(marks[k]){ // 再点=从生词本删除（用户 11-18：可撤销）
+    delete marks[k];store.set('vocab',marks);
+    if(el){el.style.background='';el.classList.remove('tadded')}
+    toast('「'+k+'」已从生词本移除');return}
   marks[k]={n:1,day:studyDay(),art:-1,due:studyDay(),ease:1,lapses:0};
-  store.set('vocab',marks);if(el)el.style.background='#ffe08a';toast('「'+k+'」已加入生词本，复习页可见')}
+  store.set('vocab',marks);
+  if(el){el.style.background='#ffe08a';el.classList.add('tadded')}
+  toast('「'+k+'」已加入生词本（翻译在复习页按日可见；再点一下可移除）')}
+
+// 渲染后把已在生词本的训练词着色（刷新/重渲染后保持黄底）
+function markTrainWords(){
+  const marks=store.get('vocab');
+  document.querySelectorAll('w[data-w]').forEach(w=>{
+    if(marks[w.dataset.w]){w.style.background='#ffe08a';w.classList.add('tadded')}
+    else{w.style.background='';w.classList.remove('tadded')}})}
 
 function quizHtml(day,qn,qz,saved){
   const key=day+'#q'+qn;
