@@ -45,6 +45,14 @@ a.back{color:var(--accent);text-decoration:none;font-size:.9rem}
 .nav button.act{background:var(--accent);color:#fff;border-color:var(--accent)}
 #toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99;max-width:80vw}
 #toast.show{opacity:.95}
+
+.vocabside{position:fixed;right:18px;top:120px;width:230px;max-height:calc(100vh - 160px);overflow-y:auto;background:var(--card);border:1px solid #e3e3dc;border-radius:12px;padding:12px 14px;font-size:.85rem;box-shadow:0 2px 10px rgba(0,0,0,.05);z-index:5}
+.vocabside h3{margin:0 0 8px;font-size:.9rem;color:var(--accent)}
+.vocabside li{margin:6px 0;line-height:1.5;list-style:none}
+.vocabside .w{font-weight:600;cursor:pointer}
+.vocabside .tr{color:var(--dim);display:block;font-size:.8rem}
+.vocabside .del{cursor:pointer;color:var(--bad);margin-left:6px}
+@media (max-width:1100px){.vocabside{display:none}}
 </style>
 </head>
 <body>
@@ -60,7 +68,87 @@ const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e)
 // ===== 每日训练（Claude 更新；新的在上）=====
 // 2026-11-03 定版规则（用户原话）："我阅读能力和说话能力不是一个层级"＋"不要直接给出具体内容供我直接填写"：
 // ① 题目=纯中文场景，绝不印英文框架/候选句/文章原句 ② 参考答案先写后看（空作答不给看）③ 语音只手动只读英文短句
-const TRAIN=[{
+// ===== 训练关键词注释（用户 11-18：关键词/重点词/易错词提前写好翻译，展示在题干下）=====
+const TRAIN_KEYWORDS={
+ "2026-11-19": {
+  "attendance": "名词：出勤、到场人数",
+  "resigned": "动词：辞职（resign 过去式）",
+  "galleries": "名词：画廊、展厅（gallery 复数）",
+  "ridership": "名词：客流量、乘客数",
+  "conclusion": "名词：结论",
+  "uncomfortable": "形容词：令人不安的；不舒服的",
+  "admission": "名词：入场许可；门票；（景区）入园",
+  "decade": "名词：十年",
+  "flooded": "形容词：被水淹的（flood 过去分词）",
+  "detour": "名词/动词：绕路、绕行",
+  "fare": "名词：车费、票价",
+  "enforcement": "名词：执法、强制执行",
+  "compensation": "名词：补偿、赔偿",
+  "laminated": "形容词：塑封的（laminate 过去分词）",
+  "recited": "动词：背诵、朗诵（recite 过去式）",
+  "unannounced": "形容词：未经预告的",
+  "notebook": "名词：笔记本",
+  "policy": "名词：政策、规定；保险单",
+  "clerk": "名词：职员、前台接待",
+  "apparently": "副词：显然；据说"
+ },
+ "2026-11-18": {
+  "attendance": "名词：出勤、到场人数",
+  "resigned": "动词：辞职（resign 过去式）"
+ },
+ "2026-11-17": {
+  "attendance": "名词：出勤、到场人数",
+  "resigned": "动词：辞职（resign 过去式）"
+ }
+,
+ "2026-11-19": {"admission": "名词：入场许可；门票", "attendance": "名词：出勤、到场人数", "resigned": "动词：辞职（resign 过去式）", "galleries": "名词：展厅（gallery 复数）", "neighbourhoods": "名词：街区（neighbourhood 复数）", "ridership": "名词：客流量", "detour": "名词/动词：绕路", "fare": "名词：车费", "enforcement": "名词：执法", "compensation": "名词：补偿、赔偿", "laminated": "形容词：塑封的", "recited": "动词：背诵（recite 过去式）", "unannounced": "形容词：未预告的", "notebook": "名词：笔记本", "policy": "名词：政策、规定", "clerk": "名词：职员、前台", "apparently": "副词：显然"}
+};
+
+const TRAIN=[
+{
+  day:'2026-11-19',
+  title:'雅思阅读实战 · 独立长文混合题型（推理与作者态度专练）',
+  brief:'题型轮换日：判断+单选+作者观点匹配+句子结尾匹配。本日重点不再是找原词，而是推理：正确答案往往换个说法，甚至只给态度不下结论；遇到 not given 先问自己「原文有没有直接说过这句话」。',
+  daily:[
+    {en:'The meter covered the first two kilometers.',zh:'计价器覆盖前两公里（起步价）'},
+    {en:'I would hear from him personally, whatever it said.',zh:'无论报告写什么，他都会亲自答复我'},
+    {en:'Being handled and being heard are different things.',zh:'「被处理」和「被倾听」是两回事'}
+  ],
+  items:[],
+  quiz:[
+    {passage:"The library study rooms charged four pounds an hour while the free hall stayed open with every table facing the entrance, where the door announced each arrival. A student complained that the free option had been designed to be unendurable; the librarian said the study rooms simply paid for themselves.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The librarian admitted that the free hall had been designed badly.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:2,
+     why:'图书管理员只说了自习室「自负盈亏」，既没承认也没否认设计问题——NOT GIVEN。别把「没否认」当成「默认」：雅思里沉默≠承认'},
+    {passage:"The library study rooms charged four pounds an hour while the free hall stayed open with every table facing the entrance, where the door announced each arrival. A student complained that the free option had been designed to be unendurable; the librarian said the study rooms simply paid for themselves.",
+     type:'单选（Multiple Choice）',
+     q:'What does the passage suggest about the free hall\'s layout?',
+     opts:['It was designed to concentrate visitors near the exit','Its design served goals other than concentration','It was arranged by the paid-room designer','Students preferred tables near the door'],ans:1,
+     why:'原文说设计者是「管客流量的」而不是「管专注度的」——布局服务于其他目标（B）。A 偷换概念（不是疏散是引流）；C 无中生有；D 原文没说偏好'},
+    {passage:"The taxi driver turned the meter off for the flooded stretch of road, charging only for the dry part. The city, meanwhile, had spent years building cameras, hotlines and appeals processes. The writer concludes that trust is cheaper than enforcement.",
+     type:'作者观点匹配（Does the writer agree?）',
+     q:'The writer believes most drivers would switch the meter off in the same situation.',
+     opts:['YES','NO','NOT GIVEN'],ans:2,
+     why:'作者只讲了这一位司机的故事并评价了信任的成本，从头到尾没提其他司机会不会这么做——NOT GIVEN。作者的观点≠普遍事实的统计'},
+    {passage:"The taxi driver turned the meter off for the flooded stretch of road, charging only for the dry part. The city, meanwhile, had spent years building cameras, hotlines and appeals processes. The writer concludes that trust is cheaper than enforcement.",
+     type:'单选（Multiple Choice）',
+     q:'Which sentence best captures the writer\'s main point?',
+     opts:['Cameras and hotlines make taxi rides safer','One driver\'s honesty exposes how expensive enforcement really is','Flooded roads should be free by law','Passengers should always pay the full meter'],ans:1,
+     why:'主旨=最后一段：信任比执法便宜。一位司机的判断分文不花且每次管用，反衬整套监管的昂贵（B）。A/C/D 都是细节或无中生有'},
+    {passage:"The clerk recited the complaints policy like a poem memorized without understanding. The manager, by contrast, wrote for two minutes without interrupting and promised to reply personally whatever the engineer's report said.",
+     type:'句子结尾匹配（Sentence Ending）',
+     q:'The writer uses the word "poem" to suggest that the clerk…',
+     opts:['enjoyed reciting rules aloud','delivered the policy fluently but without engaging with it','had written the policy himself','was being deliberately unhelpful'],ans:1,
+     why:'「背熟却不懂的诗」=流利但没走心（B）。A 只取字面；C 无中生有；D 程度过重——他是没权限，不是故意刁难'},
+    {passage:"The clerk recited the complaints policy like a poem memorized without understanding. The manager, by contrast, wrote for two minutes without interrupting and promised to reply personally whatever the engineer's report said.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The manager gave the writer a larger discount than the standard rate.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:2,
+     why:'原文说折扣「确实按费率表执行」——金额与标准一致，差别在态度不在钱数。金额没变所以不是 TRUE，但「有没有多给」原文没直接比较。最稳的答案是 NOT GIVEN'},
+  ]
+},
+{
   day:'2026-11-17',
   title:'雅思阅读实战 · 独立长文混合题型（同义改写专练二）',
   brief:'题型轮换日：判断+单选+段落标题匹配+摘要填空。继续同义改写专项——正确答案是对原文的翻译式概括；题干/选项中与原文长得一模一样的短语，先假设它是陷阱再验证。训练页文章生词可点入生词本（已修复）。',
@@ -437,7 +525,7 @@ function render(){
     <div class="answer" id="ans-${n}"><b>参考（一种写法，不是标准答案）</b> <button class="speak" onclick="speak(this.dataset.s)" data-s="${esc(it.refEn||it.ref)}">🔊</button>
 ${esc(it.ref)}</div></div>`}).join('');
   markTrainWords();
-}
+renderVocabSide();}
 function pick(day){curDay=day;render()}
 // 雅思练一练渲染 + 判分（quizdone 记 {day#qn: {pick, ok}}，防止重渲染丢状态）
 // 训练页生词:passage 词可点,点即入 vocab(day=studyDay,art=-1 归「其他」)
@@ -466,6 +554,11 @@ function markTrainWords(){
     if(marks[w.dataset.w]){w.style.background='#ffe08a';w.classList.add('tadded')}
     else{w.style.background='';w.classList.remove('tadded')}})}
 
+// 关键词注释块：当日关键词/易错词翻译（TRAIN_KEYWORDS 预写，不依赖在线）
+function kwHtml(day,qn){
+  const kws=TRAIN_KEYWORDS[day];if(!kws)return '';
+  const items=Object.entries(kws).map(([w,t])=>`<span style="display:inline-block;margin:2px 8px 2px 0;padding:1px 8px;background:#f4f7f4;border-radius:10px;font-size:.75rem"><b>${esc(w)}</b> <span style="color:var(--dim)">${esc(t)}</span></span>`)
+  return `<div style="margin:6px 0 0;padding:6px 10px;background:#f9faf7;border-left:3px solid var(--accent);border-radius:6px;font-size:.78rem;line-height:1.9"><b style="color:var(--accent)">🔑 关键词</b><br>${items.join('')}</div>`}
 function quizHtml(day,qn,qz,saved){
   const key=day+'#q'+qn;
   const done=saved[key];
@@ -478,6 +571,7 @@ function quizHtml(day,qn,qz,saved){
   const res=done?`<div class="qdone ${done.ok?'ok':'no'}">${done.ok?'✓ 答对了':'✗ 答错了——正确答案：'+'ABCD'[qz.ans]}</div>`:'';
   return `<div style="margin-top:14px"><div style="font-size:.72rem;color:var(--dim)">${esc(qz.type)}</div>
   <div class="passage">${qz.passage.split(/\s+/).map(w2tok).join(' ')} <span style="color:var(--dim);font-size:.7rem">（点生词加入复习）</span></div>
+  ${kwHtml(day,qn)}
   <p style="font-weight:700;margin:6px 0">${esc(qz.q)}</p>${opts}${res}
   <div class="qwhy ${done?'show':''}" id="why-${qn}">💡 ${esc(qz.why)}</div></div>`}
 function answerQuiz(day,qn,pickIdx){
@@ -489,6 +583,18 @@ function answerQuiz(day,qn,pickIdx){
   const why=document.getElementById('why-'+qn);if(why)why.classList.add('show')}
 // 导出作答：只导出**当前选中日期**的作答（用户定版：不要把其他日期混进来）
 // 作答以「输入框实时内容」为准（用户改过多版的最终版），traintry 只是保存兜底
+// ===== 训练页侧栏生词本（用户 11-18：训练页也要能看到生词本）=====
+function escT(x){return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function renderVocabSide(){ // 与阅读页同一个 vocab 库 + translations 缓存
+  const el=document.getElementById('vocaside-list');if(!el)return;
+  const marks=store.get('vocab');const ks=Object.keys(marks);
+  const tc=store.get('translations');
+  if(!ks.length){el.innerHTML='<li style="color:var(--dim);font-size:.8rem">还没有生词——点文章/训练里的生词即可加入</li>';return}
+  el.innerHTML=ks.slice(-40).reverse().map(k=>{const q=k.replace(/'/g,"\'").replace(/"/g,'&quot;');
+    return `<li><span class="w" onclick="speak('${q}',0.9)">${escT(k)}</span><span class="del" onclick="delVocabSide('${q}')" title="移除">×</span><span class="tr">${tc[k]?escT(tc[k]):'<span style="color:var(--dim)">查译…</span>'}</span></li>`}).join('');
+}
+function delVocabSide(k){const marks=store.get('vocab');delete marks[k];store.set('vocab',marks);renderVocabSide();toast('「'+k+'」已移除')}
+document.addEventListener('DOMContentLoaded',renderVocabSide);
 function exportAnswers(){
   const saved=store.get('traintry');
   const day=curDay||TRAIN[0].day;

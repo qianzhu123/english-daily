@@ -1016,4 +1016,51 @@ window.ARTICLES = [
       "win an argument by refusing to have one —— by+动名词悖论：不吵架=赢（点题）"
     ]
   }
+,
+  {
+    title: "The Meter That Ran Kindly (B1+)",
+    date: "2026-11-19",
+    level: "B1+ · 出租车计费/信任经济",
+    sentences: [
+      "The taxi meter in that city started at a flat fee that covered the first two kilometers, and every driver explained it the same way, with the same tired pride, as if they had personally invented generosity.",
+      "One night a driver took a longer route because the short one was flooded, announced the detour before making it, and then turned the meter off for the flooded stretch, charging only for the dry road.",
+      "Nothing in the regulations required any of it; the rules cared about the maximum a driver could charge, and had apparently never considered the maximum a passenger could be trusted to pay.",
+      "When I asked why he switched the meter off, he shrugged and said the machine only knew distance, and distance on a flooded road was nobody's journey, so it belonged to no one's fare.",
+      "The city had spent years installing cameras, printing complaints hotlines on every receipt, and building an entire appeals process for disputes, and this driver had solved the same problem in one sentence and a shrug.",
+      "Trust, it turns out, is cheaper than enforcement: the cameras cost millions, the hotline costs salaries, and a driver deciding that a flooded road is free costs nothing at all and works every single time.",
+      "I have forgotten the fare and the street and even the color of the car; what stayed is the small click of a meter being switched off, which was, for one night, the sound of a system deciding to be kind."
+    ],
+    notes: [
+      "as if they had personally invented generosity —— as if + 过去完成时虚拟：司机把公司规定说成个人美德",
+      "announced the detour before making it —— before + 动名词：先声明再绕路（顺序=诚信）",
+      "the machine only knew distance, and distance... was nobody's journey —— 拟人+悖论：计价器只认距离，水淹的距离不属于任何人的行程",
+      "it belonged to no one's fare —— 双重所有格收尾：那段路不进任何人的账单",
+      "the maximum a passenger could be trusted to pay —— 省略 that 的定语从句；规则只防多收钱，从没想过乘客愿意多付钱",
+      "Trust, it turns out, is cheaper than enforcement —— 插入语 it turns out；金句：信任比执法便宜",
+      "the small click of a meter being switched off —— 动名词被动 being switched off；一次关表声=系统在行善"
+    ]
+  },
+  {
+    title: "The Manager Who Took Notes (B1+)",
+    date: "2026-11-19",
+    level: "B1+ · 酒店投诉/被认真对待",
+    sentences: [
+      "The hotel had a policy for complaints that was written in three languages, laminated behind the front desk, and visible to every guest except the ones actually complaining.",
+      "When the air conditioner failed at midnight, the clerk recited the policy like a poem he had memorized without understanding: an engineer would come within twenty-four hours, and compensation followed a fixed table of rates.",
+      "What he could not do was walk to the room; that, apparently, was not in the policy, and the policy, the clerk implied with every carefully neutral word, was not something a night clerk could improve.",
+      "The manager arrived unannounced at seven in the morning, holding a small notebook, and asked to hear the whole story again, from the beginning, including the part about the poem.",
+      "He wrote for two full minutes without interrupting, then closed the notebook and said only that the engineer's report would arrive by noon, and that I would hear from him personally, whatever it said.",
+      "The report did arrive by noon, the discount did follow the fixed table, and yet the entire experience felt different, because the policy had finally been delivered by a person instead of recited at one.",
+      "The difference between being handled and being heard is roughly the width of a notebook, but no laminated policy in three languages has ever managed to cross it."
+    ],
+    notes: [
+      "visible to every guest except the ones actually complaining —— except the ones 定语从句省略 who are；规定只给不投诉的人看",
+      "like a poem he had memorized without understanding —— 省略 that 的定语从句+without 动名词：背熟了但不懂",
+      "with every carefully neutral word —— with 短语作状语：每个中性词都在表达「我无权」",
+      "holding a small notebook —— 现在分词伴随状语；一个本子=整个管理风格的差别",
+      "whatever it said —— 让步状语从句省略（=no matter what it said）：无论结论如何都亲自回复",
+      "delivered by a person instead of recited at one —— 过去分词对仗：被「执行」vs 被「背诵」；at one=对着某人",
+      "the width of a notebook —— 度量隐喻点题：被处理与被倾听之间只差一个本子的宽度"
+    ]
+  }
 ];

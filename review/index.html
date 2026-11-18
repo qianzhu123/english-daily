@@ -104,7 +104,7 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200)}
 function speak(text,rate){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||0.9;u.voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u)}
 // ===== 翻译（gtx 主源 + MyMemory 兜底 + 有效性过滤 + 人工义） =====
-const TKEY='translations',TVER='v14';
+const TKEY='translations',TVER='v15';
 function getTrans(){let c=store.get(TKEY+TVER);
   if(!Object.keys(c).length){ // 新版本缓存为空：迁入旧版本缓存（坏翻译已由 MANUAL 覆盖 + v13 起的过滤器清洗），免去全量重查
     const prev=store.get(TKEY+'v13');if(Object.keys(prev).length){store.set(TKEY+TVER,prev);return prev}}
@@ -280,7 +280,116 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
   anchored:'动词：锚定、基于（anchor 的过去式）',
   mood:'名词：情绪、心情',
   case:{any:'名词：情况；箱子',art:[{t:'Refund',v:'名词：（有据可依的）案子、案件（a case 有理有据的投诉）'}]},
-  clever:'形容词：聪明的、机灵的'};
+  clever:'形容词：聪明的、机灵的',
+  "entrance":"名词：入口、门口；（戏剧性）登场；进入",
+  "thick":"形容词：厚的、粗的；浓的、茂密的；（with）布满",
+  "concentration":"名词：专注、全神贯注；集中；浓度",
+  "delivery":"名词：递送、送货；（快递）送达；分娩；表达方式",
+  "outrage":"名词：愤怒、义愤；暴行；动词：激怒",
+  "tone":"名词：语气、口吻；音调；色调；风格",
+  "neighborhood":"名词：街区、邻里；附近一带",
+  "subscriptions":"名词：订阅、订购（subscription 复数）；会员费",
+  "subscription":"名词：订阅、订购；会员费",
+  "hall":"名词：大厅、礼堂；走廊",
+  "thesis":"名词：论文；论点、主张",
+  "librarian":"名词：图书馆管理员",
+  "unendurable":"形容词：难以忍受的、不堪忍受的",
+  "foot":"名词：脚；英尺；底部",
+  "traffic":"名词：人流、交通；（非法）交易",
+  "invitation":"名词：邀请",
+  "invited":"动词：邀请（invite 过去式/过去分词）",
+  "receipt":"名词：收据、发票；收到",
+  "funding":"名词：资金、拨款",
+  "competition":"名词：竞争、角逐；比赛",
+  "basement":"名词：地下室",
+  "faction":"名词：派系、小集团",
+  "dent":"名词：凹痕、瘪角；动词：使凹陷；削弱",
+  "courier":"名词：快递员、信使",
+  "swap":"动词/名词：交换、调换",
+  "specificity":"名词：具体（性）、明确（性）",
+  "framed":"动词：装框；（贬）诬陷（frame 过去式）",
+  "elegant":"形容词：优雅的、简练的",
+  "escalate":"动词：（使）升级、加剧",
+  "sweetness":"名词：甜；（性格）和气",
+  "partial":"形容词：部分的；偏心的、偏袒的",
+  "replacement":"名词：替换品、更换；替补",
+  "silence":"名词：安静、沉默；动词：使沉默",
+  "opinion":"名词：意见、看法",
+  "damaged":"形容词：受损的、损坏的（damage 过去分词）",
+  "corner":"名词：角、角落；困境；转弯处",
+  "dissolve":"动词：消解、溶解；解散；（议会）解散",
+  "photographed":"动词：拍照（photograph 过去式）",
+  "declined":"动词：婉拒；下降（decline 过去式）",
+  "noon":"名词：正午",
+  "consisted":"动词：在于；（of）由…构成（consist 过去式）",
+  "outcome":"名词：结果、结局",
+  "lovely":"形容词：美好的、讨人喜欢的",
+  "risk":"名词：风险、危险；动词：冒…风险",
+  "refused":"动词：拒绝（refuse 过去式/过去分词）",
+  "watched":"动词：观看、注视（watch 过去式）",
+  "arguing":"动词：争论、主张（argue 现在分词）",
+  "argument":"名词：争论；论点、理由",
+  "reviews":"名词：评论、评价（review 复数）；动词：复习",
+  "misunderstanding":"名词：误会、误解",
+  "politeness":"名词：礼貌、客气",
+  "worn":"形容词：磨损的；（wear 过去分词）穿旧的",
+  "grass":"名词：草、草地",
+  "inspections":"名词：检查、巡查（inspection 复数）",
+  "nightly":"形容词/副词：每夜的（地）",
+  "crew":"名词：全体工作人员、班组",
+  "obtained":"动词：获得、得到（obtain 过去式）",
+  "records":"名词：记录、档案（record 复数）；唱片",
+  "maintenance":"名词：维护、保养；维修",
+  "persuaded":"动词：说服、劝说（persuade 过去式）",
+  "whichever":"代词/限定词：无论哪个",
+  "required":"动词：需要、要求（require 过去式）",
+  "conversations":"名词：对话、交谈（conversation 复数）",
+  "rarely":"副词：很少、难得",
+  "grand":"形容词：宏大的、 grand 的；壮丽的",
+  "agreements":"名词：协议、约定（agreement 复数）",
+  "victory":"名词：胜利",
+  "expired":"动词：到期、失效（expire 过去式）",
+  "victories":"名词：胜利（victory 复数）",
+  "gathered":"动词：聚集（gather 过去式）",
+  "crossing":"名词：过街通道、渡口；十字路口",
+  "shortcut":"名词：捷径",
+  "gate":"名词：大门、登机口",
+  "reasonable":"形容词：合理的；通情达理的",
+  "capital":"名词：首都；资本；大写字母；形容词：主要的",
+  "pedestrian":"名词：行人；形容词：步行的、平淡的",
+  "vote":"名词/动词：投票、表决",
+  "second":"形容词：第二的；名词：秒；片刻；动词：附议",
+  "hidden":"形容词：隐藏的、看不见的（hide 过去分词）",
+  "floor plan":"名词短语：平面图、房型图",
+  "printed":"动词：印刷、打印（print 过去式）",
+  "wall":"名词：墙、墙壁",
+  "concentrate":"动词：专注、集中；（浓度）浓缩",
+  "render":"动词：使成为；演出、表现",
+  "factory":"名词：工厂",
+  "councils":"名词：（市政）委员会、议会（council 复数）；（英）地方议会",
+  "barbers":"名词：理发师（barber 复数）；理发店",
+  "feared":"动词：害怕、担心（fear 过去式）",
+  "answered":"动词：回答（answer 过去式）",
+  "perfectly":"副词：完美地；完全",
+  "conversation":"名词：对话、交谈",
+  "forgetting":"动词：忘记（forget 现在分词）",
+  "candidate":"名词：候选人；考生、应聘者",
+  "interviewer":"名词：面试官；采访者",
+  "teamwork":"名词：团队合作",
+  "failure":"名词：失败；故障",
+  "secretly":"副词：偷偷地、暗地里",
+  "stronger":"形容词：更强壮的、更坚定的（strong 比较级）",
+  "copying":"动词：誊抄、复制（copy 现在分词）",
+  "rejection":"名词：拒绝、否决",
+  "promotion":"名词：晋升、提拔；促销",
+  "handwriting":"名词：笔迹、手写",
+  "engineer":"名词：工程师；动词：设计、策划",
+  "publicly":"副词：公开地、当众",
+  "belonged":"动词：属于（belong 过去式）",
+  "filed":"动词：提交、归档（file 过去式）",
+  "rehearsed":"动词：排练、预演（rehearse 过去式）",
+  "prepares":"动词：准备（prepare 三单）",
+  "rehearsing":"动词：排练（rehearse 现在分词）"};
 function validTrans(t,k){if(!t)return false;if(!/[一-鿿A-Za-z0-9]/.test(t))return false;
 if(/^[：:，,。;；\s]/.test(t))return false; // 残缺符号开头的碎片（hundred→"：一百"事故）
 if(t.toLowerCase()===k.toLowerCase())return false;if(/MYMEMORY WARNING|QUERY LENGTH|%s|ALL AVAILABLE FREE TRANSLATIONS/i.test(t))return false;return true}
@@ -464,15 +573,12 @@ function dayHtml(db){ // 单日:单词+语法+当日原文
   Object.keys(uk).forEach(ai=>{const i2=Number(ai);if(ART[i2])uk[ai].forEach(x=>{if(x.day===d)sentKeys.push({ai:i2,j:x.j,sent:x.sent})})});
   if(sentKeys.length){
     html+=`<div class="dayh">✏️ 重点句 <span class="tag">${sentKeys.length} 句</span></div>`+
-      sentKeys.map(x=>{const a=ART[x.ai];
-        return `<div class="gcard"><div style="color:var(--dim);font-size:.75rem;margin-bottom:2px">${esc(a.title)}</div><b>${esc(x.sent)}</b><div class="src" id="uktr-${x.ai}-${x.j}"> —— 整句翻译中…</div></div>`}).join('');
-    // 批量补翻译(缓存 arttr 或逐句 gtx)
-    sentKeys.forEach(x=>{const id='uktr-'+x.ai+'-'+x.j;
+      sentKeys.map((x,xi)=>{const a=ART[x.ai];
+        return `<div class="gcard"><span class="rm" data-ukai="${x.ai}" data-uksent="${esc(x.sent)}" style="float:right;cursor:pointer;color:var(--bad,#c0392b);font-size:1.05rem" title="删除该片段">×</span><div style="color:var(--dim);font-size:.75rem;margin-bottom:2px">${esc(a.title)}</div><b>${esc(x.sent)}</b><div class="src" id="uktr-${x.ai}-${xi}"> —— 翻译中…</div></div>`}).join('');
+    // 片段翻译：片段≠整句，PRETR 对不上——逐片段在线翻译（uktrv1 缓存）
+    sentKeys.forEach(x=>{const id='uktr-'+x.ai+'-'+sentKeys.indexOf(x);
       const sp=document.getElementById(id);if(!sp)return;
-      const full=store.get('arttrv3');
-      const key='t'+ART[x.ai].title;
-      if(full&&full[key]){const lines=full[key].split('\n');const tr=lines[x.j*2+1];if(tr){sp.textContent='—— '+tr;return}}
-      sp.textContent=''; // 无缓存留空(不额外请求,点阅读页「整篇翻译」后即有)
+      translateFrag(x.sent).then(tr=>{if(tr)sp.textContent='—— '+tr;else sp.textContent=''}).catch(()=>sp.textContent='')
     })}
   if(arts.length){
     html+=`<div class="dayh">📄 当日文章 <span class="tag">${arts.length} 篇</span></div>`+
