@@ -67,8 +67,8 @@ w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /
 <textarea id="tokin" style="width:100%;height:60px;margin:8px 0;font-size:.75rem" placeholder="粘贴 token（github_pat_...）"></textarea>
 <div style="display:flex;gap:8px"><button onclick="saveToken()" style="flex:1">保存</button><button onclick="clearToken()" style="flex:1">清除</button><button onclick="document.getElementById('tokbox').classList.add('hidden')">关闭</button></div>
 <div id="tokstat" style="color:var(--dim);margin-top:6px;font-size:.78rem"></div></div>
-<script src="articles.js?v=1119a"></script>
-<script src="scenes.js?v=1119a"></script>
+<script src="articles.js?v=1120a"></script>
+<script src="scenes.js?v=1120a"></script>
 <script>
 const A=window.ARTICLES;
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -1150,7 +1150,8 @@ if(ch){marks=cleaned;store.set('vocab',marks)}})();
 // 现在统一改存 A 原索引；旧值若挂错文章（首词在该文章正文匹配不到），按首词回扫正文重定位。
 (function(){let ch=false;
 for(const k in marks){const e=marks[k];if(!e||typeof e!=='object'||typeof e.art!=='number')continue;
-  if(e.art>=A.length){e.art=wordHomeIdx(k);ch=true;continue} // 越界直接重定位
+  if(e.art<0)continue; // 训练页生词 art:-1 归「其他」组，不是越界（用户 11-19 白屏根因：A[-1].sentences 崩）
+  if(e.art>=A.length||!A[e.art]||!A[e.art].sentences){e.art=wordHomeIdx(k);ch=true;continue} // 越界/悬空直接重定位
   const first=k.split(' ')[0].toLowerCase();
   const text=A[e.art].sentences.join(' ').toLowerCase();
   if(!new RegExp('\\b'+first.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(text)){e.art=wordHomeIdx(k);ch=true}}
