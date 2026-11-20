@@ -665,8 +665,9 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
   "didnt":"（did not 缩写）没有",
   "ask":"动词：问；请求",
   "resume":"名词：简历（résumé）",
+"résumé":"名词：简历",
   "handed":"动词：递、交（hand 过去式；hand in=上交）",
-  "broken":"形容词：坏的、 broken 的（break 过去分词）",
+  "broken":"形容词：坏的（break 过去分词）",
   "printer":"名词：打印机",
   "fix":"动词：修理；解决；名词：解决办法",
   "front":"名词：前面；正面",
@@ -1902,13 +1903,23 @@ function wordHomeIdx(k){ // art 可信时优先（标记时写入的原索引，
 let view={mode:'cal',ym:null,day:null}; // ym='2026-11'; day='2026-11-13'
 function doneDB(){return store.get('doneread')}
 function ukDB(){return store.get('userkeys')}
-function dayDB(){ // 词+语法按日期归并 {day:{words:[],grams:[]}}
+function artDate(ai){const a=ART[ai];return a&&a.date?a.date:null}
+function dayDB(){ // 按文章发布日期归并（用户 11-20：复习时间=文章发布日，不是操作当天）
   const db={};
-  Object.keys(marks).forEach(k=>{const d=(marks[k]&&marks[k].day)||studyDay();
-    (db[d]=db[d]||{words:[],grams:[]}).words.push(k)});
+  Object.keys(marks).forEach(k=>{const ai=wordHomeIdx(k);
+    const d=artDate(ai)||ART[ai]&&ART[ai].date||null;
+    const dd=d||(marks[k]&&marks[k].day)||studyDay();
+    (db[dd]=db[dd]||{words:[],grams:[],frags:[],byArt:{}}).words.push(k);
+    const key=ART[ai]?ai:'loose';
+    (db[dd].byArt[key]=db[dd].byArt[key]||[]).push(k)});
   const g=gramDB();
-  Object.keys(g).forEach(gid=>{const d=(g[gid]&&g[gid].date)||studyDay();
-    (db[d]=db[d]||{words:[],grams:[]}).grams.push(gid)});
+  Object.keys(g).forEach(gid=>{const t=g[gid].title||'';
+    const ai=ART.findIndex(a=>a.title===t);
+    const dd=(ai>=0&&ART[ai].date)||g[gid].date||studyDay();
+    (db[dd]=db[dd]||{words:[],grams:[],frags:[],byArt:{}}).grams.push(gid)});
+  Object.keys(ukDB()).forEach(aiS=>{const ai=Number(aiS);if(!ART[ai])return;
+    const dd=artDate(ai)||studyDay();
+    ukDB()[aiS].forEach(x=>{(db[dd]=db[dd]||{words:[],grams:[],frags:[],byArt:{}}).frags.push({ai:ai,j:x.j,sent:x.sent})})});
   return db}
 function parsePath(){ // /english-daily/review/261113 或 ?d=261113
   let m=location.pathname.match(/review\/(\d{6})\/?$/);
@@ -1981,48 +1992,76 @@ function wireCal(db){
     const d2=new Date(y,m-1+Number(b.dataset.nav),1);
     view.ym=d2.getFullYear()+'-'+String(d2.getMonth()+1).padStart(2,'0');render()});
   document.querySelectorAll('.calcell.has').forEach(b=>b.onclick=()=>gotoDay(b.dataset.d))}
-function dayHtml(db){ // 单日:单词+语法+当日原文
-  const d=view.day;const e=db[d]||{words:[],grams:[]};
+function dayHtml(db){ // 单日:按文章分组——单词→词组→句子片段→语法→完整文章（含原始标记）
+  const d=view.day;const e=db[d]||{words:[],grams:[],frags:[],byArt:{}};
   const g=gramDB();
-  // 当日文章:词/语法点挂的文章 + 标题日期匹配
+  // 当日文章（按发布日期归属，用户 11-20）
   const artIdxs=new Set();
   const done=doneDB();
   Object.keys(done).forEach(t=>{if(done[t]&&done[t].date===d){const i2=ART.findIndex(a=>a.title===t);if(i2>=0)artIdxs.add(i2)}});
   e.grams.forEach(gid=>{const t=(g[gid].title||'');const i2=ART.findIndex(a=>a.title===t);if(i2>=0)artIdxs.add(i2)});
-  const arts=[...artIdxs].map(i2=>ART[i2]).filter(Boolean);
-  let html=`<div class="dayhead"><a class="backcal" href="#" onclick="backCal();return false">← 日历</a><b>${d}</b><span class="tag">${e.words.length} 词 · ${e.grams.length} 语法</span></div>`;
-  if(e.words.length){
-    const byArt={};
-    e.words.forEach(k=>{const i2=wordHomeIdx(k);const key=ART[i2]?i2:'loose';(byArt[key]=byArt[key]||[]).push(k)});
-    for(const key of Object.keys(byArt)){
-      const title=key==='loose'?'其他':esc(ART[key].title);
-      html+=`<div class="dayh">${title} <span class="tag">${byArt[key].length} 词</span></div><div class="wl">${byArt[key].sort((a,b)=>((marks[a]&&marks[a].seq)||0)-((marks[b]&&marks[b].seq)||0)).map(k=>rowHtml(k)).join('')}</div>`}}
-  if(e.grams.length){
-    html+=`<div class="dayh">⭐ 语法点 <span class="tag">${e.grams.length} 条</span></div>`+
-      e.grams.map(gid=>`<div class="gcard"><span class="rm" data-gid="${esc(gid)}" style="float:right;cursor:pointer;color:var(--bad)" title="取消收藏">×</span>${esc(g[gid].text||gid)}<div class="src">来自：${esc(g[gid].title||'')}</div></div>`).join('')}
-  const uk=ukDB();const sentKeys=[];
-  Object.keys(uk).forEach(ai=>{const i2=Number(ai);if(ART[i2])uk[ai].forEach(x=>{if(x.day===d)sentKeys.push({ai:i2,j:x.j,sent:x.sent})})});
-  if(sentKeys.length){
-    html+=`<div class="dayh">✏️ 重点句 <span class="tag">${sentKeys.length} 句</span></div>`+
-      sentKeys.map((x,xi)=>{const a=ART[x.ai];
-        return `<div class="gcard"><span class="rm" data-ukai="${x.ai}" data-uksent="${esc(x.sent)}" style="float:right;cursor:pointer;color:var(--bad,#c0392b);font-size:1.05rem" title="删除该片段">×</span><div style="color:var(--dim);font-size:.75rem;margin-bottom:2px">${esc(a.title)}</div><b>${esc(x.sent)}</b><div class="src" id="uktr-${x.ai}-${xi}"> —— 翻译中…</div></div>`}).join('');
-    // 片段翻译：片段≠整句，PRETR 对不上——逐片段在线翻译（uktrv1 缓存）
-    sentKeys.forEach(x=>{const id='uktr-'+x.ai+'-'+sentKeys.indexOf(x);
-      const sp=document.getElementById(id);if(!sp)return;
-      translateFrag(x.sent).then(tr=>{if(tr)sp.textContent='—— '+tr;else sp.textContent=''}).catch(()=>sp.textContent='')
-    })}
-  if(arts.length){
-    html+=`<div class="dayh">📄 当日文章 <span class="tag">${arts.length} 篇</span></div>`+
-      arts.map(a=>`<div class="artfull"><h3>${esc(a.title)}</h3><div style="color:var(--dim);font-size:.78rem;margin-bottom:6px">${esc(a.date)} · ${esc(a.level||'')}</div>${a.sentences.map(x=>'<p style="margin:4px 0">'+esc(x)+'</p>').join('')}</div>`).join('')}
-  if(!e.words.length&&!e.grams.length)html+='<div class="empty">这一天没有学习记录。</div>';
-  return html}
-function wireDay(){
+  (e.frags||[]).forEach(x=>artIdxs.add(x.ai));
+  Object.keys(e.byArt||{}).forEach(k=>{if(k!=='loose')artIdxs.add(Number(k))});
+  const arts=[...artIdxs].map(i2=>Number(i2)).filter(i2=>ART[i2]).sort((a,b)=>(ART[a].date||'')<(ART[b].date||'')?-1:1);
+  let html=`<div class="dayhead"><a class="backcal" href="#" onclick="backCal();return false">← 日历</a><b>${d}</b><span class="tag">${e.words.length} 词 · ${(e.frags||[]).length} 片段 · ${e.grams.length} 语法</span></div>`;
+  // 词组与单词分列：词组=key 含空格（用户 11-20 展示顺序：第一篇单词→词组→句子→语法→全文，再下一篇）
+  if(arts.length===0&&(e.words.length)){
+    const loose=(e.byArt.loose||[]);
+    if(loose.length)html+=`<div class="dayh">其他 <span class="tag">${loose.length} 词</span></div><div class="wl">${loose.sort((a,b)=>((marks[a]&&marks[a].seq)||0)-((marks[b]&&marks[b].seq)||0)).map(k=>rowHtml(k)).join('')}</div>`}
+  for(const ai of arts){
+    const a=ART[ai];
+    const ks=(e.byArt[ai]||[]).slice().sort((x,y)=>((marks[x]&&marks[x].seq)||0)-((marks[y]&&marks[y].seq)||0));
+    const words=ks.filter(k=>!k.includes(' '));
+    const phrases=ks.filter(k=>k.includes(' '));
+    const frags=(e.frags||[]).filter(x=>x.ai===ai);
+    const grams=e.grams.filter(gid=>g[gid].title===a.title);
+    html+=`<div class="dayh">${esc(a.title)} <span class="tag">${esc(a.date)} · ${esc(a.level||'')}</span></div>`;
+    if(words.length)html+=`<div class="wl">${words.map(k=>rowHtml(k)).join('')}</div>`;
+    if(phrases.length)html+=`<div class="dayh" style="font-size:.85rem">词组 <span class="tag">${phrases.length}</span></div><div class="wl">${phrases.map(k=>rowHtml(k)).join('')}</div>`;
+    if(frags.length){
+      html+=`<div class="dayh" style="font-size:.85rem">✏️ 重点片段 <span class="tag">${frags.length}</span></div>`+
+        frags.map((x,xi)=>{const gi='uktr-'+x.ai+'-'+xi;
+          return `<div class="gcard"><span class="rm" data-ukai="${x.ai}" data-uksent="${esc(x.sent)}" style="float:right;cursor:pointer;color:var(--bad,#c0392b);font-size:1.05rem" title="删除该片段">×</span><b>${esc(x.sent)}</b><div class="src" id="${gi}"> —— 翻译中…</div></div>`}).join('');
+      frags.forEach((x,xi)=>{const id='uktr-'+x.ai+'-'+xi;
+        setTimeout(()=>{const sp=document.getElementById(id);if(!sp)return;
+          translateFrag(x.sent).then(tr=>{if(tr)sp.textContent='—— '+tr;else sp.textContent=''}).catch(()=>sp.textContent='')},0)})}
+    if(grams.length){
+      html+=`<div class="dayh" style="font-size:.85rem">⭐ 语法点 <span class="tag">${grams.length}</span></div>`+
+        grams.map(gid=>`<div class="gcard"><span class="rm" data-gid="${esc(gid)}" style="float:right;cursor:pointer;color:var(--bad)" title="取消收藏">×</span>${esc(g[gid].text||gid)}</div>`).join('')}
+    // 完整文章：重现阅读页的原始标记（生词高亮 + 片段高亮）
+    const markWords=new Set(words.concat(phrases));
+    const fragByJ={};frags.forEach(x=>{(fragByJ[x.j]=fragByJ[x.j]||[]).push(x)});
+    html+=`<div class="dayh" style="font-size:.85rem">📄 完整文章 <span class="tag">含你的原始标记</span></div><div class="artfull">`;
+    html+=a.sentences.map((sent,j)=>{
+      let marked=sent.split(/\s+/).map(tok=>{
+        const m2=tok.match(/^([^A-Za-z0-9À-ɏ]*)([A-Za-z0-9À-ɏ'’-]+)([\s\S]*)$/);
+        if(!m2)return esc(tok);
+        const cw=m2[2].toLowerCase();
+        const cls=markWords.has(cw)?' on':'';
+        return esc(m2[1])+'<w class="'+cls.trim()+'">'+esc(m2[2])+'</w>'+esc(m2[3])}).join(' ');
+      (fragByJ[j]||[]).forEach(x=>{
+        const toks=sent.split(/\s+/);const joined=toks.join(' ');
+        const start=joined.indexOf(x.sent);if(start<0)return;
+        const before=joined.slice(0,start);
+        const n0=before.trim()?before.trim().split(/\s+/).length:0;
+        const n1=n0+x.sent.split(/\s+/).length;
+        // 片段高亮：在 marked 字符串上按词序包 fragon（重新分词一遍）
+        let wi2=0;
+        marked=marked.replace(/<w class="( on)?">([\s\S]*?)<\/w>/g,(mm,cls2,txt)=>{
+          const inFrag=wi2>=n0&&wi2<n1;wi2++;
+          return '<w class="'+(inFrag?'fragon':(cls2||'').trim())+'">'+txt+'</w>'})});
+      return '<p style="margin:4px 0">'+marked+'</p>'}).join('');
+    html+=`</div>`;
+  }
+  if(!e.words.length&&!e.grams.length&&!(e.frags||[]).length)html+='<div class="empty">这一天没有学习记录。</div>';
+  return html}function wireDay(){
   document.querySelectorAll('.rm').forEach(b=>b.onclick=()=>{const db2=gramDB();delete db2[b.dataset.gid];store.set('grammar',db2);render();toast('已取消收藏')})}
 window.onpopstate=()=>{const d=parsePath();if(d){view.mode='day';view.day=d;render()}else{view.mode='cal';render()}};
 function rowHtml(k){
   const id='tr-'+k.replace(/[^a-z0-9]/gi,'_');
   const e=marks[k]||{};
-  const dtag=e.day&&e.day!==studyDay()?`<span style="color:#bbb;font-size:.68rem">${e.day.slice(5)} </span>`:'';
+  const ai2=wordHomeIdx(k);const pub=(ART[ai2]&&ART[ai2].date)||e.day||'';
+  const dtag=pub?`<span style="color:#bbb;font-size:.68rem">${pub.slice(5)} </span>`:'';
   return `<div class="wrow"><span class="w" onclick="speak('${esc(k).replace(/'/g,"\\'")}')">${esc(k)}</span>
   <span class="tr" id="${id}">${getTrans()[k]?esc(getTrans()[k]):'<i style=color:#bbb>查译中…</i>'}</span>${dtag}
   <button class="peek" data-peek="${esc(k)}" onclick="peek('${esc(k).replace(/'/g,"\\'")}')">盖住</button>
