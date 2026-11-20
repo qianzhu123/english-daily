@@ -1,0 +1,605 @@
+
+const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+// ===== 每日训练（Claude 更新；新的在上）=====
+// 2026-11-03 定版规则（用户原话）："我阅读能力和说话能力不是一个层级"＋"不要直接给出具体内容供我直接填写"：
+// ① 题目=纯中文场景，绝不印英文框架/候选句/文章原句 ② 参考答案先写后看（空作答不给看）③ 语音只手动只读英文短句
+// ===== 训练关键词注释（用户 11-18：关键词/重点词/易错词提前写好翻译，展示在题干下）=====
+const TRAIN_KEYWORDS={
+ "2026-11-19": {
+  "attendance": "名词：出勤、到场人数",
+  "resigned": "动词：辞职（resign 过去式）",
+  "galleries": "名词：画廊、展厅（gallery 复数）",
+  "ridership": "名词：客流量、乘客数",
+  "conclusion": "名词：结论",
+  "uncomfortable": "形容词：令人不安的；不舒服的",
+  "admission": "名词：入场许可；门票；（景区）入园",
+  "decade": "名词：十年",
+  "flooded": "形容词：被水淹的（flood 过去分词）",
+  "detour": "名词/动词：绕路、绕行",
+  "fare": "名词：车费、票价",
+  "enforcement": "名词：执法、强制执行",
+  "compensation": "名词：补偿、赔偿",
+  "laminated": "形容词：塑封的（laminate 过去分词）",
+  "recited": "动词：背诵、朗诵（recite 过去式）",
+  "unannounced": "形容词：未经预告的",
+  "notebook": "名词：笔记本",
+  "policy": "名词：政策、规定；保险单",
+  "clerk": "名词：职员、前台接待",
+  "apparently": "副词：显然；据说"
+ },
+ "2026-11-18": {
+  "attendance": "名词：出勤、到场人数",
+  "resigned": "动词：辞职（resign 过去式）"
+ },
+ "2026-11-17": {
+  "attendance": "名词：出勤、到场人数",
+  "resigned": "动词：辞职（resign 过去式）"
+ }
+,
+ "2026-11-19": {"admission": "名词：入场许可；门票", "attendance": "名词：出勤、到场人数", "resigned": "动词：辞职（resign 过去式）", "galleries": "名词：展厅（gallery 复数）", "neighbourhoods": "名词：街区（neighbourhood 复数）", "ridership": "名词：客流量", "detour": "名词/动词：绕路", "fare": "名词：车费", "enforcement": "名词：执法", "compensation": "名词：补偿、赔偿", "laminated": "形容词：塑封的", "recited": "动词：背诵（recite 过去式）", "unannounced": "形容词：未预告的", "notebook": "名词：笔记本", "policy": "名词：政策、规定", "clerk": "名词：职员、前台", "apparently": "副词：显然"}
+};
+
+const TRAIN=[
+{
+  day:'2026-11-19',
+  title:'雅思阅读实战 · 独立长文混合题型（推理与作者态度专练）',
+  brief:'题型轮换日：判断+单选+作者观点匹配+句子结尾匹配。本日重点不再是找原词，而是推理：正确答案往往换个说法，甚至只给态度不下结论；遇到 not given 先问自己「原文有没有直接说过这句话」。',
+  daily:[
+    {en:'The meter covered the first two kilometers.',zh:'计价器覆盖前两公里（起步价）'},
+    {en:'I would hear from him personally, whatever it said.',zh:'无论报告写什么，他都会亲自答复我'},
+    {en:'Being handled and being heard are different things.',zh:'「被处理」和「被倾听」是两回事'}
+  ],
+  items:[],
+  quiz:[
+    {passage:"The library study rooms charged four pounds an hour while the free hall stayed open with every table facing the entrance, where the door announced each arrival. A student complained that the free option had been designed to be unendurable; the librarian said the study rooms simply paid for themselves.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The librarian admitted that the free hall had been designed badly.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:2,
+     why:'图书管理员只说了自习室「自负盈亏」，既没承认也没否认设计问题——NOT GIVEN。别把「没否认」当成「默认」：雅思里沉默≠承认'},
+    {passage:"The library study rooms charged four pounds an hour while the free hall stayed open with every table facing the entrance, where the door announced each arrival. A student complained that the free option had been designed to be unendurable; the librarian said the study rooms simply paid for themselves.",
+     type:'单选（Multiple Choice）',
+     q:'What does the passage suggest about the free hall\'s layout?',
+     opts:['It was designed to concentrate visitors near the exit','Its design served goals other than concentration','It was arranged by the paid-room designer','Students preferred tables near the door'],ans:1,
+     why:'原文说设计者是「管客流量的」而不是「管专注度的」——布局服务于其他目标（B）。A 偷换概念（不是疏散是引流）；C 无中生有；D 原文没说偏好'},
+    {passage:"The taxi driver turned the meter off for the flooded stretch of road, charging only for the dry part. The city, meanwhile, had spent years building cameras, hotlines and appeals processes. The writer concludes that trust is cheaper than enforcement.",
+     type:'作者观点匹配（Does the writer agree?）',
+     q:'The writer believes most drivers would switch the meter off in the same situation.',
+     opts:['YES','NO','NOT GIVEN'],ans:2,
+     why:'作者只讲了这一位司机的故事并评价了信任的成本，从头到尾没提其他司机会不会这么做——NOT GIVEN。作者的观点≠普遍事实的统计'},
+    {passage:"The taxi driver turned the meter off for the flooded stretch of road, charging only for the dry part. The city, meanwhile, had spent years building cameras, hotlines and appeals processes. The writer concludes that trust is cheaper than enforcement.",
+     type:'单选（Multiple Choice）',
+     q:'Which sentence best captures the writer\'s main point?',
+     opts:['Cameras and hotlines make taxi rides safer','One driver\'s honesty exposes how expensive enforcement really is','Flooded roads should be free by law','Passengers should always pay the full meter'],ans:1,
+     why:'主旨=最后一段：信任比执法便宜。一位司机的判断分文不花且每次管用，反衬整套监管的昂贵（B）。A/C/D 都是细节或无中生有'},
+    {passage:"The clerk recited the complaints policy like a poem memorized without understanding. The manager, by contrast, wrote for two minutes without interrupting and promised to reply personally whatever the engineer's report said.",
+     type:'句子结尾匹配（Sentence Ending）',
+     q:'The writer uses the word "poem" to suggest that the clerk…',
+     opts:['enjoyed reciting rules aloud','delivered the policy fluently but without engaging with it','had written the policy himself','was being deliberately unhelpful'],ans:1,
+     why:'「背熟却不懂的诗」=流利但没走心（B）。A 只取字面；C 无中生有；D 程度过重——他是没权限，不是故意刁难'},
+    {passage:"The clerk recited the complaints policy like a poem memorized without understanding. The manager, by contrast, wrote for two minutes without interrupting and promised to reply personally whatever the engineer's report said.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The manager gave the writer a larger discount than the standard rate.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:2,
+     why:'原文说折扣「确实按费率表执行」——金额与标准一致，差别在态度不在钱数。金额没变所以不是 TRUE，但「有没有多给」原文没直接比较。最稳的答案是 NOT GIVEN'},
+  ]
+},
+{
+  day:'2026-11-17',
+  title:'雅思阅读实战 · 独立长文混合题型（同义改写专练二）',
+  brief:'题型轮换日：判断+单选+段落标题匹配+摘要填空。继续同义改写专项——正确答案是对原文的翻译式概括；题干/选项中与原文长得一模一样的短语，先假设它是陷阱再验证。训练页文章生词可点入生词本（已修复）。',
+  daily:[],
+  items:[],
+  quiz:[
+    {passage:"When the museum introduced free admission on weekdays, attendance doubled within a season. The director celebrated, but the head of security resigned quietly: the galleries had been designed for two hundred visitors a day, and were now receiving eight hundred, and the paintings nearest the doors had begun to show it.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The museum hired more security staff after attendance doubled.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:2,
+     why:'原文只说安保主管辞职（resigned），没说有没有增聘人手——NOT GIVEN。注意 double attendance 是背景事实，题干问的是增聘动作：背景真≠动作发生'},
+    {passage:"A transport study followed two neighbourhoods for a decade. In the first, the city built a new metro line; in the second, it simply painted more bus lanes and cut ticket prices by half. Ridership rose thirty percent in both. The conclusion was uncomfortable for engineers: the painted line and the steel line moved the same number of people, at one twentieth of the cost.",
+     type:'单选（Multiple Choice）',
+     q:'What made the study\'s conclusion uncomfortable?',
+     opts:['Cheap measures matched expensive infrastructure in results','The metro line was more expensive than expected','Bus lanes reduced metro ridership by thirty percent'],ans:0,
+     why:'结论句：painted line 和 steel line 运送同样多的人，成本二十分之一 → 便宜手段与昂贵基建效果相当。B 原文未提预算超支；C 因果捏造（两个街区互不影响）'},
+    {passage:"The researchers were careful not to oversell the finding. Bus lanes work where roads exist; metro works where density demands it. What the study actually showed was not that one method was better, but that the question cities ask first should be 'what is the cheapest thing that could work here', not 'what is the most impressive thing we could build'.",
+     type:'段落标题匹配（Matching Headings）',
+     q:'为上面段落选小标题：',
+     opts:['Ask what works cheaply before asking what looks impressive','Metro lines are always superior to bus lanes','Researchers should avoid publishing their findings'],ans:0,
+     why:'末句即主旨：先问「这里最便宜的可行方案是什么」，再问「我们能建什么最气派」。B 与原文相反；C 曲解 oversell（不过度推销≠不发表）'},
+    {passage:"The researchers were careful not to oversell the finding. Bus lanes work where roads exist; metro works where density demands it. What the study actually showed was not that one method was better, but that the question cities ask first should be 'what is the cheapest thing that could work here', not 'what is the most impressive thing we could build'.",
+     type:'摘要填空（Summary Completion）',
+     q:'填空（每空一词，句式已改写，禁止照抄原文短语）：According to the study, the first question for city planners should concern the least ______ option that could function locally, rather than the most impressive construction.',
+     opts:['expensive','impressive','crowded','popular'],ans:0,
+     why:'原文 cheapest thing that could work here → least expensive（cheapest 改写为 least expensive，同义升格）。impressive 原文有但属于对比项（rather than 之后），恰是陷阱——摘要填空取原文词的前提是句法位对上'},
+    {passage:"The museum's director later admitted that free Fridays had been chosen because a neighbouring city had them, not because anyone had counted the cost of wear on two-hundred-year-old canvases. 'We copied a policy the way children copy homework,' she said, 'without checking whether the answers fit our question.'",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The museum conducted an assessment of potential damage before introducing free Fridays.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:1,
+     why:'not because anyone had counted the cost of wear = 没有人算过磨损代价 → 与「conducting an assessment」直接矛盾 → FALSE。题干 assessment 改写自 counted the cost，同义改写藏在题干里'},
+    {passage:"The museum's director later admitted that free Fridays had been chosen because a neighbouring city had them, not because anyone had counted the cost of wear on two-hundred-year-old canvases. 'We copied a policy the way children copy homework,' she said, 'without checking whether the answers fit our question.'",
+     type:'段落标题匹配（Matching Headings）',
+     q:'为上面段落选小标题：',
+     opts:['A policy adopted without asking whether it fitted','Why free museums attract vandals','An apology from the security chief'],ans:0,
+     why:'copied a policy without checking = 采纳政策却没核对是否适配。B 偷换概念（磨损≠故意破坏，且非段落焦点）；C 无中生有（道歉的是 director，且未道歉）'}
+  ]
+},
+{
+  day:'2026-11-16',
+  title:'雅思阅读实战 · 独立长文混合题型（同义改写专练）',
+  brief:'题型轮换日：判断+单选+段落标题匹配+摘要填空。本日专项：雅思阅读的核心机关是同义改写（paraphrase）——正确答案几乎从不照抄原文原词；凡是与原文长得一模一样的选项，出题人多半拿它当陷阱。另：训练页文章里的生词现在点一下就能收进生词本。',
+  daily:[],
+  items:[],
+  quiz:[
+    {passage:"When the city announced that its public libraries would stay open until midnight during exam season, the newspapers praised the council for its generosity. The librarians said nothing in public, but pointed out privately that the extra hours had come with no extra staff: the same twelve people were now covering the evenings that two shifts had once covered.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The council hired additional librarians for the extended hours.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:1,
+     why:'原文 no extra staff + the same twelve people = 没有增员 → FALSE（直接矛盾）。注意题干 additional librarians 改写自 extra staff——同义改写在题干里，不在原文里'},
+    {passage:"Attendance figures told a quieter story. Visits rose by a fifth, but almost all of the increase came after ten at night, and most of those visitors were not reading at all: they were sitting in the warm, charging their phones, and treating the building as what one regular called 'a living room for people who do not have one'.",
+     type:'单选（Multiple Choice）',
+     q:'What do the attendance figures mainly suggest?',
+     opts:['Late-night visitors come mainly to study for exams','The libraries are used as a place to rest rather than to read','Reading overall has declined by twenty percent'],ans:1,
+     why:'they were sitting in the warm / a living room = 把图书馆当作休憩之处。A 与 "most were not reading at all" 矛盾；C 偷换概念——涨了五分之一，不是读书量降两成'},
+    {passage:"Some councillors now argue that the scheme should end when exams finish, calling it an expensive gesture. Others reply that the figures prove a need the city has ignored for years, and that closing the doors at midnight will not make that need disappear.",
+     type:'段落标题匹配（Matching Headings）',
+     q:'为上面段落选小标题：',
+     opts:['A debate over whether the scheme should continue','How to attract more students to libraries','The rising cost of hiring librarians'],ans:0,
+     why:'should end vs. prove a need = 延续与否的争论。B 无中生有；C 原文只说 expensive gesture，没谈招聘成本'},
+    {passage:"The librarians themselves have made one quiet request: not more money, but a word. They want the council to state publicly whether warm shelter counts as a library service — because at present they are being measured on lending figures while their real work has become something no one has agreed to name.",
+     type:'段落标题匹配（Matching Headings）',
+     q:'为上面段落选小标题：',
+     opts:['Librarians seek an official definition of their changing role','The council refuses to give libraries more funding','Late-night opening should become permanent'],ans:0,
+     why:'段落主线：图书管理员要的不是钱，是「一句话」——官方确认温暖庇护所算不算图书馆服务（no one has agreed to name = 角色未被定义）。B 只对一半（not more money 是让步不是诉求主体）；C 无中生有——标题匹配的正确项是全段主旨的同义概括，不是段落里某个词'},
+    {passage:"The librarians themselves have made one quiet request: not more money, but a word. They want the council to state publicly whether warm shelter counts as a library service — because at present they are being measured on lending figures while their real work has become something no one has agreed to name.",
+     type:'摘要填空（Summary Completion）',
+     q:'填空（每空一词，句式已整体改写，禁止照抄原文短语）：The librarians are currently ______ on how many items people borrow, yet their true role has never been officially defined.',
+     opts:['measured','judged','lent','counted'],ans:0,
+     why:'原文 being measured on lending figures。空格从「figures 前的名词位」移到了「动词位」——先判词性（被动语态动词），再回原文找 being measured on。lending/lent 是借阅动词的形态陷阱，counted 原文没有——照抄原短语者必错'},
+    {passage:"The librarians themselves have made one quiet request: not more money, but a word. They want the council to state publicly whether warm shelter counts as a library service — because at present they are being measured on lending figures while their real work has become something no one has agreed to name.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The council has officially recognized warm shelter as part of the library service.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:1,
+     why:'管理员正请求官方表态（want the council to state publicly）→ 说明尚未认定 → FALSE（与题干 directly 矛盾）。这不是「文章没说」，是「文章说了还没做」——FALSE 与 NOT GIVEN 的分界题'},
+    {passage:"The librarians themselves have made one quiet request: not more money, but a word. They want the council to state publicly whether warm shelter counts as a library service — because at present they are being measured on lending figures while their real work has become something no one has agreed to name.",
+     type:'单选（Multiple Choice）',
+     q:'What is the librarians\' main concern in this paragraph?',
+     opts:['They are asked to do unrecorded work while being graded on a different metric','They want warmer shelters built inside library buildings','They dislike working late during exam season'],ans:0,
+     why:'measured on lending figures（考核借阅量）vs real work has become something no one has agreed to name（真实工作无人定义/不计入）= 考核错位。B 偷换 warm shelter 字面义；C 原文未提'},
+    {passage:"A study of remote work found that employees who moved to smaller towns reported saving eleven hours a week — time that had previously been spent commuting. What the study did not ask was who now spent those hours: the workers said household chores quietly became theirs, in a redistribution that nobody negotiated and nobody announced.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'Remote workers in the study gained free time that they fully controlled.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:1,
+     why:'saved eleven hours 但 hours became theirs (chores) = 时间被家务占走，并非 fully controlled → FALSE。题干 fully controlled 改写自「谁花这些时间」，答案没有原词'},
+    {passage:"The researchers concluded that remote work does not create free time; it relocates it. The commute disappears from the diary and reappears, itemised, in the evening — folded into laundry, cooking and the school run, tasks that once arrived with a salary and now arrive with a home.",
+     type:'段落标题匹配（Matching Headings）',
+     q:'为上面段落选小标题：',
+     opts:['Free time is moved rather than made','The end of the daily commute','Housework should be paid work'],ans:0,
+     why:'relocates = moved rather than made 的改写；主旨句就是结论句。B 只是段落细节（commute 消失是一半，另一半是家务）；C 无中生有'}
+  ]
+},
+{
+  day:'2026-11-15',
+  title:'雅思阅读实战 · 独立长文混合题型（即时反馈）',
+  brief:'题型轮换日：本日是雅思 A 类阅读真实组合——判断+单选+段落标题匹配+摘要填空，做一篇独立长文（不与本批阅读文章挂钩）。注意：答案全是同义改写，原词照抄的多半是陷阱；NOT GIVEN 是「文章没说」，不是「我找不到」。',
+  daily:[],
+  items:[],
+  quiz:[
+    {passage:"The post-pandemic city has a new kind of migrant: the remote worker who moves not for a job but away from an office. Lisbon, Mexico City and Chiang Mai now compete for them the way seaside towns once competed for holidaymakers.",
+     type:'段落标题匹配（Matching Headings）',
+     q:'为上面段落选小标题：',
+     opts:['Cities now market themselves to mobile workers','Remote workers move because they hate cities','Holidaymakers have stopped travelling'],ans:0,
+     why:'段落主线：城市在争夺远程工作者（compete for them）——正是「城市营销自己」的同义改写。B 因果颠倒（不是逃离城市），C 无中生有'},
+    {passage:"Economists are divided on whether these workers help. Rents rise for everyone, but the money they spend lands in cafés, gyms and language schools — businesses that locals, not landlords, own.",
+     type:'单选（Multiple Choice）',
+     q:'What point does the passage make about remote workers\'s economic impact?',
+     opts:['They only benefit landlords','Their spending supports local businesses even as rents rise','Economists agree they harm host cities','They spend nothing locally'],ans:1,
+     why:'双向信息：房租涨（成本）+ 钱进咖啡馆/健身房/语言学校（本地人的生意）——干扰项 A 只取一半，C 说「一致」而原文是 divided，D 与原文相反'},
+    {passage:"Some governments have gone further and offered digital nomad visas — one-year permits with tax breaks, provided applicants earn above a threshold abroad. Critics call this a competition to give away public services to people who will never vote there.",
+     type:'段落标题匹配（Matching Headings）',
+     q:'为上面段落选小标题：',
+     opts:['Governments compete to attract remote workers with special visas','Digital nomads refuse to pay tax','Voting rights are the main attraction of nomad visas'],ans:0,
+     why:'段落两端：政府发签证（优惠+门槛）→ 批评者称之为竞争（competition）。B 税收细节未提拒缴，C 篡改批评点——「选举权」是被批评缺位的，不是吸引力'},
+    {passage:"A quiet problem has followed the boom: the schools. In Chiang Mai, international schools report waiting lists three times longer than before, and some have begun charging overseas applicants a separate, higher fee band — a practice that would have been unthinkable when their clients were mostly children of local professionals.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'International schools in Chiang Mai charge local children less than overseas applicants.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:0,
+     why:'a separate, higher fee band for overseas applicants + 客户曾是本地专业人士子女 → 本地孩子交的是原价（较低）。这是需要两步推理的 TRUE，不是原词照抄'},
+    {passage:"The boom has also changed schools: waiting lists are longer and overseas applicants pay a higher fee band.",
+     type:'摘要填空（Summary Completion）',
+     q:'填空：Overseas applicants must pay a higher ______ than local families.',
+     opts:['waiting list','fee band','rent','salary'],ans:1,
+     why:'摘要填空的答案必须与原文词性一致：higher fee band（费用档）。waiting list 是「更长」的搭配对象，rent/salary 原文未与 higher 连用——排除法+词性线索并用'}
+  ]
+},
+{
+  day:'2026-11-14',
+  title:'雅思练一练 · 判断与选择（即时反馈）',
+  brief:'题型日：判断 TRUE/FALSE/NOT GIVEN + 单选，点选项即时判分。用本批新文章（租房看房/健身退款维权）做阅读载体。考点：NOT GIVEN「没说不等于说了」+ 金句主旨 + while/instead of 对照修辞。',
+  daily:[],
+  items:[],
+  quiz:[
+    {passage:"The agent met me at the door with a smile that had been rehearsed in front of a mirror, and said, 'You are lucky — three people called about this flat this morning.'",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'Three other people had already rented the flat that morning.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:2,
+     why:'原文只说三个人「打电话问过」（called about），没说租下（rented）——NOT GIVEN。雅思经典陷阱：把「有人感兴趣」偷换成「已被租走」'},
+    {passage:"That sentence costs the agent nothing; it is not a discount, it is a feeling of one, and it has closed more deals than any actual reduction.",
+     type:'单选',
+     q:'What does the writer think of the agent\'s promise to "talk to the owner"?',
+     opts:['It is a real discount in disguise','It costs the agent nothing but creates the feeling of getting a deal','It will definitely lead to a price reduction'],ans:1,
+     why:'costs nothing / not a discount but a feeling of one / more deals than actual reduction——三个信号都指向「话术营造感觉，不是真降价」'},
+    {passage:"He wrote it down. Agents only write down things they intend to pass on, and the pen moving is worth more than any smile.",
+     type:'单选',
+     q:'Why does the writer think "the pen moving" matters?',
+     opts:['The agent writes down things he plans to pass to the owner, so it is a real sign of progress','The agent has a habit of writing everything down','Writing looks more professional than smiling'],ans:0,
+     why:'Agents only write down things they intend to pass on——笔动=打算转达=真进展。A 是同义改写，B/C 都是原文没支持的个人发挥'},
+    {passage:"The first reply offered a free month instead of money, which is how companies say no while sounding generous.",
+     type:'单选',
+     q:'The writer describes the offer of a free month as...',
+     opts:['A genuine apology','A generous gift that solved the problem','A polite way of refusing the refund'],ans:2,
+     why:'say no while sounding generous——听着大方地说不。给月卡不给钱=变相拒绝退款。考点：while+doing 的反讽读法'},
+    {passage:"A complaint that lives in your head is just a mood; a complaint that lives in an email with dates and a clause number is a case.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The writer believes a written complaint with specific details is more effective than one that is not written down.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:0,
+     why:'金句同义改写：mood（情绪）vs case（案子）= 心里想想没用，写下来带细节才有效 → TRUE。呼应前文 specific / written down / anchored to a clause'}
+  ]
+},
+{
+  day:'2026-11-12',
+  title:'雅思练一练 · 判断与选择（即时反馈）',
+  brief:'题型日：判断 TRUE/FALSE/NOT GIVEN + 单选，点选项即时判分。用本批新文章（维修砍价/邻里噪音）做阅读载体。考点：if 虚拟「与事实相反」+ no matter how 让步 + more A than B 情绪描写。',
+  daily:[],
+  items:[],
+  quiz:[
+    {passage:"He quoted a number that was nearly the price of a new one, and then, seeing my face, added: 'I am not cheating you. The part alone costs this much.'",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The repair shop owner admitted that his first price was too high.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:2,
+     why:'老板只说「我没坑你、零件就这价」，从头到尾没承认报价高——NOT GIVEN。雅思陷阱：把「辩解」当成「承认」'},
+    {passage:"If I had accepted the first number, I would have paid for a new part I did not need; if I had walked out, I would have kept my money and lost my photos.",
+     type:'单选',
+     q:'What can we learn about what the writer actually did?',
+     opts:['He accepted the first price','He paid for a new part he did not need','He found a middle option between paying full price and walking away'],ans:2,
+     why:'两个 if 虚拟句描述的都是没发生的分支（接受/走人），真实情况在两者之间——下一句 the middle path 直接点明。考点：虚拟语气反推事实'},
+    {passage:"He thought for a moment, then offered a used screen with a ninety-day guarantee, and the price dropped by a third, just like that.",
+     type:'单选',
+     q:'What made the price drop by a third?',
+     opts:['The writer threatened to leave','The writer asked about alternatives, prompting the owner to offer a different option','The owner lowered the price out of sympathy'],ans:1,
+     why:'前文 writer 问 what can you do for two hundred（争替代方案），老板才换方案降价。不是威胁也不是同情——是「问别的可能」'},
+    {passage:"No matter how honest the shop, the first number is a starting point, not a price.",
+     type:'单选',
+     q:'The underlined sentence tells us that...',
+     opts:['Honest shops do not need bargaining','Even in an honest shop, the first quote is not the final price','Shops always cheat customers'],ans:1,
+     why:'no matter how 让步：让步的对象是 honest（再老实也一样），结论落在 starting point not a price。不是「都宰客」，也不是「老实店免砍」'},
+    {passage:"A note can be read as an attack; a knock is just a person at the door. The same sentence lands differently when your face comes with it.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The writer believes the way a message is delivered matters as much as the message itself.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:0,
+     why:'金句同义改写：同一句话 lands differently（效果不同）取决于纸条还是敲门（传递方式）→ TRUE。雅思考点：结尾金句往往就是主旨题答案'}
+  ]
+},
+{
+  day:'2026-11-10',
+  title:'雅思练一练 · 判断与选择（即时反馈）',
+  brief:'今天不写句子——换成雅思阅读同款题型：判断 TRUE/FALSE/NOT GIVEN + 单选。点选项即时判分，答完看解析。这练的是读得准，跟场景输出互补。',
+  daily:[],
+  items:[],
+  quiz:[
+    {passage:'I did not raise my voice; I held up my phone and said, calmly, that I knew this route, that the app showed nine euros, and that I would pay what the app said.',
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The writer shouted at the taxi driver.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:1,
+     why:'原文 I did not raise my voice（没有提高声音）→ FALSE。雅思判断题考点：not + 动词 的直接否定'},
+    {passage:'The meter said twenty-two euros; the map on my phone said the trip should have cost nine.',
+     type:'单选',
+     q:'What does "should have cost" tell us?',
+     opts:['The trip actually cost nine euros','Nine euros was the expected fair price, but the real cost was different','The app made a mistake'],ans:1,
+     why:'should have done = 本该…（而实际不是）——预期 9 欧，实收 22 欧。这是本结构的核心语义'},
+    {passage:'She did not speak English, but she recognized the street name, made a face that said \'far\', and then — instead of pointing — simply waved at me to follow her.',
+     type:'单选',
+     q:'How did the woman help?',
+     opts:['She called a taxi for the writer','She pointed at the map carefully','She personally led the way'],ans:2,
+     why:'instead of pointing — waved at me to follow her：没指路，而是带着走。instead of + doing 是雅思高频替换信号'},
+    {passage:'Asking a stranger for help used to feel expensive, like I owed them something; now I understand it is just a small trade.',
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The writer now thinks asking for help costs nothing socially.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:0,
+     why:'used to feel expensive（过去觉得）→ now... just a small trade（现在觉得只是小交换）→ TRUE。考点：used to 与 now 的今昔对比'},
+    {passage:'Convenience does not always save time; sometimes it just moves the work, quietly, from someone paid to do it onto you.',
+     type:'单选',
+     q:'What is the writer\'s view of self-checkout?',
+     opts:['It is always faster than a cashier','It transfers effort from staff to customers','It should be removed from stores'],ans:1,
+     why:'moves the work... onto you（把活儿转移到你身上）——同义替换：transfer effort from staff to customers。雅思阅读考的就是这种改写识别'}
+  ]
+},
+{
+  day:'2026-11-09',
+  title:'开口产出 · 理发与错过班车（从零写）',
+  brief:'场景继续与文章零重叠。回考重点：should have done（本该…却没，复盘专用）；疑问句单助动词第三次盯。规则不变：中文场景自己写，写完才看参考。',
+  daily:[
+    {en:'How much is a haircut?',zh:'理发多少钱？——how much is + 名词，问价万能'},
+    {en:'Just a trim, please.',zh:'只修一下——trim=修剪（不说 cut a little）'},
+    {en:'I should have left earlier.',zh:'我本该早点出发的——should have done，复盘专用（实际没早走）'},
+    {en:'When does the next bus come?',zh:'下一班车什么时候来？——疑问句单助动词：does 后跟动词原形 come'}
+  ],
+  items:[
+    {q:'你走进理发店。理发师问你剪什么样的。你想只修短两厘米，不要剪太短。说出你的要求（1-2 句）。',
+     ref:'Just a trim, please. Two centimeters off, not too short.\n（trim=修剪；off=剪掉多少的量词用法，take two centimeters off）'},
+    {q:'理发师剪完问你意见。你发现后面右边比左边短了一点。礼貌指出并请他修一下（1-2 句）。',
+     ref:'Excuse me, the right side looks a bit shorter than the left. Could you fix it a little?\n（比较级 than；指出问题用 looks，不是 is not true）'},
+    {q:'你到车站时公交车刚开走。向站台的人解释情况并问下一班（2 句：懊恼+提问）。',
+     ref:'The bus just left. I should have left home earlier. When does the next bus come?\n（should have done=本该做实际没做；does 后接原形 come）'},
+    {q:'朋友问你为什么迟到了。解释：你在错误的站台等了十五分钟（说出持续感，用 have been 的句式）。',
+     ref:'Sorry, I was waiting at the wrong stop for fifteen minutes.\n（过去发生的事用过去进行 was waiting；have been waiting 只用于持续到现在）'}
+  ]
+},
+{
+  day:'2026-11-08',
+  title:'开口产出 · 丢东西与换货（从零写）',
+  brief:'今天的场景和阅读文章零重叠——阅读是输入，这里是纯输出。重点回考两处：have been doing（"等了半小时"的持续感）；疑问句只能有一个助动词。规则不变：中文场景自己写，写完才看参考。',
+  daily:[ // 回考埋点：11-05 批改的两个洞
+    {en:'I\'ve been waiting for twenty minutes.',zh:'我已经等了二十分钟——have been doing 持续到现在，B1 核心时态'},
+    {en:'Could you tell me where the fitting room is?',zh:'能告诉我试衣间在哪吗？——could + 原形，问句一个助动词'},
+    {en:'I bought this yesterday, but it doesn\'t work.',zh:'这个我昨天买的，但坏了——过去的事用 bought（过去式）'},
+    {en:'Can I get a refund or exchange it?',zh:'能退款或者换一个吗？——refund 退款 / exchange 换货'}
+  ],
+  items:[
+    {q:'你在店里买的水壶用了两次就漏水了。你回到店里，向店员说明情况并提出解决（2 句：说明+要求）。',
+     ref:'I bought this bottle two days ago, and it leaks. Could I exchange it, please?\n（过去的事用过去式 bought；leak 漏水；换货 exchange）'},
+    {q:'店员问你有没有收据。你有，放在手机里。回答他。',
+     ref:'Yes, here it is. It\'s on my phone.\n（Here it is = 给您；指手机里那张收据用 It\'s on my phone）'},
+    {q:'店员说这个颜色没货了，要等一周。你不想等，提出退款。说出你的要求（1-2 句）。',
+     ref:'I don\'t want to wait. Could I get a refund instead?\n（instead=改要别的；refund 第三次出现，要形成条件反射）'},
+    {q:'你已经在退货队伍里排了 40 分钟，队几乎没动。向旁边的人抱怨一句（1-2 句，用上持续感）。',
+     ref:'I\'ve been standing here for forty minutes, and the line hasn\'t moved at all.\n（have been doing + for 时间段 = 已经…了；排队站军用 standing）'}
+  ]
+},
+{
+  day:'2026-11-05',
+  title:'开口产出 · 餐厅与问路（从零写）',
+  brief:'今天的场景和阅读文章零重叠——阅读是输入，这里是纯输出。注意两处回考点：want 后接 to do；疑问句只能有一个助动词。规则不变：中文场景自己写，写完才看参考。',
+  daily:[ // 回考埋点：昨天的两个洞
+    {en:'I want to see the menu, please.',zh:'我想看菜单——want to do（昨天漏了 to）'},
+    {en:'What do you recommend?',zh:'你推荐什么？——do 后面跟动词原形（recommend），疑问句单助动词'},
+    {en:'Excuse me, how do I get to the station?',zh:'请问车站怎么走？——问路万能句'},
+    {en:'Is it far from here?',zh:'离这儿远吗？——far from 配对出现'}
+  ],
+  items:[
+    {q:'餐厅里你的菜等了 25 分钟还没来，你叫住服务员询问（1-2 句）。',
+     ref:'Excuse me, I ordered ten minutes ago. Could you check on my order, please?\n（说出 order + 追问就算过）',
+     grade:{ok:false,text:'催促句三个坑：①take me food 语序错（bring me my food）②**fasterly 不存在**——fast 本身就是副词 ③地道催法：My food is taking a long time.'}},
+    {q:'服务员问你：「soup or salad?」（汤还是沙拉，套餐二选一）。你要汤。一句话回答。',
+     ref:'Soup, please. / I\'d like the soup, please.\n（点餐请求用 I\'d like，不用 I want）',
+     grade:{ok:true,text:'完全正确——最简二选一回答，礼貌词就位'}},
+    {q:'你找不到回酒店的路了，向路人开口求助（1-2 句）。',
+     ref:'Excuse me, how do I get to the Grand Hotel? I\'m a bit lost.\n（问路 = how do I get to + 地点；说明状态 I\'m lost）',
+     grade:{ok:false,text:'①help me show 双动词打架——要么 help me，要么 show me where the hotel is ②I\'m really waitting → **I\'ve been waiting**（现在完成进行时：「等了半小时」的持续感，B1 核心时态，重点盯）'}},
+    {q:'路人告诉了你方向，但话很快。你没听全。请他慢一点、再说一遍（1 句）。',
+     ref:'Could you say that again, slowly, please?\n（听不懂救命句——第三次出现，要形成条件反射）',
+     grade:{ok:true,text:'过关——救命句第三次出现已内化，开头加 Sorry 比参考答案还自然'}}
+  ]
+},
+{
+  day:'2026-11-04',
+  title:'开口产出 · 退房与安检（从零写）',
+  brief:'酒店剧情今天收尾（退房账单），再加机场安检一轮。规则不变：中文场景自己写，写完才看参考。参考只是一种写法——意思对就算过。',
+  daily:[
+    {en:'I didn\'t touch the mini-bar.',zh:'我没用过迷你吧——touch 此处=动过/用过，不是“摸”'},
+    {en:'Could you check this charge again?',zh:'这笔费用能再核一下吗？——质疑账单最客气且有效的说法'},
+    {en:'Here is my passport. I\'m flying to Tokyo.',zh:'这是我的护照，我飞东京——安检/值机开场两件套'},
+    {en:'Can I refill it after security?',zh:'过完安检能再灌水吗？——refill=重新灌满，被没收水瓶时的救命句'}
+  ],
+  items:[
+    {q:'退房时账单比你订价高出 90 欧，其中一笔“迷你吧补货”你没消费过。向前台开口质疑这笔费用（1-2 句）。',
+     ref:'Excuse me, I didn\'t use the mini-bar. Could you check this charge again?\n（说出 mini-bar + 质疑/核实就算过；charge 账目、bill 账单）',
+     grade:{ok:false,text:'①pill→**bill**（pill=药丸，b/p 混）②is not true→doesn\'t look right（"账单不对"说 look right，is not true 是说"这句话是假的"）'}},
+    {q:'你不确定那 90 欧的差额都是什么。向前台询问账单构成。',
+     ref:'What are these charges for?\n（更具体：What is the city tax? Could you explain this line?）',
+     grade:{ok:false,text:'What does the bill —— 句子断在半路：does 后必须跟动词原形；问构成用 What are these charges for?'}},
+    {q:'机场安检员问你是否带液体。你包里有一瓶忘了喝完的水。如实回答并问有没有别的办法（比如喝掉再灌）。',
+     ref:'Yes, I have a bottle of water. Can I drink it and refill it after security?',
+     grade:{ok:false,text:'①I take a botter → I **have** a bottle（随身带着=have，take 是"拿走"；bottle 拼写）②只写了半句——"喝掉再灌"的后半段没出来，输出完整性待加强'}},
+    {q:'安检员说这瓶水不能带过去。用一句话接受这个结果，礼貌不争辩。',
+     ref:'OK, no problem. / Sure, I\'ll leave it here.\n（安检不是辩论场——接受+不废话就是最快通关）',
+     grade:{ok:false,text:'I know 对工作人员显顶撞（=我知道了别啰嗦）；接受结果用 OK / Sure / No problem'}}
+  ]
+},
+{
+  day:'2026-11-03',
+  title:'开口产出 · 酒店篇（从零写）',
+  brief:'下面 4 个场景都是你马上会用到的。每个场景用你自己的词写 1-2 句英文——长短不限，说清楚就行。写不出来先写最简单的版本，再点「对答案」对比。',
+  daily:[
+    {en:'The room is too hot.',zh:'房间太热了——最短投诉句，too + 形容词'},
+    {en:'Is breakfast included?',zh:'早餐含在内吗？——住酒店必问'},
+    {en:'I\'d like to check out, please.',zh:'我要退房——checkout 名词/动词两用'},
+    {en:'Could you help me, please?',zh:'能帮我一下吗？——万能求助，比 Excuse me 更进一步'}
+  ],
+  items:[
+    {q:'你半夜到酒店房间，发现房间很热，空调不制冷。向打电话给前台的你，说 1-2 句英文。',
+     ref:'The room is too hot. The air conditioner doesn\'t work.\n（doesn\'t work / is broken 都对；更简单只说 The room is too hot 也算过）',
+     grade:{ok:false,text:'could you resolve it? → could you **fix** it, please?（resolve 偏书面/偏大，修东西口语用 fix）'}},
+    {q:'你希望酒店明天给你换一个房间。开口要。',
+     ref:'Could I change my room tomorrow?\n（I would like to change my room. 也对）',
+     grade:{ok:false,text:'I want change room at tomorrow 三连坑：①want 后接 to do ②my room 不说裸 room ③tomorrow 前不加 at'}},
+    {q:'前台提出送你一份免费早餐作为补偿。你不想要早餐，你想要退钱。拒绝并说出你要什么。',
+     ref:'No, thank you. I\'d like a refund, please.\n（说出 refund 或 money back 就算过）',
+     grade:{ok:false,text:'I want to get my money → I\'d like a **refund**（退款专词；want to 生硬，请求用 I\'d like）'}},
+    {q:'第二天早上你准备退房离开。说一句退房的话，再问一句早餐是否包含在房费里。',
+     ref:'I\'d like to check out, please. Is breakfast included?',
+     grade:{ok:false,text:'I\'d like to check out ✅ 完美；但 Does the breakfest was include 四坑：①breakfast 拼写 ②Does 与 was 双助动词只能留一个 ③疑问句单助动词 ④included 被动——**疑问句单助动词是新洞，回考盯**'}}
+  ]
+}];
+function esc(s){return String(s).replace(/&/g,'&').replace(/</g,'<')}
+let toastTimer=null;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200)}
+// 语音规则：只手动触发，只读英文（en-US 念中文是乱音）；不自动播放
+function speak(text,rate){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||0.9;u.voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u)}
+let curDay=null;
+function render(){
+  document.getElementById('nav').innerHTML=TRAIN.map((d,i)=>`<button class="${(curDay||TRAIN[0].day)===d.day?'act':''}" onclick="pick('${d.day}')">${d.day.slice(5)} ${d.title.slice(0,12)}</button>`).join('');
+  const d=TRAIN.find(x=>x.day===(curDay||TRAIN[0].day))||TRAIN[0];
+  const saved=store.get('traintry');
+  document.getElementById('content').innerHTML=`
+  <div class="card"><h2>${esc(d.title)}<span class="tag">${d.day}</span></h2><p style="color:var(--dim)">${esc(d.brief)}</p></div>`+
+  (d.daily&&d.daily.length?`<div class="card"><h2>📌 今日实用句 <span class="tag">听读用 · 别抄进答案</span></h2>`+
+    d.daily.map(s=>`<div class="daily"><span class="en">${esc(s.en)}</span> <button class="speak" onclick="speak(this.dataset.s)" data-s="${esc(s.en)}">🔊</button><div class="zh">${esc(s.zh)}</div></div>`).join('')+
+    `</div>`:'')+
+  // 完整文章（用户 11-20）：训练日出处文章全文先展示，再做题——不给「只看答案句」降难度
+  (function(){const arts=(window.ARTICLES||[]).filter(a=>a.date===d.day&&!a.draft);
+    if(!arts.length)return '';
+    return arts.map(a=>'<div class="card"><h2>📖 原文全文 · '+esc(a.title)+'<span class="tag">'+esc(a.date)+'</span></h2><div>'+a.sentences.map(x=>'<p style="margin:4px 0">'+esc(x)+'</p>').join('')+'</div></div>').join('')})()+  // 雅思练一练（选择/判断，提交制；作答状态记 traintry，刷新不重置）
+  (d.quiz&&d.quiz.length?`<div class="card"><h2>📝 雅思练一练 <span class="tag">选选项 → 提交判分</span></h2>`+
+    d.quiz.map((qz,qn)=>quizHtml(d.day,qn,qz,saved)).join('')+'</div>':'')+
+  d.items.map((it,n)=>{
+    const key=d.day+'#'+n;const mine=saved[key]||'';
+    const g=it.grade; // 批改标记（Claude 会话批改后录入，用户定版：从 11-03 起回填）
+    const gbar=g?`<div class="gradebar ${g.ok?'gok':'gno'}">${g.ok?'✅ 批改：过关':'❌ 批改：待改进'}${g.text?'<div class="gtxt">'+esc(g.text)+'</div>':''}</div>`:'';
+    return `<div class="card"><h2>场景 #${n+1}</h2>
+    <p>${esc(it.q)}</p>
+    <textarea class="try" id="try-${n}" placeholder="用你自己的英文写……写错没关系" onblur="saveTry('${d.day}',${n})">${esc(mine)}</textarea>
+    <div class="fb" id="fb-${n}"></div>
+    <button class="reveal" onclick="reveal('${d.day}',${n})">对答案</button>
+    ${gbar}
+    <div class="answer" id="ans-${n}"><b>参考（一种写法，不是标准答案）</b> <button class="speak" onclick="speak(this.dataset.s)" data-s="${esc(it.refEn||it.ref)}">🔊</button>
+${esc(it.ref)}</div></div>`}).join('');
+  markTrainWords();
+renderVocabSide();}
+function pick(day){curDay=day;render()}
+// 看往期（用户 11-20）：仅训练日历——点日期看当天训练，不含任何其他内容
+let calOpen=false;
+function toggleTrainCal(){calOpen=!calOpen;renderCal()}
+function renderCal(){
+  const el=document.getElementById('traincal');if(!el)return;
+  el.style.display=calOpen?'':'none';
+  if(!calOpen){el.innerHTML='';return}
+  const days=TRAIN.map(d=>d.day);
+  const ym0=days[0].slice(0,7);
+  const [y,mth]=ym0.split('-').map(Number);
+  const first=new Date(y,mth-1,1);
+  const startDow=first.getDay();
+  const daysIn=new Date(y,mth,0).getDate();
+  const byDay={};days.forEach(d=>byDay[d]=true);
+  let cells='';
+  for(let i=0;i<startDow;i++)cells+='<div class="calcell dim"></div>';
+  for(let d=1;d<=daysIn;d++){
+    const ds=y+'-'+String(mth).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    cells+='<button class="calcell'+(byDay[ds]?' has':' dim')+'" '+(byDay[ds]?'onclick="pick(\''+ds+'\');calOpen=false;renderCal()"':'disabled')+'>'+d+'</button>'}
+  el.innerHTML='<div class="cal"><div class="calhead"><b>'+y+' 年 '+mth+' 月 · 训练记录</b></div><div class="calgrid"><div class="caldow">日</div><div class="caldow">一</div><div class="caldow">二</div><div class="caldow">三</div><div class="caldow">四</div><div class="caldow">五</div><div class="caldow">六</div>'+cells+'</div></div>'}
+// 雅思练一练渲染 + 判分（quizdone 记 {day#qn: {pick, ok}}，防止重渲染丢状态）
+// 训练页生词:passage 词可点,点即入 vocab(day=studyDay,art=-1 归「其他」)
+function studyDay(){const d=new Date();if(d.getHours()<4)d.setDate(d.getDate()-1);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+const TR_STOP=new Set('the a an and or but of to in on at for with from by as is are was were be been being it its this that these those i you he she we they them their his her our your my me him us not no do does did done have has had will would can could should may might must so if then than when while which who whom whose what where how why all any some each every more most less least very just only about into over under out up down off again once there here now also too both either neither nor because before after during between among against without within along across behind beyond plus per via say says said get got make makes made take takes took come comes came go goes gone went see saw seen know knew known think thought want wants wanted work works worked need needs needed give gives gave find finds found tell told ask asks asked feel felt seem seems seemed look looks looked use uses used admit admits admitted expect expects expected manage manages managed enjoy enjoys enjoyed agree agrees agreed plan plans planned decide decides decided carry carries carried avoid avoids avoided suggest suggests suggested remain remains remained appear appears appeared offer offers offered afford afforded borrow borrowed reach reaches reached allow allows allowed attract attracts attracted protect protects protected prevent prevents prevented reduce reduces reduced refuse refuses refused complain complained describe described mention mentioned prefer preferred realize realized receive received promise promised improve improved accept accepted invite invited attend attended depend depended familiar convenient expensive available patient polite rude nervous confident comfortable difficult popular various ancient modern tourism tourist tradition traditional culture cultural attitude behaviour behavior resident local visitor passenger commuter citizen community suburb urban rural frequent frequency schedule delay commute fare'.split(' '));
+function w2tok(t){const m=t.match(/^([^A-Za-z0-9À-ɏ]*)([A-Za-z0-9À-ɏ'’-]+)([\\s\\S]*)$/);
+  if(!m)return esc(t);
+  const w=m[2].toLowerCase();
+  if(TR_STOP.has(w)||w.length<3)return esc(t); // 功能词/超短词不当生词（用户 11-18）
+  return esc(m[1])+`<w data-w="${esc(w)}" style="cursor:pointer" onclick="addTrainWord('${esc(w).replace(/'/g,"\\'")}',this)">${esc(m[2])}</w>`+esc(m[3])}
+const TVKEY='vocab-train'; // 训练生词独立库（用户 11-20：与阅读生词本分开）
+function addTrainWord(k,el){const marks=store.get(TVKEY);
+  if(marks[k]){ // 再点=从生词本删除（用户 11-18：可撤销）
+    delete marks[k];store.set(TVKEY,marks);
+    if(el){el.style.background='';el.classList.remove('tadded')}
+    toast('「'+k+'」已从生词本移除');return}
+  marks[k]={n:1,day:studyDay(),art:-1,due:studyDay(),ease:1,lapses:0};
+  store.set(TVKEY,marks);
+  if(el){el.style.background='#ffe08a';el.classList.add('tadded')}
+  toast('「'+k+'」已加入生词本（翻译在复习页按日可见；再点一下可移除）')}
+
+// 渲染后把已在生词本的训练词着色（刷新/重渲染后保持黄底）
+function markTrainWords(){
+  const marks=store.get(TVKEY);
+  document.querySelectorAll('w[data-w]').forEach(w=>{
+    if(marks[w.dataset.w]){w.style.background='#ffe08a';w.classList.add('tadded')}
+    else{w.style.background='';w.classList.remove('tadded')}})}
+
+function quizHtml(day,qn,qz,saved){
+  const key=day+'#q'+qn;
+  const done=saved[key];
+  // 提交制（用户 11-20）：点选项只选中，点「提交」才判分
+  const picked=quizPick[key];
+  const opts=qz.opts.map((o,i)=>{
+    let cls='opt';
+    if(done){ // 已提交：锁定，标出对错
+      if(i===qz.ans)cls+=' good';
+      else if(i===done.pick)cls+=' badv'}
+    else if(picked===i)cls+=' picked';
+    return `<button class="${cls}" ${done?'disabled':''} onclick="pickOpt('${day}',${qn},${i})">${'ABCD'[i]}. ${esc(o)}</button>`}).join('');
+  const submit=!done?`<button class="reveal" style="margin:8px 0" ${picked===undefined?'disabled':''} onclick="answerQuiz('${day}',${qn})">提交</button>`:'';
+  const res=done?`<div class="qdone ${done.ok?'ok':'no'}">${done.ok?'✓ 答对了':'✗ 答错了——正确答案：'+'ABCD'[qz.ans]}</div>`:'';
+  return `<div style="margin-top:14px"><div style="font-size:.72rem;color:var(--dim)">${esc(qz.type)}</div>
+  <div class="passage">${qz.passage.split(/\s+/).map(w2tok).join(' ')} <span style="color:var(--dim);font-size:.7rem">（点生词加入复习）</span></div>
+  <p style="font-weight:700;margin:6px 0">${esc(qz.q)}</p>${opts}${submit}${res}
+  <div class="qwhy ${done?'show':''}" id="why-${qn}">💡 ${esc(qz.why)}</div></div>`}
+const quizPick={}; // 未提交的临时选择 {day#qn: idx}
+function pickOpt(day,qn,i){quizPick[day+'#q'+qn]=i;render()}
+function answerQuiz(day,qn){
+  const picked=quizPick[day+'#q'+qn];
+  if(picked===undefined){toast('先选一个选项再提交');return}
+  const d=TRAIN.find(x=>x.day===day);const qz=d.quiz[qn];
+  const ok=picked===qz.ans;
+  const saved=store.get('traintry');
+  saved[day+'#q'+qn]={pick:picked,ok:ok};store.set('traintry',saved);
+  delete quizPick[day+'#q'+qn];
+  render();
+  const why=document.getElementById('why-'+qn);if(why)why.classList.add('show')}// 导出作答：只导出**当前选中日期**的作答（用户定版：不要把其他日期混进来）
+// 作答以「输入框实时内容」为准（用户改过多版的最终版），traintry 只是保存兜底
+// ===== 训练页侧栏生词本（用户 11-18：训练页也要能看到生词本）=====
+function escT(x){return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function renderVocabSide(){ // 训练页独立生词库 vocab-train（与阅读分开）
+  const el=document.getElementById('vocaside-list');if(!el)return;
+  const marks=store.get(TVKEY);const ks=Object.keys(marks);
+  const tc=store.get('translations-train');
+  if(!ks.length){el.innerHTML='<li style="color:var(--dim);font-size:.8rem">还没有生词——点文章/训练里的生词即可加入</li>';return}
+  el.innerHTML=ks.slice(-40).reverse().map(k=>{const q=k.replace(/'/g,"\'").replace(/"/g,'&quot;');
+    return `<li><span class="w" onclick="speak('${q}',0.9)">${escT(k)}</span><span class="del" onclick="delVocabSide('${q}')" title="移除">×</span><span class="tr">${tc[k]?escT(tc[k]):'<span style="color:var(--dim)">查译…</span>'}</span></li>`}).join('');
+}
+function delVocabSide(k){const marks=store.get(TVKEY);delete marks[k];store.set(TVKEY,marks);renderVocabSide();toast('「'+k+'」已移除')}
+document.addEventListener('DOMContentLoaded',renderVocabSide);
+function exportAnswers(){
+  const saved=store.get('traintry');
+  const day=curDay||TRAIN[0].day;
+  const d=TRAIN.find(x=>x.day===day);if(!d)return;
+  let text='【'+day+' '+d.title+'】\n';let count=0;
+  // 雅思练一练作答（选择/判断，含对错）
+  (d.quiz||[]).forEach((qz,qn)=>{
+    const r=saved[day+'#q'+qn];if(!r)return;
+    count++;
+    text+='练一练'+(qn+1)+'（'+qz.type+'）：'+qz.q+'\n我的选择：'+'ABCD'[r.pick]+'. '+qz.opts[r.pick]+(r.ok?'（✓ 对）':'（✗ 错，正确：'+'ABCD'[qz.ans]+'. '+qz.opts[qz.ans]+'）')+'\n\n'});
+  // 场景作答
+  d.items.forEach((it,n)=>{
+    const ta=document.getElementById('try-'+n);
+    const live=ta?ta.value.trim():'';
+    const snap=(saved[day+'#'+n]||'').trim();
+    const ans=live||snap;
+    if(!ans)return;
+    count++;
+    text+='场景'+(n+1)+'：'+it.q.replace(/\n/g,' ')+'\n我的作答：'+ans+'\n\n'});
+  if(!count){toast('这一天还没有作答——先在场景里写英文或做练一练');return}
+  text=text.replace(/\n+$/,'\n');
+  // 复制到剪贴板（手机/桌面通用），失败降级为弹层手动复制
+  const done=()=>toast('✓ 作答已复制，去会话里粘贴即可批改（'+count+' 题）');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallback(text))
+  }else fallback(text);
+  function fallback(t){
+    const box=document.createElement('div');
+    box.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:70px;background:var(--card);border-radius:10px;box-shadow:0 2px 14px rgba(0,0,0,.2);padding:14px 16px;width:90%;max-width:360px;z-index:9;max-height:50vh;overflow:auto';
+    box.innerHTML='<b style="font-size:.85rem">长按/全选复制以下内容发给 Claude：</b><textarea style="width:100%;height:180px;margin-top:8px;font-size:.82rem;font-family:inherit">'+esc(t)+'</textarea><div style="text-align:right"><button onclick="this.parentNode.parentNode.remove()" style="padding:2px 10px;font-size:.78rem">关闭</button></div>';
+    document.body.appendChild(box)}}
+function saveTry(day,n){ // 输入框失焦即存：编辑后不点对答案也不丢
+  const ta=document.getElementById('try-'+n);if(!ta)return;
+  const v=ta.value.trim();
+  const saved=store.get('traintry');
+  if(v&&v!==(saved[day+'#'+n]||'')){saved[day+'#'+n]=v;store.set('traintry',saved)}}
+function reveal(day,n){
+  const d=TRAIN.find(x=>x.day===day);const it=d.items[n];
+  const ans=document.getElementById('ans-'+n);const ta=document.getElementById('try-'+n);const fb=document.getElementById('fb-'+n);
+  if(ans.style.display==='block'){ans.style.display='none';return}
+  // 提取压力：没写不给看（用户定版：直接给内容填=没意义）
+  if(!ta.value.trim()){toast('先写一句（写错没关系），再对答案');fb.className='fb no';fb.textContent='先写，再看';return}
+  ans.style.display='block';
+  saveTry(day,n); // 点对答案时也保存当前版本（但不覆盖更新的失焦保存——同一内容幂等）
+  fb.className='fb ok';fb.textContent='✓ 已记录你的作答——Claude 下次会话批改';
+}
+render();
