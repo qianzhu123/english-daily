@@ -1,0 +1,2615 @@
+
+const A=window.ARTICLES;
+const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let marks=store.get('vocab'),sentEls=[],sentTexts=[],selState=null;
+let keyMode={}; // keyMode[ai]=1 时点词=选句子首/末词（画重点句新模式，用户 11-16 定版：废弃句尾☆点击）
+let keySel=null; // {ai,j,firstW,firstEl} 首词已点，等末词
+// ===== 批次发布制：显示所有已发布文章；新增文章等我发布（无日期过滤）。「看往期」=收起/展开旧批次 =====
+let showOld=false; // 「看往期」改为临时视图：仅本次生效，刷新回落（不再持久化——旧文章"赖着不走"的根因）
+// ===== 已读管理：次数计数 + 「读完了」收进往期 =====
+function doneDB(){return store.get('doneread')}
+function readCount(title){return (doneDB()[title]&&doneDB()[title].count)||0}
+function isDone(title){const e=doneDB()[title];if(!e)return false;
+  // 批次保护：文章比读完标记新（新批次重发/换文）→ 视为未读，不让旧标记藏新文章
+  const a=(window.ARTICLES||[]).find(x=>x.title===title);
+  if(a&&a.date&&e.date&&a.date>e.date)return false;
+  return !!e}
+function markDone(title){const db=doneDB();
+  db[title]={count:(db[title]&&db[title].count||0)+1,date:studyDay()};
+  store.set('doneread',db);toastMsg('✓ 第 '+db[title].count+' 遍读完，收进往期（看往期可随时回看）');
+  render()}
+function toggleOld(){showOld=!showOld;render()}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+// ===== 重点句(用户自己画):点句末☆标/取消,按学习日入库,复习页按日展示 =====
+function clearArtKeys(ai){const db=ukDB();
+  if(!db[ai]||!db[ai].length){toast('本篇没有重点句');return}
+  delete db[ai];store.set('userkeys',db);render();toast('已清空本篇重点句')}
+function ukDB(){return store.get('userkeys')}
+function isUserKey(ai,j){const db=ukDB();return (db[ai]||[]).some(x=>x.j===j)}
+function studyDay(){const d=new Date();if(d.getHours()<4)d.setDate(d.getDate()-1); // 凌晨4点前算前一天
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+// ⭐ 重点片段管理（用户 11-18：全局"清空"按钮废除——每条片段单独删）
+function showKeyChips(ai,btn){
+  const db=ukDB();const list=db[ai]||[];
+  const old=document.getElementById('keychips-'+ai);
+  if(old){old.remove();return} // 再点=收起
+  const wrap=document.createElement('div');wrap.id='keychips-'+ai;
+  wrap.style.cssText='margin:6px 0;padding:8px 10px;background:#fffbe8;border:1px solid #e5d9a8;border-radius:8px;font-size:.85rem';
+  if(!list.length){wrap.innerHTML='<span style="color:var(--dim)">本篇还没有画重点片段（点「✏️ 画重点句」后：首词→末词）</span>'}
+  else{
+    wrap.innerHTML=list.map((x,xi)=>`<div style="display:flex;align-items:center;gap:6px;padding:3px 0"><span style="flex:1">${esc(x.sent)}</span><button onclick="delUserKey(${ai},keychipSent(${ai},${xi}))" style="padding:0 7px;font-size:.8rem;color:var(--bad,#c0392b);cursor:pointer;border:1px solid #d9c99a;background:#fff;border-radius:4px">×</button></div>`).join('')}
+  btn.parentNode.parentNode.querySelector('.article').parentNode.insertBefore(wrap,btn.parentNode.parentNode.querySelector('.article'))
+}
+function keychipSent(ai,xi){return (ukDB()[ai]||[])[xi].sent}
+function toggleKeyMode(ai,btn){keyMode[ai]=!keyMode[ai];keySel=null;
+  btn.style.background=keyMode[ai]?'#ffe08a':'';
+  toast(keyMode[ai]?'✏️ 画重点句：先点句子第一个词，再点最后一个词':'已退出画重点句')}
+function delUserKey(ai,sent){const db=ukDB();db[ai]=(db[ai]||[]).filter(x=>x.sent!==sent);
+  store.set('userkeys',db);render();toast('已删除该片段')}
+function toggleUserKey(ai,j){const db=ukDB();db[ai]=db[ai]||[];
+  const hit=db[ai].find(x=>Number(x.j)===Number(j));
+  if(hit){db[ai]=db[ai].filter(x=>Number(x.j)!==Number(j));toast('已取消重点句')}
+  else{db[ai].push({j:Number(j),sent:A[Number(ai)].sentences[Number(j)],day:studyDay()});toast('⭐ 已画重点句，复习页按日可看')}
+  store.set('userkeys',db);render()}
+// ===== 语法点收藏 =====
+function gramDB(){return store.get('grammar')}
+function isGram(gid){return !!gramDB()[gid]}
+function toggleGram(st){const gid=st.dataset.gid;const db=gramDB();
+  if(db[gid]){delete db[gid];st.textContent='☆';st.classList.remove('on');toastMsg('已取消收藏')}
+  else{ // 收藏时把语法点全文一起存，复习页不依赖 articles 原文
+    const [t,j]=gid.split('#');const art=A.find(a=>a.title===t);
+    db[gid]={text:art&&art.notes?art.notes[Number(j)]:'',date:studyDay(),title:t};
+    st.textContent='★';st.classList.add('on');toastMsg('已收藏，复习页可回看')}
+  store.set('grammar',db)}
+function render(){
+  const app=document.getElementById('app');
+  app.innerHTML='';sentEls=[];sentTexts=[]; // 幂等：重渲染前清空，杜绝文章叠加
+  const list=A.map((a,i)=>({a,i})).filter(x=>!x.a.draft&&(showOld||!x.a.archived&&!isDone(x.a.title)));
+  renderTask(list); // 任务卡：常驻顶部，会话断了也能看到当前任务（用户 10-31 需求）
+  if(!list.length)app.innerHTML='<div style="color:var(--dim);padding:40px 0;text-align:center">当前批次已读完 ✓ 点「看往期」回看，或等新文章发布。</div>';
+  list.forEach(({a,i},n)=>{ // i=A 原索引（data-a/面板 id 用它——稳定不随批次漂移）；n+1 仅作显示编号
+    const d=document.createElement('div');
+    d.className='art-wrap';d.style.position='relative';d.dataset.ai=i; // data-ai=原索引：positionPanels 按 DOM 位置配对用（原索引≠DOM 序，旧版卡死根因）
+    d.innerHTML=`<h2>${n+1}. ${esc(a.title)}</h2><div class="meta">${esc(a.date)} · 第 ${readCount(a.title)+1} 遍 · ${esc(a.level)} <button onclick="markDone('${esc(a.title).replace(/'/g,"\\'")}',this)" style="padding:1px 8px;font-size:.72rem;margin-left:6px">✓ 读完了</button><button onclick="playArticle(${i},this)" style="padding:1px 8px;font-size:.72rem">▶ 整篇朗读</button><button onclick="toggleArticleTr(${i},this)" style="padding:1px 8px;font-size:.72rem">整篇翻译</button></div>`;    const box=document.createElement('div');box.className='article';
+    const p=document.createElement('p');
+    a.sentences.forEach((s,j)=>{
+      // 本句已画片段（可能多条）→ 句内词序号集合：只高亮命中词，不再整句画（用户 11-18）
+      const fragWords=[];
+      (ukDB()[i]||[]).filter(x=>Number(x.j)===j).forEach(x=>{
+        const f=x.sent;const toks=s.split(/\s+/);const joined=toks.join(' ');
+        const start=joined.indexOf(f);if(start<0)return;
+        const before=joined.slice(0,start);
+        const n0=before.trim()?before.trim().split(/\s+/).length:0;
+        const n1=n0+f.split(/\s+/).length;
+        for(let q=n0;q<n1;q++)fragWords.push(q)});
+      const sp=document.createElement('span');sp.className='sent';sp.dataset.i=i+'-'+j;
+      // 标点放 <w> 外：点击高亮只盖住词本身，不带标点（À-ɏ=带变音符字母，résumé 可点）
+      let wi=0; // 句内词序：data-i=定位词的精确位置（同词多处只亮点过的那个）
+      const tokHtml=t=>{const m=t.match(/^([^A-Za-z0-9À-ɏ]*)([A-Za-z0-9À-ɏ'’-]+)([\s\S]*)$/);
+        if(!m)return esc(t);
+        const wIdx=wi++;
+        const cls=fragWords.includes(wIdx)?' class="fragon"':'';
+        return esc(m[1])+`<w${cls} data-w="${esc(m[2].toLowerCase())}" data-a="${i}" data-i="${j}-${wIdx}">${esc(m[2])}</w>`+esc(m[3])};
+      sp.innerHTML=s.split(/\s+/).map(tokHtml).join(' ');
+      // 句尾☆已废弃（toast 未定义致点击静默失败）：改「✏️ 画重点句」模式，点首词+末词即成句
+      p.appendChild(sp);p.appendChild(document.createTextNode(' '));sentEls.push(sp);sentTexts.push(s)});
+    box.appendChild(p);
+    if(a.notes&&a.notes.length){const n=document.createElement('div');n.className='notes';
+      n.innerHTML='<b>语法点</b>（点 ☆ 收藏，复习页回看）<br>'+a.notes.map((x,j)=>{
+        const gid=a.title+'#'+j;
+        return `<div class="gline"><span class="gstar ${isGram(gid)?'on':''}" data-gid="${esc(gid)}" title="收藏语法点">${isGram(gid)?'★':'☆'}</span>· ${esc(x)}</div>`}).join('');
+      n.querySelectorAll('.gstar').forEach(st=>st.onclick=()=>toggleGram(st));
+      box.appendChild(n)}
+    // 本文的浮动生词本（跟随文章区间滚动）
+    const vp=document.createElement('div');vp.className='vpanel';vp.id='vpanel-'+i;
+    vp.innerHTML=`<h4><span class="fold" onclick="toggleFold(${i})" style="cursor:pointer">▾</span> 生词本·${esc(a.title)} <button onclick="location.href='review.html'" style="padding:1px 6px;font-size:.7rem">复习</button></h4><ul></ul><div style="color:var(--dim);font-size:.75rem;margin-top:4px">本文全部生词，按标记顺序；跨天不消失，复习页可删</div>`;
+    d.appendChild(box);d.appendChild(vp);app.appendChild(d);
+  });
+  renderVocab();restoreMarks();positionPanels();
+  // 手机端默认折叠：面板只露标题条，点 ▸ 展开，不再挡正文点击（folded 状态记忆）
+  if(isMobilePanel()&&store.get('vfold')!=='0'){document.querySelectorAll('.vpanel').forEach(vp=>{
+    vp.classList.add('folded');const f=vp.querySelector('.fold');if(f)f.textContent='▸'})}
+  let raf=null; // 滚动节流：rAF 合帧，杜绝高频重算导致的闪动
+  const onScroll=()=>{if(raf)return;raf=requestAnimationFrame(()=>{raf=null;positionPanels()})};
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll);
+}
+function positionPanels(){ // 面板驻右空白垂直居中；活动区间锁定所属文章；仅当文章完全滑出屏幕才消失
+  const vh=window.innerHeight;
+  const wrapEl=document.querySelector('.wrap');
+  const contentRight=wrapEl?wrapEl.getBoundingClientRect().right:0;
+  const gutter=window.innerWidth-contentRight;
+  const hasGutter=gutter>320; // 右侧空白够宽才外挂，否则贴回文章内（窄屏回退）
+  const visIdx=[]; // 先收集本屏可见的文章：按 data-ai 配对（DOM 里只有可见文章，节点序≠A 原索引——旧版按序取节点导致面板全错位/卡死）
+  const artWrapEl=document.querySelectorAll('.art-wrap');
+  A.forEach((a,i)=>{
+    const wrap=[...artWrapEl].find(el=>Number(el.dataset.ai)===i);const vp=document.getElementById('vpanel-'+i);
+    if(!wrap||!vp)return;
+    const wr=wrap.getBoundingClientRect();
+    const panelH=vp.offsetHeight||160;
+    // 文章完全滑出屏幕（底在上边之上 / 顶在下边之下）→ 面板消失；其余一律显示
+    if(wr.bottom<=0||wr.top>=vh){vp.style.display='none';return}
+    visIdx.push({i,vp,wr,panelH});
+  });
+  // 同屏多篇：上篇底部与下篇顶部把可用区切成两段，各面板在自己文章的可见段内垂直居中，重叠即被段边界顶开
+  visIdx.forEach(({vp,wr,panelH})=>{
+    if(hasGutter){
+      const ideal=vh/2-panelH/2;                     // 目标：垂直居中
+      const lo=Math.max(wr.top,0);                   // 不高于文章可视顶
+      const hi=Math.min(wr.bottom,vh)-panelH;        // 不低于文章可视底
+      const top=hi<lo?lo:Math.min(Math.max(ideal,lo),hi); // 放不下时贴文章可视顶，不消失
+      vp.style.display='';
+      vp.style.right='12px';                         // 贴窗口最右（空白区内）
+      vp.style.top=Math.max(top,0)+'px';
+    }else{
+      // 手机端（窄屏）：面板固定右下角，内容=当前屏内最靠上的可见文章；文章滑出自动切下一篇
+      vp.style.display='';
+      vp.style.right='12px';
+      vp.style.top='';vp.style.bottom='16px';
+      vp.style.left='';vp.style.width='min(70vw,280px)';
+      // 显示控制交给下面的 exclusive 逻辑统一处理
+    }
+  });
+  // 手机端互斥：右下角只挂一个面板——屏内可见文章中"最靠下"的那个（你正在读的），其余全隐藏
+  if(!hasGutter){
+    for(let j=0;j<visIdx.length;j++){
+      visIdx[j].vp.style.display=(j===visIdx.length-1)?'':'none'}
+  }
+}
+const MIN_TOP=10; // 面板顶不允许高于此线
+document.addEventListener('click',e=>{
+    const w=e.target.closest('w');if(!w)return;
+    // ✏️ 画重点句模式：点首词→记住；点末词→成句（同句首末再点=取消）
+    if(w.dataset.a!==undefined&&keyMode[w.dataset.a]){
+      const ai=Number(w.dataset.a);const sentEl=w.closest('.sent');
+      if(!sentEl)return;
+      const j=Number(sentEl.dataset.i.split('-')[1]);
+      const wi=Number((w.dataset.i||'').split('-')[1]||0);
+      if(!keySel||keySel.ai!==ai){
+        document.querySelectorAll('w.ksel').forEach(x=>x.classList.remove('ksel'));
+        keySel={ai:ai,j:j,w1:wi,w2:wi};w.classList.add('ksel');
+        toast('已选起始词「'+cleanWord(w.dataset.w)+'」，再点结束词（片段=首词到末词）');return}
+      // 已有起始：这次点击=结束词（片段按词序从首到末收集）
+      const db=ukDB();db[ai]=db[ai]||[];
+      const a0=Math.min(keySel.w1,wi), b0=Math.max(keySel.w1,wi);
+      const frag=A[ai].sentences[j].split(/\s+/).slice(a0,b0+1).join(' ');
+      const hit=db[ai].find(x=>x.sent===frag);
+      document.querySelectorAll('w.ksel').forEach(x=>x.classList.remove('ksel'));keySel=null;
+      if(hit){db[ai]=db[ai].filter(x=>x.sent!==frag);toast('已取消该片段')}
+      else{db[ai].push({j:j,sent:frag,day:studyDay()});toast('⭐ 已画重点片段，复习页按日可看')}
+      store.set('userkeys',db);render();return}
+    const k=cleanWord(w.dataset.w);
+    if(selState){ // 词组模式
+      if(selState.key==='__start__'){ // 模式刚开启，点第一个词
+        selState={key:k,words:[k],wEl:w};w.classList.add('sel');speak(k,0.9);return}
+      if(k===selState.key){confirmPhrase();return}
+      const prev=selState.words[selState.words.length-1];
+      // 取下一个元素节点（跳过词与词之间的空格文本节点——词组连不上的根因）
+      let nx=selState.wEl.nextSibling;while(nx&&nx.nodeType!==1)nx=nx.nextSibling;
+      const nextClean=nx?cleanWord(nx.dataset.w||''):null;
+      if(nextClean===k){selState.words.push(k);selState.wEl=nx;w.classList.add('sel');speak(k,0.95);return}
+      document.querySelectorAll('w.sel').forEach(x=>x.classList.remove('sel'));
+      if(k===prev){selState=null;return}
+      selState={key:k,words:[k],wEl:w};w.classList.add('sel');speak(k,0.9);return}
+    if(marks[k]){delete marks[k];w.classList.remove('on')}
+    else{const loc=w.dataset.i; // 词的精确位置（句号-句内词序）：只亮你点的那一个，不全文连亮
+      addWord(k,w.closest('.sent')?w.closest('.sent').textContent:null,Number(w.dataset.a),loc);w.classList.add('on')}
+    store.set('vocab',marks);renderVocab();
+  });
+function cleanWord(s){return s.replace(/[.,!?;:"'()“”’]/g,'').toLowerCase().trim()}
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function addWord(k,ctx,artIdx,loc){if(!k)return;
+  if(marks[k]){const e=normEntry(marks[k]);e.n=(e.n||1)+1;if(!e.day)e.day=studyDay();if(typeof artIdx==='number')e.art=artIdx;
+    if(loc){e.locs=e.locs||[];if(!e.locs.includes(loc))e.locs.push(loc)} // 多处出现：记录每次点的位置
+    marks[k]=e}
+  else{const e=normEntry(1);e.day=studyDay();if(typeof artIdx==='number')e.art=artIdx;
+    if(loc)e.locs=[loc];
+    e.seq=(Number(store.get('seq'))||0)+1;store.set('seq',e.seq); // 显式序号：生词本顺序的唯一定据，合并/刷新都不乱
+    marks[k]=e;translate(k,ctx,artIdx)}
+  speak(k,0.9)}
+function confirmPhrase(){
+  const phrase=selState?selState.words.join(' '):'';
+  const startW=selState?selState.wEl:null;
+  const artIdx=startW&&startW.dataset&&startW.dataset.a?Number(startW.dataset.a):wordHomeIdx(phrase);
+  selState=null;document.querySelectorAll('w.sel').forEach(x=>x.classList.remove('sel'));
+  const pb=document.getElementById('phraseBtn');if(pb)pb.textContent='+ 词组';
+  if(phrase&&!marks[phrase]){const en=normEntry(1);en.day=studyDay();if(artIdx!=null)en.art=artIdx;
+    en.seq=(Number(store.get('seq'))||0)+1;store.set('seq',en.seq);
+    marks[phrase]=en;translate(phrase);speak(phrase,0.9);store.set('vocab',marks);renderVocab();restoreMarks()}
+  else if(phrase){toastMsg('生词本已有：'+phrase)}}
+let toastTimer=null;
+const toast=toastMsg; // 兼容别名：重点句等新函数用 toast（此前 toast 未定义→点击静默失败）
+function toastMsg(m){let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';
+  t.style.cssText='position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99;max-width:80vw';
+  document.body.appendChild(t)}
+  t.textContent=m;t.style.opacity='.95';clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.style.opacity='0',2200)}
+function togglePhraseMode(){ // 词组模式入口：开→连点单词；已选→确认入本
+  if(selState){confirmPhrase();
+    document.querySelectorAll('.vpanel button').forEach(b=>{if(b.textContent==='确认 ✓')b.textContent='+ 词组'});return}
+  selState={key:'__start__',words:[],wEl:null};
+  document.querySelectorAll('.vpanel button').forEach(b=>{if(b.textContent==='+ 词组')b.textContent='确认 ✓'});
+  toastMsg('词组模式已开：依次点击连续的单词（变绿），再点「确认 ✓」入本')}
+function isMobilePanel(){ // 与 positionPanels 同判据：右侧空白不够 = 手机端面板
+  const wrapEl=document.querySelector('.wrap');if(!wrapEl)return window.innerWidth<=900;
+  return window.innerWidth-wrapEl.getBoundingClientRect().right<=320}
+function toggleFold(i){ // 手机端折叠：默认收起（只露标题条），不挡正文点击；桌面端也可用
+  const vp=document.getElementById('vpanel-'+i);if(!vp)return;
+  const folded=vp.classList.toggle('folded');
+  const f=vp.querySelector('.fold');if(f)f.textContent=folded?'▸':'▾';
+  store.set('vfold',folded?'1':'0');
+  positionPanels()}
+function restoreMarks(){ // 已标词高亮：只亮你点过的位置（e.locs 精确到句-词序）；旧数据无 locs 时按所属文章亮该篇全部出现处
+  const home={}; // 词 → 所属文章
+  Object.keys(marks).forEach(k=>{home[k]=wordHomeIdx(k)});
+  document.querySelectorAll('w').forEach(w=>{
+    const cw=cleanWord(w.dataset.w);
+    const wArt=Number(w.dataset.a);
+    const e=marks[cw];
+    if(e){
+      if(Array.isArray(e.locs)&&e.locs.length){if(e.locs.includes(w.dataset.i))w.classList.add('on');return} // 精确位置命中才亮
+      if(home[cw]===wArt)w.classList.add('on');return} // 旧词条：所属文章内的出现处都亮
+    // 词组成员下划线：词组归属文章里的出现处才标
+    const phrase=Object.keys(marks).find(k=>k.includes(' ')&&k.split(' ').includes(cw));
+    if(phrase&&home[phrase]===wArt)w.classList.add('inphrase')});}
+// ===== 生词归属与翻译 =====
+const TKEY='translations',TVER='v16'; // v14：MANUAL 扩到 57 词（block/slightly/stroller 坏译+11-11 两篇关键词全预置），清旧在线查询缓存
+function getTrans(){let c=store.get(TKEY+TVER);
+  if(!Object.keys(c).length){ // 新版本缓存为空：迁入旧版本缓存（坏翻译已由 MANUAL 覆盖 + v13 起的过滤器清洗），免去全量重查
+    const prev=store.get(TKEY+'v13');if(Object.keys(prev).length){store.set(TKEY+TVER,prev);return prev}}
+  return c}
+// 人工优先义项：gtx 词典会把高频词核心义埋掉/给冷僻义（article 缺"冠词"、clearance→净空、panicked→恐吓）
+// 格式=标准词典释义（词性：词义），不做单词条的说教式解读（用户 11-07 定版：不要针对某个词强行解释）
+// 关键词预置（用户 11-10 定版）：高频旅行词+近期坏译词直接给人工义，点词秒出不再请求
+const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
+  properly:'副词：正确地、适当地、得体地',
+  clearance:'名词：放行许可；清关；净空',
+  panicked:'动词：恐慌、惊慌失措（panic 的过去式）',
+  pure:'形容词：纯粹的；完全的；纯的',
+  mattered:'动词：要紧、重要（matter 的过去式）',
+  terminal:'名词：航站楼；终端；终点站',
+  grilled:'动词：烤（grill 的过去分词）；形容词：烤制的',
+  hundred:'数词：一百',
+  instructions:'名词：说明、指示（instruction 的复数）',
+  gracefully:'副词：得体地、从容地；优雅地',
+  meter:'名词：（出租车）计价器；仪表；公尺',
+  technically:'副词：严格来说；名义上',
+  owed:'动词：欠（owe 的过去式/过去分词）；欠（钱/人情）',
+  fare:'名词：车费、票价',
+  overcharge:'动词：多收钱、宰客',
+  tipped:'动词：给小费（tip 的过去式）',
+  guesthouse:'名词：民宿、招待所',
+  pronounce:'动词：发音（……的音）',
+  charger:'名词：充电器',
+  errand:'名词：差事、跑腿',
+  waved:'动词：挥手（wave 的过去式）',
+  commission:'名词：手续费、佣金',
+  rate:'名词：汇率；费率；速度',
+  receipt:'名词：收据、小票',
+  clerk:'名词：职员、店员',
+  laundry:'名词：要洗的衣物；洗衣',
+  instinct:'名词：本能、直觉',
+  suspicion:'名词：怀疑、疑心',
+  villain:'名词：坏人、反派',
+  folded:'动词：折叠（fold 的过去式/过去分词）',
+  dissolved:'动词：消散、化解（dissolve 的过去式）',
+  slightly:'副词：稍微、略微',
+  stroller:'名词：婴儿推车',
+  block:{any:'名词：街区；块；动词：堵塞、挡住',art:[{t:'Multitasking',v:'动词：留出、预留（block out time 留出时间）'},{t:'Way Downtown',v:'名词：街区（down the block 沿着这条街往前）'}]},
+  queue:'名词：（排的）队；动词：排队',
+  pharmacy:'名词：药房、药店',
+  pharmacist:'名词：药剂师',
+  syrup:'名词：糖浆（cough syrup 止咳糖浆）',
+  cough:'名词/动词：咳嗽',
+  dose:'名词：剂量、一剂（药）',
+  transaction:'名词：交易',
+  impatient:'形容词：不耐烦的、没耐心的',
+  insult:'名词：侮辱；动词：侮辱',
+  filter:'名词：过滤器；把关者；动词：过滤',
+  insurance:'名词：保险',
+  gap:'名词：缺口、空当；差距',
+  mumbled:'动词：咕哝、嘟囔（mumble 的过去式）',
+  pavement:'名词：（路边的）人行道',
+  applauded:'动词：鼓掌、称赞（applaud 的过去式）',
+  rehearsed:'动词：排练、演练（rehearse 的过去式）',
+  firmly:'副词：坚定地、坚决地',
+  reserved:'动词：预订、预留（reserve 的过去式/过去分词）',
+  willingness:'名词：意愿、乐意',
+  inwardly:'副词：在心里、暗自地',
+  // ↓ 11-12 批次（行李延误/换汇）关键词预置：按两篇实际用词铺
+  suitcase:'名词：行李箱、手提箱',
+  detour:'名词：绕路、改道',
+  belt:{any:'名词：腰带；安全带',art:[{t:'Suitcase',v:'名词：（机场）行李传送带'}]},
+  baggage:'名词：行李',
+  apologize:'动词：道歉',
+  scanned:'动词：扫描（scan 的过去式）',
+  nodded:'动词：点头（nod 的过去式）',
+  calmly:'副词：平静地、镇定地',
+  fault:'名词：过错、责任',
+  delivered:'动词：投递、送达（deliver 的过去式）',
+  register:'动词：登记、注册（register the hotel 登记酒店）',
+  settled:'动词：解决、办妥（settle 的过去式）',
+  transfer:{any:'名词/动词：转移；转让',art:[{t:'Suitcase',v:'名词：（机场）转机、中转（transfer desk 转机柜台）'}]},
+  exchange:'名词/动词：兑换；交换',
+  counter:'名词：柜台',
+  currency:'名词：货币',
+  charged:'动词：收费、要价（charge 的过去式）；充电（手机/电池）',
+  worse:'形容词：更糟的（bad 的比较级）',
+  extra:'形容词：额外的',
+  argue:'动词：争论、辩驳',
+  politely:'副词：礼貌地',
+  percent:'名词：百分之……（eight percent 百分之八）',
+  difference:'名词：差别、差额',
+  trip:'名词：旅程、行程；动词：绊倒',
+  local:'形容词：当地的',
+  apparently:'副词：看来、显然',
+  // ↓ 11-12 新批次（维修砍价/邻里噪音）关键词预置：按两篇实际用词铺，场景义优先
+  solder:'名词：焊锡、焊料（维修台的气味）',
+  quoted:'动词：报价（quote 的过去式）',
+  alternatives:'名词：其他选择、替代方案（alternative 的复数）',
+  guarantee:{any:'名词：保证、担保',art:[{t:'Phone',v:'名词：（维修）保修、保修期（ninety-day guarantee 九十天保修）'}]},
+  honesty:'名词：诚实',
+  bargaining:'名词/动词：讨价还价（bargain 的动名词）',
+  punctual:'形容词：准时的、守时的',
+  disturbance:{any:'名词：干扰、骚乱',art:[{t:'Noise',v:'名词：（噪音）扰民'}]},
+  regulations:'名词：规定、条例（regulation 的复数）',
+  embarrassed:'形容词：尴尬的、不好意思的',
+  defensive:'形容词：戒备的、有防备心的',
+  tenant:'名词：租户、房客（tenant rights 租客权益）',
+  drilling:{any:'名词：钻孔、操练（drill 的动名词）',art:[{t:'Noise',v:'名词：（装修）电钻声'}]},
+  shelves:'名词：架子、搁板（shelf 的复数；put up shelves 装架子）',
+  // ↓ 11-12 批次第二轮补铺：覆盖更多文章实际用词，场景义优先
+  repair:{any:'动词/名词：修理、修补',art:[{t:'Phone',v:'名词：维修（repair shop 维修店）'}]},
+  worth:{any:'形容词：值……的（be worth + 钱数）',art:[{t:'Apartment',v:'形容词：值得……的（worth learning 值得学的）'}]},
+  smelled:{any:'动词：闻起来（smell 系动词 + 形容词）；发出气味',art:[{t:'Phone',v:'动词：闻起来（smelled like 有……的味道，中性，不等于发臭）'}]},
+  burnt:{any:'形容词：烧焦的（burn 的过去分词作形容词）',art:[{t:'Phone',v:'形容词：（咖啡）煮过头的、焦苦的'}]},
+  owner:'名词：主人、老板（维修店老板）',
+  battery:'名词：电池',
+  nearly:'副词：几乎、差不多（= almost）',
+  cheating:{any:'动词：欺骗、作弊（cheat 的现在分词）',art:[{t:'Phone',v:'动词：宰客、坑人（I am not cheating you 我没坑你）'}]},
+  argued:{any:'动词：争论、争辩（argue 的过去式）',art:[{t:'Phone',v:'动词：据理力争（argued about alternatives 争的是选择，不是吵架）'}]},
+  angrily:'副词：生气地、愤怒地',
+  offered:{any:'动词：主动提出、提供（offer 的过去式）',art:[{t:'Phone',v:'动词：（卖家）开价、拿出（方案）'}]},
+  dropped:{any:'动词：掉落；下降（drop 的过去式）',art:[{t:'Phone',v:'动词：（价格）降了（dropped by a third 降了三分之一）'}]},
+  third:{any:'数词：第三',art:[{t:'Phone',v:'名词：三分之一（a third）'}]},
+  accepted:'动词：接受（accept 的过去式）',
+  paid:'动词：付钱（pay 的过去式）',
+  photos:'名词：照片（photo 的复数）',
+  calm:{any:'形容词：平静的、镇定的',art:[{t:'Phone',v:'形容词：（谈判）不动怒的、平和的（one calm question）'}]},
+  honest:'形容词：诚实的、老实的',
+  complaint:{any:'名词：抱怨、投诉',art:[{t:'Noise',v:'名词：（噪音）投诉、交涉'}]},
+  midnight:'名词：午夜、半夜',
+  sharp:{any:'形容词：锋利的；急剧的',art:[{t:'Noise',v:'形容词：（措辞）尖锐的、生硬的'}]},
+  official:{any:'形容词：官方的、正式的',art:[{t:'Noise',v:'形容词：一本正经的、公事公办的（words like regulations）'}]},
+  knocking:{any:'名词/动词：敲门（knock 的动名词）',art:[{t:'Noise',v:'名词：敲门（这个动作，与写便条对比）'}]},
+  braver:'形容词：更勇敢的（brave 的比较级）',
+  realize:{any:'动词：意识到、明白（美式拼写，英式 realise）',art:[{t:'Noise',v:'动词：没料到（did not realize how far... 没想到声音传这么远）'}]},
+  travels:{any:'动词：旅行（travel 三单）',art:[{t:'Noise',v:'动词：（声音）传播、传开（sound travels）'}]},
+  speech:'名词：演讲；一段话、说辞',
+  rights:'名词：权利（right 的复数；tenant rights 租客权益）',
+  repeated:'动词：重复说、复述（repeat 的过去式）',
+  knock:{any:'动词/名词：敲；敲门声',art:[{t:'Noise',v:'名词：敲门（一次当面沟通，与便条对照）'}]},
+  instead:'副词：代替、反而（instead of 而不是）',
+  promise:'名词/动词：承诺、答应',
+  silence:'名词：安静、寂静',
+  afternoon:'名词：下午',
+  attack:{any:'名词/动词：攻击',art:[{t:'Noise',v:'名词：（语气上的）攻击性（be read as an attack 被当成挑衅）'}]},
+  person:'名词：人',
+  lands:{any:'动词：着陆、降落（land 三单）',art:[{t:'Noise',v:'动词：（话）落在……效果如何（sentence lands differently 同一句话效果不同）'}]},
+  differently:'副词：不同地、不一样地',
+  // ↓ 11-14 批次（租房看房/健身退款维权）关键词预置：按两篇实际用词铺，场景义优先
+  apartment:'名词：公寓（美式；英式 flat）',
+  agent:{any:'名词：代理人、经纪人',art:[{t:'Apartment',v:'名词：（房产）中介'}]},
+  mirror:'名词：镜子',
+  flat:{any:'形容词：平的；扁平的',art:[{t:'Apartment',v:'名词：（英式）公寓、单元房'}]},
+  facing:'形容词：朝向……的（south-facing 朝南）',
+  breathing:'名词/动词：呼吸（breathe 的动名词）',
+  rent:'名词：房租；动词：租',
+  figure:{any:'名词：数字；身材；人物；figure out 弄明白',art:[{t:'Apartment',v:'名词：（报出的）价格数字'}]},
+  discount:{any:'名词：折扣',art:[{t:'Apartment',v:'名词：折扣（文中 a feeling of one＝只给折扣的感觉，不给真折扣）'}]},
+  reduction:'名词：降低、减少（价格下调）',
+  lease:'名词：租约、租期（one-year lease 一年租约）',
+  upfront:'副词：（款项）一次性预付地（paid upfront 预付）',
+  intends:'动词：打算、意图（intend 三单）',
+  negotiates:'动词：谈判、协商（negotiate 三单）',
+  stronger:'形容词：更强壮的；更有优势的（strong 的比较级）',
+  membership:'名词：会员资格、会员费',
+  refund:'名词/动词：退款（refund department 退款部）',
+  punishment:'名词：惩罚、处罚',
+  branch:'名词：分店、分行；树枝',
+  renovation:'名词：装修、翻新（closed for renovation 装修停业）',
+  receptionist:'名词：前台接待员',
+  sunshine:'名词：阳光',
+  requesting:'动词：请求、要求（request 的动名词，正式书面）',
+  facility:'名词：设施、场所（gym facility 健身设施）',
+  clause:'名词：（合同）条款（clause four 第四条）',
+  contract:'名词：合同、契约',
+  hotline:'名词：热线（电话）',
+  department:'名词：部门',
+  specific:'形容词：具体的、明确的',
+  anchored:'动词：钉在、依托于（anchor 的过去式；anchored to a clause 依据条款）',
+  mood:'名词：情绪、心情',
+  case:{any:'名词：情况；案例',art:[{t:'Refund',v:'名词：（有据可依的）案子（a case 有理有据的投诉）'}]},
+  clever:'形容词：聪明的、机灵的',
+  // ↓ 11-15 批次（海关问询/外卖客服）关键词预置：按两篇实际用词铺，场景义优先
+  customs:{any:'名词：海关；关税',art:[{t:'Customs',v:'名词：海关（入境检查处）'}]},
+  officer:{any:'名词：官员、警官',art:[{t:'Customs',v:'名词：（海关）官员、检查员'}]},
+  passport:'名词：护照',
+  signature:'名词：签名、签字',
+  politeness:'名词：礼貌（polite 的名词）',
+  staying:'动词：停留、暂住（stay 的现在分词；How long are you staying 待多久）',
+  trap:{any:'名词：陷阱',art:[{t:'Customs',v:'名词：（问答的）圈套——多说的每句都是把柄'}]},
+  overstayed:'动词：逾期停留（overstay 的过去式；overstayed a visa 签证过期还滞留）',
+  visa:'名词：签证',
+  stamped:'动词：盖章（stamp 的过去式；stamped my passport 在护照上盖章）',
+  lane:{any:'名词：（高速）车道；小路',art:[{t:'Customs',v:'名词：（海关）通道、查验口'}]},
+  checklists:'名词：清单、核对单（checklist 的复数）',
+  uniform:{any:'名词：制服',art:[{t:'Customs',v:'名词：制服（checklists wearing a uniform 穿制服的清单——拟人海关）'}]},
+  pressed:'动词：按、按下（press 的过去式；pressed refund 点了退款）',
+  apology:'名词：道歉、道歉信',
+  coupon:{any:'名词：优惠券',art:[{t:'Refund',v:'名词：优惠券（客服用券代替退钱的挡箭牌）'}]},
+  dashboard:'名词：（后台）仪表盘、数据面板',
+  complaining:'名词/动词：投诉、抱怨（complain 的动名词）',
+  numbered:'形容词：编号的、标了序号的',
+  shift:{any:'名词：轮班、轮班时间',art:[{t:'Refund',v:'名词：（客服）班次（the next shift 下一班客服）'}]},
+  forwarded:{any:'动词：转发、转交（forward 的过去式）',art:[{t:'Refund',v:'动词：（工单）转交给下一班'}]},
+  dish:'名词：菜、菜肴',
+  coordinated:'形容词：协同的、串通好的（coordinate 的过去分词）',
+  generated:'动词：生成（generate 的过去分词；机器生成的）',
+  hungry:'形容词：饿的',
+  promised:'动词：承诺（promise 的过去式/过去分词）',
+  firm:'形容词：坚定的、不让步的（firm tone 强硬语气）',
+  prepared:'形容词：准备好的、做好……打算的',
+  notification:'名词：通知、提示（手机/系统推送）',
+  parcel:'名词：包裹、邮包（英式；美式 package）',
+  pickup:{"any":"名词：提取、接取","art":[{"t":"Parcel","v":"名词：（快递）自提点（pickup point）"}]},
+  corner:'名词：拐角、角落（around the corner 在附近；即将到来）',
+  riddle:'名词：谜语、费解之事',
+  digit:'名词：数字（0-9 的单个数字）；手指',
+  symbol:'名词：符号、标志',
+  font:'名词：字体、字型',
+  invisible:'形容词：看不见的、几乎不可见的',
+  recite:'动词：背诵、背出',
+  confidently:'副词：自信地、有把握地',
+  therefore:'副词：因此、所以（正式）',
+  wrongly:'副词：错误地',
+  rejected:'动词：拒绝、不受理（reject 的过去式）',
+  characters:'名词：字符；角色（character 的复数）',
+  drawer:'名词：抽屉',
+  popped:'动词：弹出、突然打开（pop 的过去式；pop open 弹开）',
+  mechanical:'形容词：机械的；（声音）机械似的',
+  sigh:'名词/动词：叹气、叹息',
+  among:'介词：在……之中（三者及以上）',
+  etiquette:'名词：礼仪、规矩（不成文的）',
+  persuasive:'形容词：有说服力的、能说会道的',
+  eventually:'副词：最终、终究',
+  thieves:'名词：小偷（thief 的复数）',
+  tore:'动词：撕开（tear 的过去式；tore open 撕开）',
+  tape:'名词：胶带；磁带',
+  trim:{"any":"动词/名词：修剪、修剪量","art":[{"t":"Haircut","v":"名词：略剪、修一下（just a trim 只剪短一点点）"}]},
+  millimetres:'名词：毫米（millimetre 的复数，英式拼写）',
+  barber:'名词：（男式）理发师；理发店',
+  professionals:'名词：专业人士（professional 的复数）',
+  nod:'动词/名词：点头',
+  spun:'动词：旋转、使转动（spin 的过去式；spun the chair 转椅子）',
+  snip:'名词/动词：咔嚓一剪、剪（的声音）',
+  clippers:'名词：理发推子、剪刀（clipper 的复数）',
+  interrupting:'动词：打断（说话/做事）（interrupt 的现在分词）',
+  unwise:'形容词：不明智的',
+  scissors:'名词：剪刀（复数形式）',
+  meticulously:'副词：一丝不苟地、极其细致地',
+  sympathy:'名词：同情、共鸣',
+  industry:'名词：行业、产业',
+  schedule:'名词：日程、时间表（on nobody\'s schedule 不按任何人的时间表）',
+  interview:{"any":"名词/动词：面试；采访","art":[{"t":"Interview","v":"名词：面试（求职场景）"}]},
+  perfectly:'副词：完美地、无可挑剔地',
+  conversation:'名词：对话、交谈',
+  forgetting:'动词：遗忘、记不住（forget 的现在分词）',
+  candidate:'名词：候选人、应聘者；（考试）考生',
+  teamwork:'名词：团队合作、协作',
+  failure:'名词：失败；失败者；（机器）故障',
+  secretly:'副词：偷偷地、暗地里',
+  copying:'动词：复制、抄写（copy 的现在分词）',
+  prepares:'动词：准备（prepare 三单；prepare for 为…准备）',
+  rehearsing:'动词：排练、预演（rehearse 的现在分词）',
+  rehearsed:'动词：排练过（rehearse 的过去式/过去分词）',
+  deciding:'动词：决定（decide 的现在分词）',
+  happens:'动词：发生（happen 三单；what happens to… …身上会怎样）',
+  admit:'动词：承认、坦白',
+  publicly:'副词：公开地、当众地',
+  engineer:'名词：工程师',
+  promotion:'名词：晋升、升职；促销',
+  handwriting:'名词：笔迹、手写',
+  sounded:'动词：听起来（sound 系动词过去式）',
+  belonged:'动词：属于（belong 的过去式；belong to 属于）',
+  rejection:'名词：拒绝、拒信（reject 的名词）',
+  filed:'动词：归档、存档（file 的过去式；file away 收好）',
+  pedestrian:'形容词：行人的、步行的；名词：行人',
+  bridge:'名词：桥；动词：架桥、弥合',
+  reasonable:'形容词：合理的、讲得通的',
+  council:'名词：（市政）委员会、议会；（英）地方议会',
+  capital:'形容词：大写的；首都的；资本的',
+  argument:'名词：论点、论证；争吵',
+  crowd:'名词：人群；动词：聚集、拥挤',
+  gathered:'动词：聚集（gather 的过去式）',
+  gate:'名词：大门、闸口',
+  crossing:'名词：过境处、交叉口；人行横道',
+  shortcut:'名词：捷径、近路',
+  worn:'形容词：磨损的（wear 的过去分词；worn into 踩出/磨出）',
+  reasoning:'名词：推理、理由（reason 的动名词）',
+  obtained:'动词：获得、取得（obtain 的过去式，正式）',
+  records:'名词：记录、档案（record 的复数）',
+  maintenance:'名词：维护、保养、维修',
+  nightly:'形容词/副词：每夜的、夜间（进行）的',
+  inspections:'名词：检查、巡查（inspection 的复数）',
+  crew:'名词：（工作）班组、全体工作人员',
+  persuaded:'动词：说服、劝说（persuade 的过去式）',
+  whichever:'代词/限定词：无论哪个；（…中）随便哪个',
+  required:'动词：需要、要求（require 的过去式）',
+  fewest:'形容词：最少的（few 的最高级）',
+  conversations:'名词：对话、交谈（conversation 的复数）',
+  rarely:'副词：很少、难得（否定副词）',
+  grand:'形容词：宏大的、盛大的',
+  agreements:'名词：协议、约定（agreement 的复数）',
+  signed:'动词：签署（sign 的过去式/过去分词）',
+  victory:'名词：胜利',
+  expired:'动词：到期、失效（expire 的过去式；合同/证件过期）',
+  victories:'名词：胜利（victory 的复数）',
+"entrance":"名词：入口、门口；（戏剧性）登场；进入",
+"thick":"形容词：厚的、粗的；浓的、茂密的；（with）布满",
+"concentration":"名词：专注、全神贯注；集中；浓度",
+"delivery":"名词：递送、送货；（快递）送达；分娩；表达方式",
+"outrage":"名词：愤怒、义愤；暴行；动词：激怒",
+"tone":"名词：语气、口吻；音调；色调；风格",
+"neighborhood":"名词：街区、邻里；附近一带",
+"subscriptions":"名词：订阅、订购（subscription 复数）；会员费",
+"subscription":"名词：订阅、订购；会员费",
+"hall":"名词：大厅、礼堂；走廊",
+"thesis":"名词：论文；论点、主张",
+"librarian":"名词：图书馆管理员",
+"unendurable":"形容词：难以忍受的、不堪忍受的",
+"foot":"名词：脚；英尺；底部",
+"traffic":"名词：人流、交通；（非法）交易",
+"invitation":"名词：邀请",
+"invited":"动词：邀请（invite 过去式/过去分词）",
+"receipt":"名词：收据、发票；收到",
+"funding":"名词：资金、拨款",
+"competition":"名词：竞争、角逐；比赛",
+"basement":"名词：地下室",
+"faction":"名词：派系、小集团",
+"dent":"名词：凹痕、瘪角；动词：使凹陷；削弱",
+"courier":"名词：快递员、信使",
+"swap":"动词/名词：交换、调换",
+"specificity":"名词：具体（性）、明确（性）",
+"framed":"动词：装框；（贬）诬陷（frame 过去式）",
+"elegant":"形容词：优雅的、简练的",
+"escalate":"动词：（使）升级、加剧",
+"sweetness":"名词：甜；（性格）和气",
+"partial":"形容词：部分的；偏心的、偏袒的",
+"replacement":"名词：替换品、更换；替补",
+"silence":"名词：安静、沉默；动词：使沉默",
+"opinion":"名词：意见、看法",
+"damaged":"形容词：受损的、损坏的（damage 过去分词）",
+"corner":"名词：角、角落；困境；转弯处",
+"dissolve":"动词：消解、溶解；解散；（议会）解散",
+"photographed":"动词：拍照（photograph 过去式）",
+"declined":"动词：婉拒；下降（decline 过去式）",
+"noon":"名词：正午",
+"consisted":"动词：在于；（of）由…构成（consist 过去式）",
+"outcome":"名词：结果、结局",
+"lovely":"形容词：美好的、讨人喜欢的",
+"risk":"名词：风险、危险；动词：冒…风险",
+"refused":"动词：拒绝（refuse 过去式/过去分词）",
+"watched":"动词：观看、注视（watch 过去式）",
+"arguing":"动词：争论、主张（argue 现在分词）",
+"argument":"名词：争论；论点、理由",
+"reviews":"名词：评论、评价（review 复数）；动词：复习",
+"misunderstanding":"名词：误会、误解",
+"politeness":"名词：礼貌、客气",
+"worn":"形容词：磨损的；（wear 过去分词）穿旧的",
+"grass":"名词：草、草地",
+"inspections":"名词：检查、巡查（inspection 复数）",
+"nightly":"形容词/副词：每夜的（地）",
+"crew":"名词：全体工作人员、班组",
+"obtained":"动词：获得、得到（obtain 过去式）",
+"records":"名词：记录、档案（record 复数）；唱片",
+"maintenance":"名词：维护、保养；维修",
+"persuaded":"动词：说服、劝说（persuade 过去式）",
+"whichever":"代词/限定词：无论哪个",
+"required":"动词：需要、要求（require 过去式）",
+"conversations":"名词：对话、交谈（conversation 复数）",
+"rarely":"副词：很少、难得",
+"grand":"形容词：宏大的、 grand 的；壮丽的",
+"agreements":"名词：协议、约定（agreement 复数）",
+"victory":"名词：胜利",
+"expired":"动词：到期、失效（expire 过去式）",
+"victories":"名词：胜利（victory 复数）",
+"gathered":"动词：聚集（gather 过去式）",
+"crossing":"名词：过街通道、渡口；十字路口",
+"shortcut":"名词：捷径",
+"gate":"名词：大门、登机口",
+"reasonable":"形容词：合理的；通情达理的",
+"capital":"名词：首都；资本；大写字母；形容词：主要的",
+"pedestrian":"名词：行人；形容词：步行的、平淡的",
+"vote":"名词/动词：投票、表决",
+"second":"形容词：第二的；名词：秒；片刻；动词：附议",
+"hidden":"形容词：隐藏的、看不见的（hide 过去分词）",
+"floor plan":"名词短语：平面图、房型图",
+"printed":"动词：印刷、打印（print 过去式）",
+"wall":"名词：墙、墙壁",
+"concentrate":"动词：专注、集中；（浓度）浓缩",
+"render":"动词：使成为；演出、表现",
+"factory":"名词：工厂",
+"councils":"名词：（市政）委员会、议会（council 复数）；（英）地方议会",
+"barbers":"名词：理发师（barber 复数）；理发店",
+"feared":"动词：害怕、担心（fear 过去式）",
+"answered":"动词：回答（answer 过去式）",
+"perfectly":"副词：完美地；完全",
+"conversation":"名词：对话、交谈",
+"forgetting":"动词：忘记（forget 现在分词）",
+"candidate":"名词：候选人；考生、应聘者",
+"interviewer":"名词：面试官；采访者",
+"teamwork":"名词：团队合作",
+"failure":"名词：失败；故障",
+"secretly":"副词：偷偷地、暗地里",
+"stronger":"形容词：更强壮的、更坚定的（strong 比较级）",
+"copying":"动词：誊抄、复制（copy 现在分词）",
+"rejection":"名词：拒绝、否决",
+"promotion":"名词：晋升、提拔；促销",
+"handwriting":"名词：笔迹、手写",
+"engineer":"名词：工程师；动词：设计、策划",
+"publicly":"副词：公开地、当众",
+"belonged":"动词：属于（belong 过去式）",
+"filed":"动词：提交、归档（file 过去式）",
+"rehearsed":"动词：排练、预演（rehearse 过去式）",
+"prepares":"动词：准备（prepare 三单）",
+"rehearsing":"动词：排练（rehearse 现在分词）",
+"flight":"名词：航班；飞行；一段楼梯",
+"already":"副词：已经、早已",
+"delayed":"形容词：延误的（delay 过去分词）；动词：推迟",
+"twice":"副词：两次；两倍",
+"time":"名词：时间；次、回；时刻；动词：计时、安排时间",
+"boarded":"动词：登机、上车（board 过去式）",
+"nobody":"代词：没有人；名词：无名之辈",
+"plane":"名词：飞机",
+"good":"形容词：好的；擅长的；名词：好处、善",
+"sat":"动词：坐（sit 过去式）",
+"runway":"名词：跑道；（时尚）T台",
+"hour":"名词：小时；钟点",
+"announced":"动词：宣布、播报（announce 过去式）",
+"waiting":"动词：等待（wait 现在分词）；名词：等候",
+"air":"名词：空气；空中；神态",
+"control":"名词/动词：控制、管制（air control=空管）",
+"man":"名词：男人；人",
+"next":"形容词：下一个的；副词：接着",
+"turned":"动词：转、变成（turn 过去式）",
+"frequent":"形容词：频繁的；动词：常去",
+"flyer":"名词：常旅客（frequent flyer=飞行常客）；传单",
+"claimed":"动词：声称、认领（claim 过去式）",
+"particular":"形容词：特定的、格外的；挑剔的",
+"route":"名词：路线、航线",
+"notorious":"形容词：臭名昭著的",
+"delays":"名词：延误（delay 复数）；动词：推迟",
+"captain":"名词：机长；船长；上尉",
+"came":"动词：来（come 过去式）",
+"intercom":"名词：内部通话系统、广播",
+"apologized":"动词：道歉（apologize 过去式）",
+"explaining":"动词：解释（explain 现在分词）",
+"shortly":"副词：不久、很快；简短地",
+"taking":"动词：拿、乘坐（take 现在分词）",
+"due":"形容词：到期的；由于（due to）；应给的",
+"severe":"形容词：严重的、剧烈的",
+"weather":"名词：天气",
+"mountains":"名词：山（mountain 复数）",
+"landed":"动词：着陆、降落（land 过去式）",
+"missed":"动词：错过、未赶上（miss 过去式）",
+"airport":"名词：机场",
+"shuttle":"名词：班车、摆渡车；航天飞机",
+"choice":"名词：选择；选择权",
+"take":"动词：拿、乘坐、花费",
+"taxi":"名词：出租车",
+"cost":"名词：费用、成本；动词：花费",
+"almost":"副词：几乎、差不多",
+"forty":"数词：四十",
+"dollars":"名词：美元（dollar 复数）",
+"finally":"副词：终于、最终",
+"arrived":"动词：到达（arrive 过去式）",
+"hotel":"名词：酒店",
+"well":"副词：好；很；名词：井",
+"past":"形容词：过去的；介词：超过；名词：过去",
+"sympathized":"动词：同情（sympathize 过去式）",
+"insisted":"动词：坚持、坚决要求（insist 过去式）",
+"reservation":"名词：预订；保留",
+"cancelled":"形容词：被取消的（cancel 过去式）",
+"no-show":"名词：订了不到、未登机者",
+"fortunately":"副词：幸运地、幸好",
+"explained":"动词：解释（explain 过去式）",
+"situation":"名词：情况、处境",
+"showed":"动词：出示、展示（show 过去式）",
+"boarding":"名词：登机（boarding pass=登机牌）；动词：登机",
+"pass":"名词：通行证、乘车卡；动词：通过、传递",
+"managed":"动词：设法做成（manage 过去式）；管理",
+"room":"名词：房间；空间；余地",
+"another":"限定词：另一个的",
+"guest":"名词：客人、宾客",
+"never":"副词：从不、从未",
+"wasnt":"（was not 缩写）不是",
+"night":"名词：夜晚",
+"planned":"动词：计划（plan 过去式）",
+"bed":"名词：床",
+"story":"名词：故事；报道；情况",
+"tell":"动词：告诉；讲述；分辨",
+"turn":"动词：转、变成；轮流；名词：轮次",
+"bad":"形容词：坏的、严重的",
+"years":"名词：年（year 复数）；岁月",
+"prided":"动词：自豪（pride oneself on=以…自豪）",
+"myself":"代词：我自己",
+"able":"形容词：能够的（be able to）",
+"juggle":"动词：兼顾（多项任务）；玩杂耍",
+"several":"形容词：几个的",
+"tasks":"名词：任务（task 复数）",
+"answering":"动词：回答、接（电话）（answer 现在分词）",
+"emails":"名词：电子邮件（email 复数）",
+"debugging":"动词：调试（程序）（debug 现在分词）",
+"code":"名词：代码；密码；法典",
+"attending":"动词：出席、参加（attend 现在分词）",
+"meetings":"名词：会议（meeting 复数）",
+"simultaneously":"副词：同时地",
+"until":"介词/连词：直到",
+"noticed":"动词：注意到（notice 过去式）",
+"quality":"名词：质量；品质",
+"work":"名词：工作；作品；动词：起作用、工作",
+"slipping":"动词：下滑、变差（slip 现在分词）",
+"began":"动词：开始（begin 过去式）",
+"question":"名词：问题；疑问；动词：质疑",
+"whether":"连词：是否；无论",
+"multitasking":"名词：多任务并行",
+"actually":"副词：实际上、确实",
+"making":"动词：做、使（make 现在分词）",
+"productive":"形容词：高效的、多产的",
+"research":"名词：研究；动词：做研究",
+"suggests":"动词：表明、暗示；建议（suggest 三单）",
+"call":"动词：称呼、打电话；名词：电话",
+"really":"副词：真正地、非常",
+"rapid":"形容词：快速的",
+"switching":"名词：切换（switch 现在分词）",
+"switch":"名词/动词：切换、转换；开关",
+"carries":"动词：携带、承载（carry 三单）",
+"small":"形容词：小的",
+"attention":"名词：注意力；关注",
+"costs":"名词：成本、代价（cost 复数）；动词：花费",
+"add":"动词：加、补充",
+"study":"名词：研究；学习；动词：学习",
+"estimated":"动词：估计（estimate 过去式）",
+"constant":"形容词：持续的、不断的",
+"interruptions":"名词：打断、干扰（interruption 复数）",
+"consume":"动词：消耗、耗费；吃、喝",
+"fifth":"数词：第五；五分之一",
+"working":"形容词：工作的；运转的",
+"day":"名词：一天；白天",
+"ran":"动词：跑、运行（run 过去式）；做实验",
+"experiment":"名词：实验",
+"two":"数词：二",
+"weeks":"名词：周（week 复数）",
+"check":"动词：查看、检查；名词：支票",
+"messages":"名词：消息（message 复数）",
+"three":"数词：三",
+"times":"名词：次、倍（time 复数）；时代",
+"sessions":"名词：时段、一场（session 复数）",
+"uninterrupted":"形容词：不间断的",
+"first":"数词：第一；副词：首先",
+"few":"形容词：很少的、几个的（a few）",
+"days":"名词：天（day 复数）",
+"surprisingly":"副词：出人意料地",
+"difficult":"形容词：困难的",
+"caught":"动词：抓住、发现自己（catch 过去式；be caught doing=下意识在做）",
+"reaching":"动词：伸手去拿（reach 现在分词）",
+"phone":"名词：电话、手机",
+"habit":"名词：习惯",
+"rather":"副词：宁愿；相当；（rather than）而不是",
+"genuine":"形容词：真实的、真诚的",
+"need":"名词/动词：需要",
+"week":"名词：一周",
+"something":"代词：某事、某物",
+"shifted":"动词：转变、改变（shift 过去式）",
+"finishing":"动词：完成（finish 现在分词）",
+"faster":"形容词/副词：更快（fast 比较级）",
+"fewer":"形容词：更少的（few 比较级）",
+"careless":"形容词：粗心的",
+"mistakes":"名词：错误（mistake 复数）",
+"even":"副词：甚至；连",
+"leaving":"动词：离开（leave 现在分词）",
+"office":"名词：办公室",
+"energy":"名词：精力；能量",
+"spare":"形容词：多余的、备用的；动词：匀出",
+"suggesting":"动词：暗示、建议（suggest 现在分词）",
+"eliminated":"动词：彻底消除（eliminate 过去式）",
+"entirely":"副词：完全地",
+"treat":"动词：对待；治疗；请客；名词：款待",
+"limited":"形容词：有限的（limit 过去分词）",
+"resource":"名词：资源",
+"doing":"动词：做（do 现在分词）",
+"thing":"名词：事情；东西",
+"real":"形容词：真实的",
+"pride":"名词：自豪、骄傲；动词：使自豪",
+"oneself":"代词：自己",
+"slip":"动词：下滑、溜走；名词：小错误",
+"morning":"名词：早晨",
+"city":"名词：城市",
+"stopped":"动词：停下、阻止（stop 过去式）",
+"passer-by":"名词：路人",
+"asked":"动词：问、请求（ask 过去式）",
+"nearby":"形容词/副词：附近的（地）",
+"since":"连词/介词：自从；既然",
+"left":"动词：离开、落下（leave 过去式）；形容词：左边的",
+"allergy":"名词：过敏",
+"pills":"名词：药片（pill 复数）",
+"home":"名词：家；副词：在家、回家",
+"pointed":"动词：指（point 过去式）",
+"told":"动词：告诉（tell 过去式）",
+"straight":"形容词/副词：直的（地）；直接",
+"intersections":"名词：十字路口（intersection 复数）",
+"lights":"名词：灯、红绿灯（light 复数）",
+"opposite":"形容词：对面的；相反的",
+"bank":"名词：银行；河岸",
+"thanked":"动词：感谢（thank 过去式）",
+"walking":"动词：走（walk 现在分词）",
+"ten":"数词：十",
+"minutes":"名词：分钟（minute 复数）",
+"realized":"动词：意识到（realize 过去式）",
+"completely":"副词：完全地",
+"lost":"形容词：迷路的、丢失的（lose 过去分词）",
+"street":"名词：街道",
+"looked":"动词：看、显得（look 过去式）",
+"identical":"形容词：一模一样的",
+"guessing":"动词：猜（guess 现在分词）",
+"stepped":"动词：踏进、走进（step 过去式）",
+"coffee":"名词：咖啡",
+"shop":"名词：商店；动词：购物",
+"barista":"名词：咖啡师",
+"quick":"形容词：快的",
+"map":"名词：地图",
+"patient":"形容词：耐心的；名词：病人",
+"enough":"副词/形容词：足够",
+"sketch":"名词：草图；动词：画草图、概述",
+"rough":"形容词：粗略的；粗糙的",
+"plan":"名词：计划；动词：打算",
+"area":"名词：区域；地区",
+"marking":"动词：标记（mark 现在分词）",
+"cross":"动词：穿过；名词：十字",
+"one-way":"形容词：单行的；单程的",
+"system":"名词：系统；制度",
+"made":"动词：做、使（make 过去式）",
+"tricky":"形容词：棘手的、难对付的",
+"newcomers":"名词：新来者（newcomer 复数）",
+"following":"动词：跟随；介词：在…之后（follow 现在分词）",
+"directions":"名词：方向；指引（direction 复数）",
+"found":"动词：找到（find 过去式）",
+"five":"数词：五",
+"tucked":"动词：塞、卷（tuck 过去式；tucked away=藏在深处）",
+"away":"副词：远离；离开",
+"bookstore":"名词：书店",
+"dry":"形容词：干的、干燥的（dry cleaner=干洗店）",
+"cleaners":"名词：干洗店（dry cleaner's）",
+"way":"名词：路；方式",
+"back":"名词：背面；副词：回原处",
+"got":"动词：得到（get 过去式）；开始（get talking=聊起来）",
+"talking":"动词：交谈（talk 现在分词）",
+"elderly":"形容词：上了年纪的",
+"gave":"动词：给（give 过去式）",
+"piece":"名词：一片、一条（a piece of advice=一条建议）",
+"advice":"名词：建议（不可数）",
+"still":"副词：仍然；还",
+"remember":"动词：记得",
+"always":"副词：总是",
+"note":"名词：笔记；纸条；动词：注意到",
+"landmark":"名词：地标",
+"near":"介词/形容词：在…附近；近的",
+"truly":"副词：真正地",
+"photographing":"动词：拍照（photograph 现在分词）",
+"corners":"名词：角落（corner 复数）",
+"whenever":"连词：每当",
+"arrive":"动词：到达",
+"somewhere":"副词：在某处",
+"new":"形容词：新的",
+"spring":"名词：春天；泉；弹簧",
+"applied":"动词：申请；应用（apply 过去式）",
+"summer":"名词：夏天",
+"internship":"名词：实习",
+"software":"名词：软件",
+"company":"名词：公司；陪伴",
+"hardly":"副词：几乎不",
+"expecting":"动词：期待、料想（expect 现在分词）",
+"hear":"动词：听见；听说",
+"surprise":"名词：惊讶；动词：使惊讶",
+"received":"动词：收到（receive 过去式）",
+"email":"名词：电子邮件",
+"inviting":"动词：邀请（invite 现在分词）",
+"tuesday":"名词：星期二",
+"spent":"动词：花费（时间/钱）（spend 过去式）",
+"whole":"形容词：整个的",
+"weekend":"名词：周末",
+"preparing":"动词：准备（prepare 现在分词）",
+"answers":"名词：回答（answer 复数）；动词：回答",
+"typical":"形容词：典型的、常见的",
+"questions":"名词：问题（question 复数）",
+"nothing":"代词：没有什么",
+"happened":"动词：发生（happen 过去式）",
+"walked":"动词：走（walk 过去式）",
+"didnt":"（did not 缩写）没有",
+"ask":"动词：问；请求",
+"resume":"名词：简历（résumé）",
+"résumé":"名词：简历",
+"handed":"动词：递、交（hand 过去式；hand in=上交）",
+"broken":"形容词：坏的（break 过去分词）",
+"printer":"名词：打印机",
+"fix":"动词：修理；解决；名词：解决办法",
+"front":"名词：前面；正面",
+"although":"连词：虽然、尽管",
+"hands":"名词：手（hand 复数）；动词：递",
+"shaking":"动词：颤抖（shake 现在分词）",
+"remembered":"动词：记得（remember 过去式）",
+"fathers":"名词：父亲（father 的所有格/复数）",
+"words":"名词：话、词（word 复数）",
+"describe":"动词：描述",
+"people":"名词：人们",
+"follow":"动词：跟随；遵循",
+"thinking":"名词：思考（think 现在分词）；想法",
+"talked":"动词：谈（talk 过去式；talk through=逐步讲清）",
+"through":"介词：通过；穿过",
+"process":"名词：过程；流程",
+"step":"名词：步骤；一步",
+"checking":"动词：检查（check 现在分词）",
+"paper":"名词：纸；文件",
+"tray":"名词：托盘；（打印机）纸盒",
+"restarting":"动词：重启（restart 现在分词）",
+"device":"名词：设备",
+"removing":"动词：移除、取出（remove 现在分词）",
+"jammed":"形容词：卡住的（jam 过去分词）",
+"page":"名词：页",
+"pair":"名词：一双、一对（a pair of）",
+"tweezers":"名词：镊子（复数形式）",
+"smiled":"动词：微笑（smile 过去式）",
+"said":"动词：说（say 过去式）",
+"fixing":"动词：修理（fix 现在分词）",
+"machine":"名词：机器",
+"point":"名词：点；要点；目的（the point=意义所在）",
+"wanted":"动词：想要（want 过去式）",
+"see":"动词：看见；理解",
+"behaved":"动词：表现（behave 过去式）",
+"pressure":"名词：压力",
+"kept":"动词：保持、继续（keep 过去式）",
+"part":"名词：部分；角色",
+"thats":"（that is 缩写）那就是",
+"talk":"名词/动词：谈话；演讲",
+"screen":"名词：屏幕",
+"cracked":"形容词：裂了的（crack 过去分词）",
+"month":"名词：月",
+"decided":"动词：决定（decide 过去式）",
+"replace":"动词：更换、替换",
+"full":"形容词：满的；完整的",
+"hardest":"形容词：最难的（hard 最高级）",
+"thumb":"名词：拇指",
+"unlocking":"动词：解锁（unlock 现在分词）",
+"felt":"动词：感觉（feel 过去式）",
+"strange":"形容词：奇怪的；陌生的",
+"itch":"名词：痒；渴望（an itch to do=想做…的冲动）",
+"anxiety":"名词：焦虑",
+"reached":"动词：伸手伸向、到达（reach 过去式）",
+"pocket":"名词：口袋",
+"however":"副词：然而；无论如何",
+"unexpected":"形容词：意想不到的",
+"having":"动词：有（have 现在分词）",
+"longer":"形容词/副词：更长的（地）；（no longer）不再",
+"classmates":"名词：同学（classmate 复数）",
+"walks":"名词：散步（walk 复数）；动词：走",
+"school":"名词：学校",
+"shorter":"形容词：更短的（short 比较级）",
+"notifications":"名词：通知（notification 复数）",
+"jumping":"动词：跳；（注意力）跳转（jump 现在分词）",
+"book":"名词：书；动词：预订",
+"used":"动词：用；（used to）过去常常",
+"took":"动词：拿、花费（take 过去式）",
+"four":"数词：四",
+"wont":"（will not 缩写）不会",
+"pretend":"动词：假装",
+"easy":"形容词：容易的",
+"maps":"名词：地图（map 复数）；动词：绘制地图",
+"borrow":"动词：借（入）",
+"strangers":"名词：陌生人（stranger 复数）",
+"surprised":"形容词：惊讶的（surprise 过去分词）",
+"quickly":"副词：很快地",
+"faded":"动词：消退、减弱（fade 过去式）",
+"missing":"动词：错过、想念（miss 现在分词）；形容词：丢失的",
+"anything":"代词：任何事",
+"important":"形容词：重要的",
+"ended":"动词：结束（end 过去式；end up=最终）",
+"buy":"动词：买",
+"deleted":"动词：删除（delete 过去式）",
+"apps":"名词：应用程序（app 复数）",
+"eating":"动词：吃（eat 现在分词）",
+"evenings":"名词：晚上（evening 复数）",
+"taught":"动词：教（teach 过去式）",
+"wonderful":"形容词：极好的",
+"tool":"名词：工具",
+"terrible":"形容词：糟糕的、可怕的",
+"master":"名词：主人；大师；动词：掌握",
+"try":"动词：尝试；名词：尝试",
+"keep":"动词：保持、保留",
+"sth":"（缩写）something 某事",
+"saturday":"名词：星期六",
+"rushed":"动词：冲、赶（rush 过去式）",
+"station":"名词：车站",
+"jumped":"动词：跳上（jump 过去式）",
+"onto":"介词：到…上面",
+"train":"名词：火车；动词：训练",
+"leave":"动词：离开；留下",
+"doors":"名词：门（door 复数）",
+"closed":"形容词：关闭的（close 过去分词）",
+"wrong":"形容词：错误的",
+"line":"名词：线路；行；队伍",
+"heading":"动词：前往（head 现在分词）",
+"north":"名词/副词：北方（地）",
+"meeting":"名词：会议",
+"town":"名词：城镇",
+"south":"名词/副词：南方（地）",
+"blamed":"动词：责怪（blame 过去式）",
+"departure":"名词：出发；离去（departure board=发车信息牌）",
+"carefully":"副词：仔细地",
+"grandfather":"名词：祖父、外公",
+"say":"动词：说",
+"accident":"名词：事故；意外",
+"disaster":"名词：灾难",
+"refuse":"动词：拒绝",
+"deal":"名词：交易；动词：处理（deal with）",
+"conductor":"名词：列车员；（乐队）指挥",
+"old":"形容词：老的、旧的",
+"tired":"形容词：累的；厌烦的",
+"friendly":"形容词：友好的",
+"face":"名词：脸；动词：面对",
+"honestly":"副词：老实说、确实",
+"scold":"动词：责骂",
+"stop":"动词/名词：停止；车站",
+"platform":"名词：站台；平台",
+"catch":"动词：赶上、抓住",
+"southbound":"形容词：向南的",
+"fifteen":"数词：十五",
+"waited":"动词：等（wait 过去式）",
+"thirty":"数词：三十",
+"railway":"名词：铁路",
+"many":"形容词：许多的",
+"forgetful":"形容词：健忘的",
+"passengers":"名词：乘客（passenger 复数）",
+"met":"动词：遇见（meet 过去式）",
+"late":"形容词/副词：晚的（地）；迟到",
+"checked":"动词：检查、核实（check 过去式）",
+"ever":"副词：曾经；究竟",
+"blame":"动词/名词：责怪；责任",
+"perfect":"形容词：完美的",
+"wide":"形容词：宽的",
+"sea":"名词：海",
+"view":"名词：景色；观点",
+"modern":"形容词：现代化的",
+"bathroom":"名词：浴室",
+"rain":"名词：雨；动词：下雨",
+"shower":"名词：淋浴；阵雨",
+"reality":"名词：现实",
+"different":"形容词：不同的",
+"conditioner":"名词：（air conditioner）空调；护发素",
+"noise":"名词：噪音",
+"like":"介词：像；动词：喜欢",
+"motorcycle":"名词：摩托车",
+"narrow":"形容词：狭窄的",
+"slice":"名词：一片、一条；动词：切",
+"grey":"形容词：灰色的",
+"water":"名词：水",
+"buildings":"名词：楼房（building 复数）",
+"sleepless":"形容词：失眠的、无眠的",
+"simply":"副词：仅仅、简单地",
+"endure":"动词：忍受、坚持住",
+"went":"动词：去（go 过去式）",
+"desk":"名词：前台；书桌",
+"speak":"动词：说、讲",
+"manager":"名词：经理",
+"voice":"名词：声音；语气",
+"sentences":"名词：句子（sentence 复数）",
+"short":"形容词：短的；矮的",
+"described":"动词：描述（describe 过去式）",
+"use":"动词/名词：用；使用",
+"immediately":"副词：立刻",
+"moved":"动词：搬、使感动（move 过去式）",
+"better":"形容词/副词：更好（good 比较级）",
+"top":"形容词：顶层的；名词：顶部",
+"floor":"名词：楼层；地板",
+"charge":"名词/动词：收费；指控",
+"sent":"动词：送（send 过去式）",
+"fruit":"名词：水果",
+"plate":"名词：盘子",
+"handwritten":"形容词：手写的",
+"sorry":"形容词：抱歉的、难过的",
+"noisy":"形容词：嘈杂的",
+"experience":"名词：经历；经验",
+"useful":"形容词：有用的",
+"polite":"形容词：有礼貌的",
+"works":"动词：起作用、有效（work 三单）",
+"far":"副词：远；非常",
+"angry":"形容词：生气的",
+"fixes":"动词：解决（fix 三单）；名词：解决办法",
+"early":"形容词/副词：早的（地）",
+"clearly":"副词：清楚地、明显",
+"hand":"名词：手；动词：递",
+"send":"动词：发送",
+"english":"名词：英语；形容词：英国的",
+"teacher":"名词：老师",
+"unusual":"形容词：不寻常的",
+"test":"名词/动词：测试",
+"entire":"形容词：整个的",
+"allowed":"动词：允许（allow 过去式）",
+"single":"形容词：单个的、唯一的",
+"sentence":"名词：句子",
+"using":"动词：使用（use 现在分词）",
+"correctly":"副词：正确地",
+"student":"名词：学生",
+"forgot":"动词：忘记（forget 过去式）",
+"mark":"动词：标记；名词：记号；分数",
+"later":"副词：后来",
+"marks":"名词：标记（mark 复数）；分数；动词：标记",
+"embarrassing":"形容词：令人尴尬的",
+"exercise":"名词：练习；锻炼",
+"discovered":"动词：发现（discover 过去式）",
+"mistake":"名词：错误",
+"rule":"名词：规则",
+"simple":"形容词：简单的",
+"consonant":"名词：辅音",
+"sound":"名词：声音；动词：听起来",
+"vowel":"名词：元音",
+"know":"动词：知道",
+"exactly":"副词：恰好、正是",
+"mean":"动词：意味着；意思是",
+"detail":"名词：细节",
+"silent":"形容词：不发音的；沉默的",
+"university":"名词：大学",
+"starts":"动词：开始（start 三单）",
+"interesting":"形容词：有趣的",
+"language":"名词：语言",
+"matters":"动词：要紧（matter 三单）；名词：事情",
+"letter":"名词：字母；信",
+"end":"名词/动词：结尾；结束",
+"grown":"动词：成长、变得（grow 过去分词）",
+"stayed":"动词：保持、停留（stay 过去式）",
+"unsure":"形容词：不确定的",
+"listener":"名词：听者",
+"yes":"副词：是的",
+"grow":"动词：生长；变得",
+"charles":"名词：查尔斯（人名）",
+"gaulle":"名词：戴高乐（人名）",
+"six":"数词：六",
+"evening":"名词：晚上",
+"fifty":"数词：五十",
+"connecting":"形容词：中转的（connecting flight=中转航班）；动词：连接",
+"rome":"名词：罗马",
+"problem":"名词：问题",
+"joined":"动词：加入、汇合（join 过去式）",
+"helping":"动词：帮助（help 现在分词）",
+"family":"名词：家人；家庭",
+"passports":"名词：护照（passport 复数）",
+"connection":"名词：中转、衔接；连接",
+"bag":"名词：包",
+"idea":"名词：主意",
+"run":"动词：跑；运营；名词：跑步",
+"wrote":"动词：写（write 过去式）",
+"big":"形容词：大的",
+"terminals":"名词：航站楼（terminal 复数）",
+"dragging":"动词：拖、拽（drag 现在分词）",
+"backpack":"名词：双肩包",
+"final":"形容词：最后的",
+"ending":"名词：结尾",
+"attendant":"名词：乘务员（flight attendant=空乘）",
+"close":"动词：关；形容词：近的、接近的",
+"hours":"名词：小时（hour 复数）",
+"matter":"动词：要紧；名词：事情",
+"cheap":"形容词：便宜的",
+"ticket":"名词：票",
+"looks":"动词：看起来（look 三单）；名词：外表",
+"dangerous":"形容词：危险的",
+"bus":"名词：公共汽车",
+"leaves":"动词：离开（leave 三单）；名词：叶子",
+"umbrella":"名词：雨伞",
+"min":"（缩写）minute 分钟",
+"news":"名词：新闻；消息",
+"cruel":"形容词：残酷的",
+"joke":"名词：玩笑",
+"depending":"动词：取决于（depend 现在分词；depending on）",
+"woman":"名词：女人",
+"usually":"副词：通常",
+"started":"动词：开始（start 过去式）",
+"taken":"动词：拿、乘坐（take 过去分词）",
+"exact":"形容词：确切的",
+"twenty":"数词：二十",
+"driver":"名词：司机",
+"phones":"名词：电话（phone 复数）",
+"dead":"形容词：没电的；死的",
+"empty":"形容词：空的",
+"pockets":"名词：口袋（pocket 复数）",
+"pay":"动词：支付",
+"beside":"介词：在…旁边",
+"daughter":"名词：女儿",
+"lived":"动词：住、生活（live 过去式）",
+"abroad":"副词：在国外",
+"two-euro":"形容词：两欧元的",
+"debt":"名词：债、人情债",
+"stranger":"名词：陌生人",
+"saved":"动词：救、省（save 过去式）",
+"own":"形容词：自己的；动词：拥有",
+"feeling":"名词：感觉（feel 现在分词）",
+"lighter":"形容词：更轻松的、更轻的（light 比较级）",
+"deserved":"动词：应得（deserve 过去式）",
+"saw":"动词：看见（see 过去式）",
+"euros":"名词：欧元（euro 复数）",
+"wave":"名词/动词：挥手；波浪",
+"deserve":"动词：应得、值得",
+"january":"名词：一月",
+"notebook":"名词：笔记本",
+"december":"名词：十二月",
+"notes":"名词：笔记（note 复数）",
+"half-finished":"形容词：写了一半的",
+"ideas":"名词：想法（idea 复数）",
+"shopping":"名词：购物",
+"lists":"名词：清单（list 复数）",
+"friends":"名词：朋友（friend 复数）",
+"telling":"动词：告诉（tell 现在分词）",
+"app":"名词：应用程序",
+"right":"形容词：对的；右边的；副词：正好",
+"same":"形容词：相同的",
+"walk":"名词/动词：走路；散步",
+"write":"动词：写",
+"things":"名词：东西、事情（thing 复数）",
+"memory":"名词：记忆；记忆力",
+"slow":"形容词：慢的",
+"physical":"形容词：身体的；实物的",
+"act":"名词：行为；动词：行动",
+"writing":"名词：书写（write 现在分词）",
+"helps":"动词：帮助（help 三单）",
+"brain":"名词：大脑",
+"hold":"动词：握住；容纳；持有",
+"information":"名词：信息",
+"cannot":"（can not）不能",
+"ring":"名词：戒指；铃声；动词：响",
+"watch":"名词：手表；动词：观看",
+"video":"名词：视频",
+"think":"动词：想、认为",
+"course":"名词：课程；当然（of course）",
+"disadvantages":"名词：缺点（disadvantage 复数）",
+"search":"动词/名词：搜索",
+"lose":"动词：丢失、输",
+"easily":"副词：容易地",
+"yesterdays":"名词：昨天（yesterday 的所有格）",
+"gone":"动词：走了、消失（go 过去分词）",
+"forever":"副词：永远",
+"written":"动词：写（write 过去分词）",
+"maybe":"副词：也许",
+"forces":"动词：迫使（force 三单）；名词：力量",
+"choose":"动词：选择",
+"deserves":"动词：应得（deserve 三单）",
+"keeps":"动词：保持（keep 三单）",
+"everything":"代词：一切",
+"means":"动词：意味着（mean 三单）；名词：手段",
+"survived":"动词：幸存、留存（survive 过去式）",
+"doubt":"名词/动词：怀疑",
+"name":"名词：名字；动词：命名",
+"number":"名词：数字；号码",
+"year":"名词：年",
+"force":"名词：力量；动词：强迫",
+"key":"名词：钥匙；键；关键",
+"card":"名词：卡片（key card=房卡）",
+"mine":"代词：我的（东西）",
+"bill":"名词：账单；动词：开账单",
+"ninety":"数词：九十",
+"higher":"形容词：更高的（high 比较级）",
+"price":"名词：价格",
+"booked":"动词：预订（book 过去式）",
+"online":"副词/形容词：在线（的）",
+"print":"动词：打印；名词：打印件；（the fine print=小字条款）",
+"tax":"名词：税",
+"service":"名词：服务",
+"fee":"名词：费用",
+"understand":"动词：理解",
+"mini-bar":"名词：小冰箱（客房酒水吧）",
+"restocking":"动词：补货（restock 现在分词）",
+"touched":"动词：碰、触动（touch 过去式）",
+"door":"名词：门",
+"removed":"动词：移除（remove 过去式）",
+"seconds":"名词：秒（second 复数）；片刻",
+"booking":"名词：预订；动词：预订（book 现在分词）",
+"website":"名词：网站",
+"kind":"形容词：善良的；名词：种类（a kind of）",
+"fair":"形容词：公平的；名词：集市",
+"questioned":"动词：质疑（question 过去式）",
+"thank":"动词：感谢",
+"read":"动词：读",
+"errors":"名词：错误（error 复数）",
+"fixed":"动词：解决、修理（fix 过去式）",
+"someone":"代词：有人",
+"points":"名词：点、积分（point 复数）；动词：指",
+"checkout":"名词：退房；结账",
+"statement":"名词：账单明细；声明",
+"security":"名词：安全；保安",
+"script":"名词：话术；脚本",
+"join":"动词：加入",
+"liquids":"名词：液体（liquid 复数）",
+"laptop":"名词：笔记本电脑",
+"holding":"动词：拿着、握住（hold 现在分词）",
+"expect":"动词：预期、料想",
+"bottle":"名词：瓶子",
+"forgotten":"动词：被遗忘（forget 过去分词）",
+"bottom":"名词：底部",
+"traveler":"名词：旅客",
+"cant":"（can not 缩写）不能",
+"drink":"动词：喝；名词：饮料",
+"here":"副词：这里",
+"refill":"动词：续水、再装满；名词：替换装",
+"other":"形容词：其他的",
+"side":"名词：边；面",
+"fountain":"名词：（饮水）喷泉；泉水",
+"meters":"名词：米（meter 复数）；计价器",
+"drank":"动词：喝（drink 过去式）",
+"basically":"副词：基本上",
+"move":"动词：移动；行动",
+"debate":"名词/动词：辩论",
+"checklist":"名词：核对清单",
+"fastest":"形容词：最快的（fast 最高级）",
+"smartest":"形容词：最聪明的（smart 最高级）",
+"ones":"代词：…的人/物（one 复数）",
+"re-":"（前缀）再、重新",
+"refold":"动词：重新折",
+"retry":"动词：重试",
+"sunday":"名词：星期日",
+"woke":"动词：醒来（wake 过去式）",
+"sore":"形容词：疼痛的（sore throat=嗓子疼）",
+"throat":"名词：喉咙",
+"slight":"形容词：轻微的",
+"fever":"名词：发烧",
+"except":"介词：除了",
+"series":"名词：系列；连续",
+"hadnt":"（had not 缩写）还没有",
+"long":"形容词：长的；副词：长久",
+"allergic":"形容词：过敏的（be allergic to）",
+"medicine":"名词：药；医学",
+"answer":"名词/动词：回答",
+"pain":"名词：疼痛",
+"swallowed":"动词：吞下（swallow 过去式）",
+"word":"名词：词；话",
+"swallow":"动词：吞；咽下",
+"swallowing":"动词：吞咽（swallow 现在分词）",
+"motion":"名词：动作",
+"laughed":"动词：笑（laugh 过去式）",
+"lozenge":"名词：润喉糖",
+"recommended":"动词：推荐（recommend 过去式）",
+"gentle":"形容词：温和的",
+"reminded":"动词：提醒（remind 过去式；remind sb of）",
+"plenty":"名词：充足（plenty of）",
+"much":"形容词/副词：多、非常",
+"vocabulary":"名词：词汇量",
+"visit":"动词/名词：拜访、就诊",
+"requires":"动词：需要（require 三单）",
+"pointing":"动词：指（point 现在分词）",
+"smile":"名词/动词：微笑",
+"list":"名词：清单；动词：列出",
+"body-related":"形容词：与身体相关的",
+"country":"名词：国家；乡村",
+"coming":"动词：来（come 现在分词）；即将到来的",
+"greatest":"形容词：最大的（great 最高级）",
+"weakness":"名词：弱点；软弱",
+"classic":"形容词：经典的、典型的",
+"trick":"名词：技巧；把戏；窍门",
+"perfectionist":"名词：完美主义者",
+"hard":"形容词：困难的；副词：努力地",
+"halfway":"副词：在中途；半途",
+"heard":"动词：听说、听见（hear 过去式）",
+"eleven":"数词：十一",
+"truth":"名词：真相；事实",
+"avoid":"动词：避免",
+"asking":"动词：问、请求（ask 现在分词）",
+"help":"名词/动词：帮助",
+"grew":"动词：变得、增长（grow 过去式）",
+"needing":"动词：需要（need 现在分词）",
+"meant":"动词：意味着（mean 过去式）",
+"weak":"形容词：虚弱的、薄弱的",
+"half":"名词：一半；形容词：一半的",
+"engineering":"名词：工程（学）",
+"knowing":"动词：知道（know 现在分词）",
+"shared":"形容词：共享的（share 过去分词）；动词：分享",
+"team":"名词：团队",
+"handles":"动词：处理、应对（handle 三单）",
+"job":"名词：工作；职责",
+"fake":"形容词：假的；伪装的；名词：赝品",
+"comes":"动词：来（come 三单）",
+"ive":"（I have 缩写）我已经",
+"practicing":"动词：练习（practice 现在分词）",
+"deliberately":"副词：刻意地、故意地",
+"worked":"动词：起作用、工作（work 过去式）",
+"supermarket":"名词：超市",
+"supposed":"动词： supposed to=应该（suppose 过去分词）",
+"packages":"名词：包裹（package 复数）",
+"knew":"动词：知道（know 过去式）",
+"sizes":"名词：尺寸（size 复数）",
+"brands":"名词：品牌（brand 复数）",
+"prices":"名词：价格（price 复数）",
+"quietly":"副词：安静地、悄悄地",
+"applying":"动词：申请、应用（apply 现在分词）",
+"stood":"动词：站（stand 过去式）",
+"milk":"名词：牛奶",
+"shelf":"名词：货架",
+"comparing":"动词：比较（compare 现在分词）",
+"labels":"名词：标签（label 复数）",
+"low-fat":"形容词：低脂的",
+"cashier":"名词：收银员",
+"couldnt":"（could not 缩写）不能",
+"agreed":"动词：同意（agree 过去式）",
+"donate":"动词：捐赠",
+"euro":"名词：欧元",
+"charity":"名词：慈善（机构）",
+"thought":"名词：想法；动词：想（think 过去式）",
+"rest":"名词：剩余部分；休息",
+"travel":"名词/动词：旅行",
+"learn":"动词：学习、学会",
+"slowly":"副词：缓慢地",
+"unclear":"形容词：不清楚的",
+"expensive":"形容词：昂贵的",
+"foreign":"形容词：外国的、陌生的",
+"apply":"动词：申请；应用；涂",
+"punchline":"名词：（笑话的）点睛之句、包袱",
+"sometime":"副词：某个时候",
+"greenhouse":"名词：温室",
+"called":"动词：称为、打电话（call 过去式）",
+"fully":"副词：完全地",
+"rooms":"名词：房间（room 复数）",
+"available":"形容词：可订的、可获得的；有空的",
+"check-in":"名词：入住、办理登机手续",
+"shout":"动词：喊、大声说",
+"threaten":"动词：威胁",
+"going":"动词：去（go 现在分词）；将要",
+"sure":"形容词：确定的",
+"expected":"动词：预期（expect 过去式）",
+"put":"动词：放",
+"learned":"动词：学到（learn 过去式）",
+"standard":"形容词：标准的；名词：标准",
+"tactic":"名词：策略、套路",
+"free":"形容词：免费的；自由的",
+"breakfast":"名词：早餐",
+"sleep":"名词/动词：睡觉",
+"offer":"动词/名词：提供、提出",
+"nine":"数词：九",
+"oclock":"副词：…点钟（o'clock）",
+"refunded":"动词：退款（refund 过去式）",
+"record":"名词：记录；动词：记录",
+"lesson":"名词：教训；课",
+"dont":"（do not 缩写）不要",
+"win":"动词：赢",
+"complaints":"名词：投诉（complaint 复数）",
+"loudest":"形容词：最大声的（loud 最高级）",
+"calmest":"形容词：最冷静的（calm 最高级）",
+"facts":"名词：事实（fact 复数）",
+"countries":"名词：国家（country 复数）",
+"lower":"形容词/动词：更低（的）、降低（low 比较级）",
+"feels":"动词：感觉（feel 三单）",
+"normal":"形容词：正常的",
+"others":"代词：其他人/物（other 复数）",
+"rude":"形容词：粗鲁的",
+"middle":"名词：中间",
+"ground":"名词：地面；立场（middle ground=折中）",
+"everywhere":"副词：到处",
+"separate":"动词：分开；形容词：分开的、各自的",
+"attacking":"动词：攻击（attack 现在分词）",
+"seller":"名词：卖家",
+"exploring":"动词：探索（explore 现在分词）",
+"bit":"名词：一点（a bit）",
+"chance":"名词：机会；可能性",
+"soft":"形容词：软的；温和的",
+"smaller":"形容词：更小的（small 比较级）",
+"sellers":"名词：卖家（seller 复数）",
+"easier":"形容词：更容易的（easy 比较级）",
+"give":"动词：给",
+"father":"名词：父亲",
+"negotiate":"动词：谈判、协商",
+"saying":"动词：说（say 现在分词）；名词：格言",
+"want":"动词：想要",
+"feel":"动词：感觉",
+"magical":"形容词：有魔力的、奇妙的",
+"turns":"动词：转、变成（turn 三单；it turns out=事实证明）",
+"solving":"动词：解决（solve 现在分词）",
+"together":"副词：一起",
+"strongest":"形容词：最强的（strong 最高级）",
+"ready":"形容词：准备好的",
+"anyway":"副词：无论如何",
+"ill":"（I will 缩写）我会；形容词：生病的",
+"suddenly":"副词：突然",
+"discounts":"名词：折扣（discount 复数）",
+"customer":"名词：顾客",
+"stands":"动词：站（stand 三单）；名词：看台",
+"smiles":"动词：微笑（smile 三单）",
+"doesnt":"（does not 缩写）不",
+"pizza":"名词：披萨",
+"ham":"名词：火腿",
+"ordered":"动词：点（餐）、订购（order 过去式）",
+"mushroom":"名词：蘑菇",
+"busy":"形容词：忙的",
+"kitchen":"名词：厨房",
+"makes":"动词：做、使（make 三单）",
+"waiter":"名词：服务员",
+"table":"名词：桌子；表格",
+"order":"名词：顺序；点单；动词：点（餐）",
+"options":"名词：选项（option 复数）",
+"louder":"形容词：更大声的（loud 比较级）",
+"clearer":"形容词：更清晰的（clear 比较级）",
+"chose":"动词：选择（choose 过去式）",
+"twelve":"数词：十二",
+"giving":"动词：给（give 现在分词）",
+"changed":"动词：改变（change 过去式）",
+"himself":"代词：他自己",
+"comped":"动词：赠送、免单（comp 过去式；酒店/餐厅免费送）",
+"added":"动词：添加（add 过去式）",
+"dessert":"名词：甜点",
+"restaurant":"名词：餐厅",
+"loud":"形容词：大声的",
+"gets":"动词：得到（get 三单）",
+"results":"名词：结果（result 复数）",
+"comp":"名词：赠品、免费券；动词：免费赠送",
+"renting":"动词：租（rent 现在分词）",
+"car":"名词：汽车",
+"pick":"动词：挑选；接（人）（pick up）",
+"live":"动词：住、生活；形容词：现场的",
+"license":"名词：执照（driving license=驾照）",
+"temporary":"形容词：临时的",
+"fine":"形容词：好的；细微的；名词：罚款",
+"printout":"名词：打印件",
+"issuing":"动词：签发（issue 现在分词）",
+"authority":"名词：官方机构；权威",
+"plastic":"名词：塑料；形容词：塑料的",
+"yet":"副词：还、尚未；连词：然而",
+"frowned":"动词：皱眉（frown 过去式）",
+"wait":"动词/名词：等待",
+"worrying":"形容词：令人担忧的（worry 现在分词）",
+"solution":"名词：解决方案",
+"refusal":"名词：拒绝",
+"deposit":"名词：押金；存款",
+"file":"名词：文件；动词：提交",
+"approved":"动词：批准（approve 过去式）",
+"supervisor":"名词：主管",
+"rental":"名词：租赁（car rental=租车）",
+"conditions":"名词：条件、条款（condition 复数）",
+"driving":"动词：开车（drive 现在分词）",
+"luck":"名词：运气",
+"brought":"动词：带来（bring 过去式）",
+"patience":"名词：耐心",
+"wants":"动词：想要（want 三单）",
+"exam":"名词：考试",
+"negotiation":"名词：谈判",
+"bring":"动词：带来",
+"goes":"动词：去（go 三单）",
+"announcement":"名词：广播、通知",
+"languages":"名词：语言（language 复数）",
+"understood":"动词：明白（understand 过去分词）",
+"twelve-hour":"形容词：十二小时的",
+"nightmare":"名词：噩梦；糟糕的经历",
+"passenger":"名词：乘客",
+"best":"形容词：最好的（good 最高级）",
+"joining":"动词：加入（join 现在分词）",
+"demanding":"动词：强烈要求（demand 现在分词）；形容词：要求高的",
+"rebooking":"动词：改签（rebook 现在分词）",
+"deliver":"动词：交付、送达",
+"opened":"动词：打开（open 过去式）",
+"airline":"名词：航空公司",
+"math":"名词：数学",
+"offering":"动词：提供（offer 现在分词）",
+"voucher":"名词：代金券、补偿券",
+"anyone":"代词：任何人",
+"willing":"形容词：愿意的",
+"outside":"副词：外面；介词：在…外",
+"seen":"动词：看见（see 过去分词）",
+"trade":"名词：交易；（in trade）行业经验",
+"experienced":"形容词：有经验的（experience 过去分词）",
+"travelers":"名词：旅客（traveler 复数）",
+"make":"动词：做",
+"inconvenience":"名词：不便",
+"soup":"名词：汤",
+"stall":"名词：摊位",
+"menu":"名词：菜单",
+"pictures":"名词：图片（picture 复数）",
+"often":"副词：经常",
+"food":"名词：食物",
+"cancellations":"名词：取消（cancellation 复数）",
+"decision":"名词：决定",
+"formed":"动词：形成（form 过去式）",
+"traveling":"动词：旅行（travel 现在分词）",
+"interaction":"名词：互动",
+"followed":"动词：遵循、跟随（follow 过去式）",
+"sad":"形容词：令人遗憾的、悲伤的",
+"pattern":"名词：模式",
+"hope":"名词/动词：希望",
+"mostly":"副词：主要地、大多",
+"substitutions":"名词：替换（substitution 复数）",
+"adjustments":"名词：调整（adjustment 复数）",
+"lisbon":"名词：里斯本",
+"meaning":"名词：意思；意义",
+"fish":"名词：鱼",
+"onions":"名词：洋葱（onion 复数）",
+"please":"动词：请；使高兴",
+"request":"名词/动词：请求",
+"world":"名词：世界",
+"earth":"名词：地球；土壤",
+"expects":"动词：预期（expect 三单）",
+"adjust":"动词：调整、适应",
+"subtle":"形容词：细微的、微妙的",
+"participant":"名词：参与者",
+"tourist":"名词：游客",
+"buys":"动词：买（buy 三单）",
+"follow-up":"名词：后续（跟进）",
+"steaks":"名词：牛排（steak 复数）",
+"medium-rare":"形容词：三分熟的",
+"sauces":"名词：酱汁（sauce 复数）",
+"ice":"名词：冰",
+"cream":"名词：奶油（ice cream=冰淇淋）",
+"magic":"名词：魔法；形容词：有魔力的",
+"two-word":"形容词：两个词的",
+"opener":"名词：开场白；（对话的）引子",
+"possible":"形容词：可能的",
+"worst":"形容词：最糟的（bad 最高级）",
+"self-checkout":"名词：自助结账",
+"machines":"名词：机器（machine 复数）",
+"care":"名词/动词：在乎、小心",
+"accent":"名词：口音；重音",
+"fact":"名词：事实",
+"hurry":"名词/动词：匆忙",
+"standing":"动词：站（stand 现在分词）",
+"scanning":"动词：扫描（scan 现在分词）",
+"bagging":"动词：装袋（bag 现在分词）",
+"apologizing":"动词：道歉（apologize 现在分词）",
+"red":"形容词：红色的",
+"item":"名词：物品",
+"lemon":"名词：柠檬",
+"placed":"动词：放置（place 过去式）",
+"unforgiving":"形容词：毫不宽容的、不给面子的",
+"continue":"动词：继续",
+"assistant":"名词：店员；助理",
+"appeared":"动词：出现、显得（appear 过去式）",
+"reader":"名词：读卡器；读者",
+"priest":"名词：神父、祭司",
+"granting":"动词：授予（grant 现在分词）",
+"absolution":"名词：赦免、宽恕",
+"disappeared":"动词：消失（disappear 过去式）",
+"tells":"动词：告诉（tell 三单）",
+"watching":"动词：观看（watch 现在分词）",
+"negotiating":"动词：谈判（negotiate 现在分词）",
+"computer":"名词：电脑",
+"chatting":"动词：聊天（chat 现在分词）",
+"human":"名词/形容词：人（的）、人类（的）",
+"queued":"动词：排队（queue 过去式）",
+"convenience":"名词：便利（convenience store=便利店）",
+"save":"动词：节省；救",
+"sometimes":"副词：有时",
+"moves":"动词：移动（move 三单）；名词：动作、一步棋",
+"reach":"动词：够到、到达",
+"our":"代词：我们的",
+"host":"名词：主人；主持人；（网络）主机",
+"wi-fi":"名词：无线网络",
+"password":"名词：密码",
+"paragraph":"名词：段落",
+"screenshotted":"动词：截图（screenshot 过去式）",
+"landing":"名词：降落；登陆页",
+"reason":"名词：原因；理由",
+"inside":"介词/副词：在里面",
+"heating":"名词：暖气；加热",
+"faced":"动词：面临（face 过去式）",
+"dilemma":"名词：两难",
+"complain":"动词：抱怨、投诉",
+"tense":"形容词：紧张的；时态",
+"cold":"形容词：冷的；名词：寒冷、感冒",
+"typed":"动词：打字（type 过去式）",
+"message":"名词：消息",
+"bother":"动词：打扰；麻烦（sorry to bother you）",
+"seems":"动词：似乎（seem 三单）",
+"wording":"名词：措辞",
+"blames":"动词：指责（blame 三单）",
+"replied":"动词：回复（reply 过去式）",
+"tripped":"动词：跳闸（trip 过去式；tripped the breaker=让断路器跳了）",
+"breaker":"名词：断路器、电闸",
+"warm":"形容词：温暖的",
+"solves":"动词：解决（solve 三单）",
+"problems":"名词：问题（problem 复数）",
+"asks":"动词：问（ask 三单）",
+"solve":"动词：解决",
+"phrase":"名词：短语、说法",
+"open":"形容词：公开的；开着的；动词：打开",
+"decides":"动词：决定（decide 三单）",
+"seem":"动词：似乎",
+"twenty-two":"数词：二十二",
+"numbers":"名词：数字（number 复数）",
+"drivers":"名词：司机（driver 复数）",
+"getting":"动词：得到、变得（get 现在分词）",
+"habits":"名词：习惯（habit 复数）",
+"universal":"形容词：普遍的",
+"raise":"动词/名词：加薪；提高",
+"held":"动词：握住、坚持（hold 过去式）",
+"protested":"动词：抗议（protest 过去式）",
+"light":"名词：灯；光；形容词：轻的",
+"mysteriously":"副词：神秘地、莫名其妙地",
+"slower":"形容词/副词：更慢（slow 比较级）",
+"attempt":"名词/动词：尝试",
+"ago":"副词：…以前",
+"review":"名词/动词：评论；复习",
+"sixty":"数词：六十",
+"skill":"名词：技能",
+"loneliness":"名词：孤独",
+"internet":"名词：互联网",
+"address":"名词：地址；动词：处理、称呼",
+"alone":"形容词/副词：独自",
+"picked":"动词：挑选（pick 过去式）",
+"older":"形容词：更老的、年长的",
+"excuse":"名词：借口；动词：原谅",
+"dying":"动词：垂死；渴望（be dying to）",
+"show":"名词：节目；动词：展示",
+"black":"形容词：黑色的",
+"recognized":"动词：认出、认可（recognize 过去式）",
+"blocks":"名词：街区（block 复数）；块",
+"direction":"名词：方向",
+"trusted":"动词：信任（trust 过去式）",
+"dig":"动词：挖；（俚）理解",
+"life":"名词：生活；生命",
+"little":"形容词：小的、少的",
+"let":"动词：让",
+"ourselves":"代词：我们自己",
+"drive":"动词：开车；驱使；名词：车程",
+"clinic":"名词：诊所",
+"cash":"名词：现金",
+"forget":"动词：忘记",
+"lasted":"动词：持续（last 过去式）",
+"border":"名词：边境；边界",
+"else":"副词：其他的、别的",
+"strong":"形容词：强壮的、强烈的",
+"mother":"名词：母亲",
+"treated":"动词：请客、对待、治疗（treat 过去式）",
+"bottles":"名词：瓶子（bottle 复数）",
+"purchases":"名词：购买（purchase 复数）",
+"transactions":"名词：交易（transaction 复数）",
+"consultations":"名词：咨询（consultation 复数）",
+"disguise":"名词：伪装；动词：掩饰",
+"minute":"名词：分钟",
+"spend":"动词：花费",
+"cheapest":"形容词：最便宜的（cheap 最高级）",
+"museum":"名词：博物馆",
+"wrapped":"动词：包裹、缠绕（wrap 过去式；wrapped around=绕在）",
+"around":"介词/副词：围绕；大约",
+"become":"动词：成为",
+"society":"名词：社会",
+"complete":"动词：完成；形容词：完整的",
+"snack":"名词：零食",
+"economy":"名词：经济；（小费文化）人情经济",
+"couple":"名词：一对、几个（a couple of）",
+"ahead":"副词：在前面",
+"sliding":"动词：滑动（slide 现在分词）",
+"cutting":"动词：切、剪（cut 现在分词）",
+"shoelace":"名词：鞋带",
+"undone":"形容词：松开的、未完成的（undo 过去分词）",
+"friend":"名词：朋友",
+"studied":"动词：研究、学习（study 过去式）",
+"moments":"名词：时刻（moment 复数）",
+"confidence":"名词：自信；信心",
+"unfriendly":"形容词：不友好的",
+"queues":"名词：队伍（queue 复数）",
+"sun":"名词：太阳",
+"require":"动词：需要",
+"direct":"形容词：直接的",
+"plans":"名词：计划（plan 复数）",
+"bags":"名词：包（bag 复数）",
+"come":"动词：来",
+"tag":"名词：标签；动词：加标签",
+"frankfurt":"名词：法兰克福",
+"change":"名词/动词：改变；换乘；零钱",
+"hotels":"名词：酒店（hotel 复数）",
+"tomorrow":"名词/副词：明天",
+"pulled":"动词：拉（pull 过去式）",
+"form":"名词：表格；形式",
+"known":"动词：知道（know 过去分词）",
+"gained":"动词：获得（gain 过去式）",
+"filled":"动词：填（fill 过去式）",
+"calls":"名词：电话（call 复数）；动词：称呼",
+"letters":"名词：字母；信（letter 复数）",
+"size":"名词：尺寸",
+"safe":"形容词：安全的",
+"seat":"名词：座位",
+"charging":"动词：充电、收费（charge 现在分词）",
+"banks":"名词：银行（bank 复数）",
+"badly":"副词：严重地；糟糕地",
+"dressed":"形容词：穿着…的（dress 过去分词）",
+"eight":"数词：八",
+"dinner":"名词：晚餐",
+"clean":"形容词：干净的；动词：打扫",
+"loss":"名词：损失",
+"hides":"动词：隐藏（hide 三单）",
+"prefer":"动词：更喜欢",
+"dcc":"（缩写）动态货币转换（Dynamic Currency Conversion）",
+"dress":"名词：连衣裙；动词：穿衣",
+"seeing":"动词：看见（see 现在分词）",
+"moment":"名词：时刻",
+"ninety-day":"形容词：九十天的",
+"money":"名词：钱",
+"path":"名词：路；路径",
+"fighting":"动词：战斗、争论（fight 现在分词）",
+"starting":"动词：开始（start 现在分词）",
+"quote":"名词：报价；引用",
+"floors":"名词：楼层（floor 复数）",
+"likely":"形容词/副词：可能的（地）",
+"putting":"动词：放（put 现在分词）",
+"start":"动词/名词：开始",
+"tea":"名词：茶",
+"stay":"动词：停留；保持",
+"lucky":"形容词：幸运的",
+"itself":"代词：它自己",
+"south-facing":"形容词：朝南的",
+"windows":"名词：窗户（window 复数）",
+"learning":"动词：学习（learn 现在分词）",
+"deals":"名词：交易、优惠（deal 复数）",
+"actual":"形容词：实际的",
+"confirmed":"动词：确认（confirm 过去式）",
+"one-year":"形容词：一年的",
+"agents":"名词：中介、代理（agent 复数）",
+"intend":"动词：打算",
+"pen":"名词：笔",
+"moving":"动词：移动、搬（move 现在分词）",
+"chair":"名词：椅子",
+"gym":"名词：健身房",
+"september":"名词：九月",
+"running":"动词：跑、运转（run 现在分词）",
+"october":"名词：十月",
+"forecasts":"名词：预报（forecast 复数）",
+"november":"名词：十一月",
+"paying":"动词：支付（pay 现在分词）",
+"dated":"形容词：过时的、注明日期的",
+"impossible":"形容词：不可能的",
+"misunderstand":"动词：误解",
+"dates":"名词：日期（date 复数）",
+"months":"名词：月份（month 复数）",
+"reply":"名词/动词：回复",
+"companies":"名词：公司（company 复数）",
+"sounding":"动词：听起来（sound 现在分词）",
+"generous":"形容词：大方的、慷慨的",
+"mentioned":"动词：提到（mention 过去式）",
+"consumer":"名词：消费者",
+"protection":"名词：保护",
+"lives":"名词：生命（life 复数）；动词：居住（live 三单）",
+"head":"名词：头；头脑",
+"anchor":"名词：锚；（比喻）定心丸、依靠",
+"reads":"动词：读（read 三单）",
+"pays":"动词：支付（pay 三单）",
+"items":"名词：物品（item 复数）",
+"thousand":"数词：千",
+"themselves":"代词：他们自己",
+"trouble":"名词：麻烦",
+"mention":"动词/名词：提到",
+"return":"名词：返回；退货；动词：归还",
+"lead":"动词：导致；带领；名词：线索",
+"none":"代词：一个也没有",
+"explain":"动词：解释",
+"borders":"名词：边境（border 复数）",
+"proving":"动词：证明（prove 现在分词）",
+"headache":"名词：头痛；麻烦事",
+"wearing":"动词：穿（wear 现在分词）",
+"effort":"名词：努力",
+"yuan":"名词：元（人民币）",
+"whatever":"代词：无论什么",
+"laid":"动词：放、铺（lay 过去式）",
+"photo":"名词：照片",
+"probably":"副词：可能、大概",
+"simpler":"形容词：更简单的（simple 比较级）",
+"forward":"副词：向前；形容词：向前的",
+"lay":"动词：放、躺（lie 的过去式也写作 lay 的错用）；铺设",
+"thursday":"名词：星期四",
+"dislike":"动词/名词：不喜欢",
+"confirmation":"名词：确认",
+"option":"名词：选项",
+"type":"名词：类型；动词：打字",
+"eighteen":"数词：十八",
+"keeping":"动词：保持（keep 现在分词）",
+"bigger":"形容词：更大的（big 比较级）",
+"paused":"动词：暂停（pause 过去式）",
+"policy":"名词：政策、规定",
+"date":"名词：日期；约会",
+"changes":"名词：改变（change 复数）；动词：改变",
+"qualify":"动词：符合条件、有资格",
+"existed":"动词：存在（exist 过去式）",
+"created":"动词：创建（create 过去式）",
+"changing":"动词：改变（change 现在分词）",
+"scare":"动词：吓唬；名词：惊吓",
+"push":"动词/名词：推；催促",
+"thank-you":"名词：感谢（信/卡）",
+"umbrellas":"名词：雨伞（umbrella 复数）",
+"decorative":"形容词：装饰性的",
+"display":"名词/动词：展示、陈列",
+"promising":"动词：承诺、预示（promise 现在分词）",
+"stops":"动词：停止（stop 三单）；名词：站点",
+"sighed":"动词：叹气（sigh 过去式）",
+"rains":"动词：下雨（rain 三单）",
+"somehow":"副词：不知怎么地",
+"considered":"动词：认为、考虑（consider 过去式）",
+"loudly":"副词：大声地",
+"government":"名词：政府",
+"soaked":"形容词：湿透的（soak 过去分词）",
+"sharing":"动词：分享（share 现在分词）",
+"useless":"形容词：无用的",
+"anger":"名词：愤怒",
+"fondly":"副词：怀念地、深情地",
+"sunny":"形容词：晴朗的",
+"wet":"形容词：湿的",
+"digits":"名词：数字（digit 复数）",
+"reading":"动词：读（read 现在分词）",
+"boxes":"名词：盒子（box 复数）",
+"struck":"动词：击中、使印象深刻（strike 过去式）",
+"technology":"名词：技术",
+"further":"形容词/副词：更进一步的（地）",
+"exceptions":"名词：例外（exception 复数）",
+"protects":"动词：保护（protect 三单）",
+"begins":"动词：开始（begin 三单）",
+"ends":"动词：结束（end 三单）；名词：结尾",
+"chosen":"动词：选择（choose 过去分词）",
+"mind":"名词：头脑；动词：介意",
+"hair":"名词：头发",
+"purchase":"名词/动词：购买",
+"feedback":"名词：反馈",
+"arrives":"动词：到达（arrive 三单）",
+"payment":"名词：付款",
+"returned":"动词：返回、退还（return 过去式）",
+"design":"名词/动词：设计",
+"partly":"副词：部分地",
+"seemed":"动词：似乎（seem 过去式）",
+"including":"介词：包括",
+"haircut":"名词：理发",
+"describes":"动词：描述（describe 三单）",
+"bought":"动词：买（buy 过去式）",
+"elses":"名词：别人的（else 的所有格）",
+"customers":"名词：顾客（customer 复数）",
+"future":"名词：未来",
+"offers":"名词：优惠（offer 复数）；动词：提供",
+"nobodys":"名词：没有人（nobody 的所有格）",
+"finished":"动词：完成（finish 过去式）",
+"hard-working":"形容词：勤奋的",
+"loved":"动词：爱（love 过去式）",
+"interviewers":"名词：面试官（interviewer 复数）",
+"zero":"数词：零",
+"true":"形容词：真的",
+"pause":"名词/动词：停顿",
+"reaches":"动词：到达（reach 三单）",
+"project":"名词：项目",
+"failed":"动词：失败（fail 过去式）",
+"reported":"动词：报告（report 过去式）",
+"river":"名词：河",
+"finish":"动词/名词：完成",
+"sign":"名词：标牌；迹象；动词：签字",
+"daily":"形容词：每日的；副词：每天",
+"forty-minute":"形容词：四十分钟的",
+"nearest":"形容词：最近的（near 最高级）",
+"regular":"形容词：常规的、规律的",
+"paths":"名词：小路（path 复数）",
+"needed":"动词：需要（need 过去式）",
+"inspection":"名词：检查、巡查",
+"cheaper":"形容词：更便宜的（cheap 比较级）",
+"fourteen":"数词：十四",
+"happen":"动词：发生",
+"seven":"数词：七",
+"rules":"名词：规则（rule 复数）",
+"shape":"名词：形状；动词：塑造",
+"quiet":"形容词：安静的",
+"clock":"名词：钟表",
+"meet":"动词：遇见；满足",
+"decide":"动词：决定",
+"closing":"名词：关闭（时间）；形容词：结束的",
+"built":"动词：建造（build 过去式）",
+"library":"名词：图书馆",
+"books":"名词：书（book 复数）",
+"borrowing":"动词：借（borrow 现在分词）",
+"sitting":"动词：坐（sit 现在分词）",
+"introduced":"动词：推出、引入（introduce 过去式）",
+"pounds":"名词：英镑（pound 复数）",
+"neighbourhood":"名词：街区、邻里",
+"arranged":"动词：安排（arrange 过去式）",
+"arrival":"名词：到达",
+"performed":"动词：表演、执行（perform 过去式）",
+"concert":"名词：音乐会",
+"contrast":"名词：对比（by contrast=相比之下）",
+"walls":"名词：墙（wall 复数）",
+"chairs":"名词：椅子（chair 复数）",
+"lighting":"名词：灯光、照明",
+"complained":"动词：抱怨、投诉（complain 过去式）",
+"designed":"动词：设计（design 过去式）",
+"unusable":"形容词：没法用的",
+"merely":"副词：仅仅",
+"public":"形容词：公共的；名词：公众",
+"winter":"名词：冬天",
+"post":"名词：邮局；帖子；动词：张贴",
+"staff":"名词：员工",
+"exposed":"形容词：暴露的（expose 过去分词）",
+"washing":"动词：洗（wash 现在分词）",
+"wednesday":"名词：星期三",
+"neighbor":"名词：邻居",
+"believed":"动词：相信（believe 过去式）",
+"friday":"名词：星期五",
+"war":"名词：战争；（比喻）斗争",
+"everyone":"代词：每个人",
+"refusing":"动词：拒绝（refuse 现在分词）",
+"dissolves":"动词：消解（dissolve 三单）",
+"covered":"动词：覆盖、包含（cover 过去式）",
+"kilometers":"名词：公里（kilometer 复数）",
+"personally":"副词：亲自；就个人而言",
+"invented":"动词：发明（invent 过去式）",
+"generosity":"名词：慷慨",
+"flooded":"形容词：被水淹的（flood 过去分词）；动词：淹没",
+"stretch":"名词：一段（路程/时间）；伸展；动词：伸展",
+"road":"名词：路",
+"cared":"动词：在乎（care 过去式）",
+"maximum":"名词/形容词：最大（的）、上限",
+"switched":"动词：切换、关掉（switch 过去式）",
+"shrugged":"动词：耸肩（shrug 过去式）",
+"distance":"名词：距离",
+"journey":"名词：旅程",
+"installing":"动词：安装（install 现在分词）",
+"cameras":"名词：摄像头（camera 复数）",
+"printing":"动词：打印（print 现在分词）",
+"hotlines":"名词：热线（hotline 复数）",
+"appeals":"名词：申诉（appeal 复数）",
+"disputes":"名词：纠纷（dispute 复数）",
+"solved":"动词：解决（solve 过去式）",
+"shrug":"动词/名词：耸肩",
+"trust":"名词/动词：信任",
+"enforcement":"名词：执法、强制执行",
+"millions":"名词：数百万（million 复数）",
+"salaries":"名词：工资（salary 复数）",
+"color":"名词：颜色",
+"click":"名词：一声轻响；点击",
+"laminated":"形容词：塑封的（laminate 过去分词）",
+"visible":"形容词：可见的",
+"recited":"动词：背诵（recite 过去式）",
+"poem":"名词：诗",
+"memorized":"动词：背熟（memorize 过去式）",
+"understanding":"名词：理解（understand 现在分词）",
+"twenty-four":"数词：二十四",
+"compensation":"名词：补偿、赔偿",
+"rates":"名词：费率（rate 复数）",
+"implied":"动词：暗示（imply 过去式）",
+"neutral":"形容词：中性的、中立的",
+"improve":"动词：改进",
+"unannounced":"形容词：未预告的",
+"beginning":"名词：开头",
+"engineers":"名词：工程师（engineer 复数）",
+"report":"名词：报告",
+"handled":"动词：处理（handle 过去式）",
+"roughly":"副词：大约；粗略地",
+"width":"名词：宽度",
+"delay":"名词/动词：延误、推迟",
+"last":"形容词：最后的；上一次的；动词：持续",
+"find":"动词：找到",
+"one":"数词：一；一个",
+"two-hour":"形容词：两小时的",
+"look":"动词：看；名词：外表；一瞥",
+"get":"动词：得到；变得；（get lost）迷路",
+"tuck":"动词：塞进；卷起（tuck away）",
+"board":"名词：板、牌；（动词）登机、上（车/船）",
+"land":"动词：着陆；获得；名词：陆地",
+"building":"名词：楼房；建筑",
+"thirty-nine":"数词：三十九",
+};
+function validTrans(t,k){ // 翻译结果有效性：空/纯标点符号/回显原文/已知垃圾模式都算无效
+  if(!t)return false;
+  if(!/[一-鿿A-Za-z0-9]/.test(t))return false; // 必须含汉字/字母/数字（滤掉"。"、"…"等）
+  if(/^[：:，,。;；\s]/.test(t))return false; // 以残缺符号开头的碎片（hundred→"：一百"事故）也不算翻译
+  if(t.toLowerCase()===k.toLowerCase())return false;
+  if(/MYMEMORY WARNING|QUERY LENGTH|%s|ALL AVAILABLE FREE TRANSLATIONS/i.test(t))return false; // 额度耗尽提示也是垃圾
+  return true}
+async function tryGtx(q,dt){ // gtx 主源；失败返回 ''（429/302 验证页/断网都算失败）
+  try{
+    const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt='+dt+(dt==='t'?'':'&dj=1')+'&q='+encodeURIComponent(q));
+    if(!r.ok)return '';
+    const j=await r.json();
+    if(dt==='t')return j.sentences&&j.sentences[0]&&j.sentences[0].trans?j.sentences.map(s=>s.trans||'').join(''):'';
+    return j&&j.dict&&j.dict.length?j:j.sentences&&j.sentences[0]?j:null
+  }catch(e){return ''}}
+async function tryBackup(q){ // 备用链路1:Google 移动版接口（不同路径，独立限流）；备用链路2:Lingva( Cloudflare 反代 Google，无需 key)
+  try{ // move 接口:同样返回 JSON，路径 translate_a/one
+    const r=await fetch('https://translate.googleapis.com/translate_a/one?client=one&sl=en&tl=zh-CN&dt=t&q='+encodeURIComponent(q));
+    if(r.ok){const j=await r.json();
+      if(j&&j.sentences&&j.sentences[0]&&j.sentences[0].trans)return j.sentences.map(s=>s.trans||'').join('')}}catch(e){}
+  try{ // Lingva 公共实例（Cloudflare 域，通常不拦）
+    const r=await fetch('https://lingva.ml/api/v1/en/zh/'+encodeURIComponent(q));
+    if(r.ok){const j=await r.json();
+      if(j&&j.translation)return j.translation}}catch(e){}
+  return ''}
+function cleanSense(d){ // 词典义项清洗：去冷僻单字项（properly→"韪"事故）
+  return d.split('；').map(g=>g.replace(/、/g,'、').replace(/、[^、]{1}$/,'').replace(/、(?=[^、]{1}、)/g,'、'))
+    .map(g=>{ // 组内过滤单字冷僻项（除核心代词/名词外）
+      const [pos,terms]=g.split('：');if(!terms)return g;
+      const keep=terms.split('、').filter(t=>t.length>=2||['他','她','它','在','有','的','了'].includes(t));
+      return keep.length?pos+'：'+keep.join('、'):''}).filter(Boolean).join('；')}
+function filterSenses(d,ctxTrans){ // 多义词只留与语境相符的义项（用户 11-07 定版：仅仅保留与语义相同的意思）
+  if(!ctxTrans)return d;
+  const norm=t=>t.replace(/[的地了着]$/,''); // 义项词常带"的/地"后缀（纯粹的/重要地），译文里是裸词——去尾再比
+  const hit=d.split('；').filter(g=>{
+    const terms=(g.split('：')[1]||'').split('、');
+    return terms.some(term=>term&&ctxTrans.indexOf(norm(term))>=0)});
+  return hit.length?hit.join('；'):d} // 全没命中就原样保留（宁多勿错杀）
+function sceneSense(m,artIdx){ // 场景义挑选：词条归属文章命中场景义项则用之，否则 any
+  if(typeof artIdx!=='number'||!A[artIdx])return m.any;
+  const hit=(m.art||[]).find(x=>A[artIdx].title.includes(x.t));
+  return hit?hit.v:m.any}
+async function translate(k,ctx,artIdx){ // 主源 gtx → 备用(move/Lingva) → MyMemory 兜底；额度耗尽提示不算翻译
+  const cache=getTrans();
+  if(MANUAL[k]){ // 人工义最高优先：即使缓存里有旧坏翻译也要覆盖写入（clearance→净空事故）
+    const m=MANUAL[k];
+    const v=typeof m==='object'&&m.art?sceneSense(m,artIdx):m; // 对象=含场景义：按文章挑，退回 any
+    if(cache[k]!==v){cache[k]=v;store.set(TKEY+TVER,cache)}
+    return v}
+  if(cache[k])return cache[k];
+  // 撇号词修复（用户 11-18）：cleanWord 把 council's→councils、barber's→barbers，词典查不到还错义。
+  // 在线查询前先试变体：去 's 所有格 → 去复数 s；命中原形义即用（缓存回写原词 k）。
+  const variants=[];
+  if(/s$/.test(k)){const base=k.slice(0,-1);if(MANUAL[base])variants.push(base);
+    if(/'s$|’s$/.test(k)){const pos=k.replace(/['’]s$/,'');if(MANUAL[pos])variants.push(pos)}}
+  else if(/'s$|’s$/.test(k)){} // 已被 cleanWord 删除,走上面 s$ 分支
+  for(const v of variants){const m=MANUAL[v];
+    const vv=typeof m==='object'&&m.art?(artIdx!==undefined?sceneSense(m,artIdx):m.any):m;
+    cache[k]=vv;store.set(TKEY+TVER,cache);return vv}
+  let t='';let ctxT='';
+  const qk=(variants&&variants.length)?variants[0]:k; // 在线查询用原形（councils→council）
+
+  if(ctx){try{ // 语境优先：整句翻译，用户看到的第一个释义来自真实上下文
+    let s=await tryGtx(ctx,'t');
+    if(!s)s=await tryBackup(ctx);
+    if(validTrans(s,ctx)){t='〔语境〕'+s;ctxT=s}} // 语境结果同样过有效性检查；留副本供义项过滤
+  catch(e){}}
+  { // 词典义项补上，但多义词只留与语境相符的义项（runway 等多义词不再全列）
+    const j=await tryGtx(qk,'bd');
+    if(j&&j.dict&&!ctx){const d=filterSenses(cleanSense(j.dict.map(x=>x.pos+'：'+x.terms.join('、')).join('；')),ctxT);
+      if(validTrans(d,k))t=d}
+    else if(!t){
+      const s2=await tryBackup(k);
+      if(validTrans(s2,k))t=s2}}
+  if(!t){try{ // 兜底 MyMemory，过滤垃圾（额度耗尽提示已在 validTrans 拦截）
+    const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(k)+'&langpair=en|zh-CN');
+    const j=await r.json();let m=j&&j.responseData&&j.responseData.translatedText||'';
+    if(m&&(m.toLowerCase()===k.toLowerCase()||/MYMEMORY WARNING|QUERY LENGTH|%s/i.test(m)))m='';
+    t=m}catch(e){}}
+  if(validTrans(t,k)){const c=getTrans();c[k]=t;store.set(TKEY+TVER,c);return t}
+  return '（暂无释义）'}
+function wordHomeIdx(k){ // 词/词组 → 文章索引（A 原索引，稳定不随批次漂移）
+  const e=marks[k];
+  const first=k.split(' ')[0].toLowerCase();
+  const cands=[]; // 含该词的全部候选文章
+  for(let i=0;i<A.length;i++){
+    const text=A[i].sentences.join(' ').toLowerCase();
+    let p=text.indexOf(first);
+    while(p>=0){
+      const b=p===0?true:/[^a-z0-9]/.test(text[p-1]);
+      const a2=p+first.length>=text.length?true:/[^a-z0-9]/.test(text[p+first.length]);
+      if(b&&a2){cands.push(i);break}
+      p=text.indexOf(first,p+1)}}
+  if(!cands.length)return A.length-1;
+  if(cands.length===1)return cands[0];
+  // 多篇命中：按标记日期消歧——date<=标记日 里最新一篇（标记时它才存在）；art 坏值（显示序漂移）不可信，不采信
+  const day=e&&typeof e==='object'?e.day:null;
+  if(day){
+    const dated=cands.map(i=>({i,date:A[i].date})).filter(x=>x.date<=day).sort((x,y)=>y.date.localeCompare(x.date));
+    if(dated.length)return dated[0].i}
+  return cands[0]}
+// ===== 任务卡：当前批次+当日任务，常驻页顶（防会话过多找不到任务） =====
+const TASKS={
+  '2026-11-19':'①读本批 2 篇新文章（B1+：出租车关表/酒店经理记笔记——信任比执法便宜「Trust is cheaper than enforcement」+ 被处理与被倾听只差一个本子的宽度「the width of a notebook」）②重点片段已是词级高亮：画出的片段只亮那几个词；点「⭐ 重点片段」可逐条删除（原「清空」按钮已废除）③训练页新增右侧生词本侧栏，与阅读页共用同一个生词库',
+  '2026-11-18':'①读本批 2 篇新文章（B1+：图书馆静音室/邻居退款——隐性成本没有收据「pay the second one without a receipt」+ 赢下争论的方式是拒绝开战「win an argument by refusing to have one」）②重点句已升级为片段模式：阅读页点「✏️ 画重点句」后，点片段首词+末词即成；复习页每条片段可单独删除，翻译自动补全',
+  '2026-10-28':'回考：could / won\'t + 原形 ✅ 已过；冠词 an+元音 继续盯',
+  '2026-10-30':'作业：①an/a 按读音判断 ✅ ②例句 I eat an apple... ✅（iPhone 大写）③场景：酒店投诉（打给经理，用投诉三句式）——尚未开练',
+  '2026-10-31':'①读本批 3 篇并标生词（单词只是弹药）②【主任务·对话】酒店投诉：你半夜打电话给前台→要求换房→见经理，目标把三句式用出来：The air conditioner is broken. / This is not as described. / I\'d like to speak to the manager. 回来在对话里打第一句就算开练',
+  '2026-11-02':'①读本批 2 篇（从今天起新节奏：每天 2 篇，读完+对话完成才发下一批；页顶「🔄 更新下一批」可自助发布）②【主任务·对话】酒店投诉续集：前台说客满没房→你争取明天换房或部分退款→前台甩出免费早餐打发→你拒绝并坚持。全部题目在「🎯 训练」页（顶部导航），答案折叠，先写再对',
+  '2026-11-08':'①读本批 2 篇（B1+ 难度档：自助结账/民宿沟通，读的时候留意 have been doing 的持续感）②【主任务·训练】11-08 训练页 4 场景（退换货+排队抱怨，与文章零重叠），写完导出作答发我批改；11-03/11-04/11-05 三天的批改标记已回填到训练页对应场景下（✅/❌ 条），先回看再写今天的',
+  '2026-11-09':'①读本批 2 篇（B1+：出租车纠纷/手机没电求助，重点句式 should have done 本该…却没）②【主任务·训练】11-09 训练页 4 场景（理发店+错过班车，与文章零重叠），写完导出作答发我批改',
+  '2026-11-11':'①读本批 2 篇（B1+：药店三问/插队事件——if 虚拟过去式 + would have done 本该…实际没有）②【主任务·训练】11-10 雅思练一练 5 题还没做的先做（判断+选择即时判分）；读完点「✓ 读完了」我会发下一批',
+  '2026-11-17':'①读本批 2 篇新文章（B1+：面试反向提问/天桥关闭时间——完美的回答为何让人忘记你「my own handwriting on it」+ 塑造城市的规则是办公室和钟表的安静协议）②【主任务·训练】11-17 雅思阅读实战：独立长文混合题型（判断+单选+标题匹配+摘要填空），答案全是同义改写；画重点句用「✏️ 画重点句」按钮：点句子首词+末词即成句',
+  '2026-11-16':'①读本批 2 篇新文章（B1+：快递取件验证码/理发店沟通误差——机器的规矩「trusted me exactly as far as the code」+ 头发是唯一不能退货的商品）②【主任务·训练】11-16 雅思阅读实战：独立长文混合题型（判断+单选+段落标题匹配+摘要填空），本日所有答案都是同义改写——原词照抄多半是陷阱；训练页文章里的生词点一下就能进生词本',
+  '2026-11-15':'①读本批 2 篇新文章（B1+：海关问询/外卖客服——回答问题的边界「nothing but the question」+ 投诉要 short/numbered）②【主任务·训练】11-15 雅思阅读实战：独立长文混合题型（判断+单选+段落标题匹配+摘要填空）；11-14 练一练没做完的补上'
+,
+  '2026-11-14':'①读本批 2 篇新文章（B1+：租房看房/健身退款维权——a feeling of one 话术识破 + as per clause 投诉句式；能走的人谈判地位更高）②【主任务·训练】11-14 雅思练一练 5 题（判断+选择即时判分，就用租房/退款这两篇做载体）；11-12 练一练没做完的补上'
+,
+  '2026-11-12':'①读本批 2 篇新文章（B1+：维修砍价/邻里噪音——if 虚拟双联句三现 + no matter how 让步；砍价＝问替代方案，不争对错）②【主任务·训练】11-12 雅思练一练 5 题（判断+选择即时判分，就用维修/噪音这两篇做载体）；没做完的补上'
+};
+function renderTask(list){
+  let el=document.getElementById('taskcard');
+  if(!el){el=document.createElement('div');el.id='taskcard';app.parentNode.insertBefore(el,app)}
+  if(showOld||!list.length){el.innerHTML='';return} // 往期视图不占地方
+  const today=todayStr();
+  const keys=Object.keys(TASKS).sort();
+  const task=TASKS[today]||TASKS[keys[keys.length-1]]; // 凌晨/跨天沿用最近任务
+  const remain=list.length;
+  el.innerHTML=`<div style="background:#eef6f0;border-left:4px solid var(--accent);border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:.9rem;line-height:1.7">
+  <b style="color:var(--accent)">📋 今日任务</b>（${today} · 还剩 ${remain} 篇未读）<br>${esc(task)}
+  <div style="color:var(--dim);font-size:.78rem;margin-top:4px">阅读是为对话攒弹药——训练题目在「🎯 训练」页；读完+对话完成后点「🔄 更新下一批」自助发下一批</div></div>`}
+function renderVocab(){
+  const ks=Object.keys(marks);
+  const tc=getTrans();
+  // 按文章分窗口：显示**全部未删除词条**（不再按 day 过滤——跨天/熬夜标记"消失"的根因），按 seq 排
+  const byArt={};ks.forEach(k=>{const e=normEntry(marks[k]);
+    if(typeof e.seq!=='number'){e.seq=1e9-ks.indexOf(k);marks[k]=e;store.set('vocab',marks)} // 旧词条无seq：键序兜底
+    if(typeof e.art!=='number'){e.art=wordHomeIdx(k);marks[k]=e;store.set('vocab',marks)}
+    (byArt[e.art]=byArt[e.art]||[]).push(k)});
+  for(const i in byArt)byArt[i].sort((a,b)=>(normEntry(marks[a]).seq||0)-(normEntry(marks[b]).seq||0));
+  A.forEach((a,i)=>{
+    const ul=document.querySelector('#vpanel-'+i+' ul');if(!ul)return;
+    const ws=byArt[i]||[];
+    ul.innerHTML=ws.map(k=>{const e=normEntry(marks[k]);const dtag=e.day===todayStr()?'':'<span style="color:#bbb;font-size:.68rem">'+(e.day||'').slice(5)+' </span>';
+      return `<li data-k="${esc(k)}"><span class="w">${esc(k)}</span><span class="del" data-del="${esc(k)}">×</span>${tc[k]?`<span class="tr">${esc(tc[k])}</span>`:`<span class="tr dim">查译…</span>`}</li>`}).join('')
+      +(ws.length?'':'<li style="color:var(--dim);cursor:default;font-size:.78rem">本文还没标生词</li>');
+    ul.querySelectorAll('li[data-k]').forEach(li=>{
+      const k=li.dataset.k;
+      if(!getTrans()[k])translate(k).then(t=>{const sp=li.querySelector('.tr');if(sp&&li.dataset.k===k){sp.textContent=t;sp.classList.remove('dim')}});
+      li.onclick=e=>{ // 点词条=朗读；删除只走 × 按钮
+        if(e.target.classList.contains('del')){delete marks[k];store.set('vocab',marks);
+          document.querySelectorAll('w').forEach(w=>{if(cleanWord(w.dataset.w)===k)w.classList.remove('on');
+            const ph=Object.keys(marks).find(pk=>pk.includes(' ')&&pk.split(' ').includes(cleanWord(w.dataset.w)));
+            if(!ph)w.classList.remove('inphrase')});renderVocab();return}
+        speak(k,0.9)}})});
+  positionPanels()}
+function exportVocab(){const t=Object.keys(marks).join(', ');navigator.clipboard&&navigator.clipboard.writeText(t);toastMsg('已复制生词：\n'+t)}
+// ===== 场景池：随机抽场景（不重复，抽完一轮重洗） =====
+let sceneBag=[];
+function drawScene(){
+  const S=window.SCENES||[];
+  if(!S.length)return;
+  if(!sceneBag.length){sceneBag=S.map((_,i)=>i).sort(()=>Math.random()-0.5)} // 洗牌抽签，保证一轮内不重复
+  const s=S[sceneBag.pop()];
+  let box=document.getElementById('scenebox');
+  if(!box){box=document.createElement('div');box.id='scenebox';box.style.cssText=
+    'position:fixed;left:50%;top:70px;transform:translateX(-50%);background:var(--card);border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.25);padding:16px 20px;max-width:420px;width:88%;font-size:.9rem;z-index:99;line-height:1.6';
+    document.body.appendChild(box)}
+  box.innerHTML=`<b style="color:var(--accent)">🎲 场景：${esc(s.name)}</b>
+    <button onclick="this.parentNode.remove()" style="float:right;padding:0 8px;font-size:.75rem">关闭</button>
+    <div style="margin-top:6px">${esc(s.brief)}</div>
+    <div style="margin-top:8px;color:var(--dim);font-size:.82rem">要点：${esc(s.goals.join(' / '))}</div>
+    <div style="margin-top:4px;color:var(--dim);font-size:.82rem">场景词汇：${esc(s.vocab.join(' · '))}</div>`;
+}
+// ===== 整篇朗读：本篇文章句子连播（与全局 playAll 不同：只播本文，且 sentEls 含所有文章需过滤） =====
+function playArticle(artIdx,btn){
+  speechSynthesis.cancel();
+  const sentEls=[...document.querySelectorAll('.sent')].filter(sp=>sp.dataset.i.startsWith(artIdx+'-'));
+  let i=0;
+  const next=()=>{if(i>=sentEls.length){sentEls.forEach(e=>e.classList.remove('active'));if(btn)btn.textContent='▶ 整篇朗读';return}
+    sentEls.forEach(e=>e.classList.remove('active'));
+    sentEls[i].classList.add('active');sentEls[i].scrollIntoView({block:'center',behavior:'smooth'});
+    const u=new SpeechSynthesisUtterance(sentEls[i].textContent);u.lang='en-US';u.rate=0.9;
+    u.onend=()=>{i++;next()};speechSynthesis.speak(u)};
+  btn.textContent='⏹ 停止';
+  btn.onclick=()=>{speechSynthesis.cancel();sentEls.forEach(e=>e.classList.remove('active'));btn.textContent='▶ 整篇朗读';btn.onclick=()=>playArticle(artIdx,btn)};
+  next()}
+// ===== 整篇翻译：显示/隐藏本文全文译文（gtx 整篇 → 失败逐句兜底 → MyMemory 兜底） =====
+// ===== 预置全文翻译：本批两篇已人工校好，点「整篇翻译」直接出，不走在线请求 =====
+const PRETR={
+  "The Meter That Ran Kindly": ["The taxi meter in that city started at a flat fee that covered the first two kilometers, and every driver explained it the same way, with the same tired pride, as if they had personally invented generosity.","那座城市的出租车计价器从一笔起步费开始，起步费覆盖前两公里，每个司机都用同样的话、带着同样疲惫的骄傲解释这件事，仿佛慷慨是他们亲自发明的。","One night a driver took a longer route because the short one was flooded, announced the detour before making it, and then turned the meter off for the flooded stretch, charging only for the dry road.","一天夜里，一位司机因为近路被淹而绕了远路——绕之前先说明——然后在水淹的那一段直接关掉了计价器，只按干燥的路面收费。","Nothing in the regulations required any of it; the rules cared about the maximum a driver could charge, and had apparently never considered the maximum a passenger could be trusted to pay.","这些举动没有任何一条规定要求；规则只关心司机最多能收多少钱，显然从来没想过乘客最多可以被信任到主动多付多少。","When I asked why he switched the meter off, he shrugged and said the machine only knew distance, and distance on a flooded road was nobody's journey, so it belonged to no one's fare.","我问他为什么关表，他耸耸肩说：机器只认距离，而水淹路上的距离不属于任何人的行程，所以也不该进任何人的账单。","The city had spent years installing cameras, printing complaints hotlines on every receipt, and building an entire appeals process for disputes, and this driver had solved the same problem in one sentence and a shrug.","这座城市花了很多年装摄像头、在每张收据上印投诉热线、为纠纷建起整套申诉流程——而这位司机用一句话加一个耸肩，解决了同一个问题。","Trust, it turns out, is cheaper than enforcement: the cameras cost millions, the hotline costs salaries, and a driver deciding that a flooded road is free costs nothing at all and works every single time.","事实证明，信任比执法便宜：摄像头要花几百万，热线要发工资，而一个司机认定水淹路不收钱，分文不花，且每次都管用。","I have forgotten the fare and the street and even the color of the car; what stayed is the small click of a meter being switched off, which was, for one night, the sound of a system deciding to be kind.","车费、街道、甚至车的颜色我都忘了；留下的是计价器被关掉时那一声轻响——那一晚，那是一个系统决定善良的声音。"],
+  "The Manager Who Took Notes": ["The hotel had a policy for complaints that was written in three languages, laminated behind the front desk, and visible to every guest except the ones actually complaining.","这家酒店有一套投诉处理规定，用三种语言写成、塑封在前台后面，每位客人都能看到——唯独真正在投诉的看不到。","When the air conditioner failed at midnight, the clerk recited the policy like a poem he had memorized without understanding: an engineer would come within twenty-four hours, and compensation followed a fixed table of rates.","半夜空调坏了，前台像背诵一首背熟却不懂的诗一样背诵规定：工程师二十四小时内到场，赔偿按固定费率表执行。","What he could not do was walk to the room; that, apparently, was not in the policy, and the policy, the clerk implied with every carefully neutral word, was not something a night clerk could improve.","他不能做的是走到房间去看一眼；这显然不在规定里，而规定——他用每一个字斟句酌的中性词暗示——不是夜班前台能改进的东西。","The manager arrived unannounced at seven in the morning, holding a small notebook, and asked to hear the whole story again, from the beginning, including the part about the poem.","早上七点，经理没有事先通知就来了，手里拿着一个小本子，要求把整件事从头再讲一遍，包括「背诗」那一段。","He wrote for two full minutes without interrupting, then closed the notebook and said only that the engineer's report would arrive by noon, and that I would hear from him personally, whatever it said.","他整整写了两分钟没有打断，然后合上本子，只说：工程师的报告中午前会到，无论报告写什么，他都会亲自告诉我。","The report did arrive by noon, the discount did follow the fixed table, and yet the entire experience felt different, because the policy had finally been delivered by a person instead of recited at one.","报告确实中午前到了，折扣也确实按费率表执行——但整个体验完全不同了，因为规定终于由一个人「执行」给我，而不是对着一个人「背诵」。","The difference between being handled and being heard is roughly the width of a notebook, but no laminated policy in three languages has ever managed to cross it.","「被处理」和「被倾听」之间的距离大约只有一个本子那么宽，但没有任何一份三语塑封规定成功跨越过它。"],
+  "The Library That Charged for Silence": ["The new library charged nothing for books, nothing for borrowing, and nothing for sitting — and then it introduced a study room that cost four pounds an hour, and half the neighbourhood quietly learned that silence had become a subscription.","新图书馆看书不收钱、借书不收钱、坐着也不收钱——然后它推出了每小时四英镑的自习室，于是半个街区悄悄明白了一件事：安静已经变成一种订阅服务。","The free reading hall stayed open, of course, but it had been arranged so that every table faced the entrance, where the door announced each arrival and the coffee machine performed its small concert every nine minutes.","免费阅览厅当然还开着，只是布局经过精心安排：每张桌子都正对大门——门会播报每一次进出，咖啡机每九分钟举办一场小型音乐会。","The paid rooms, by contrast, had thick walls, soft chairs, and a kind of lighting that made you want to finish your thesis rather than your coffee.","相比之下，付费房间墙厚、椅子软，还有一种让你想先把论文写完、而不是先把咖啡喝完的灯光。","When a student complained to the front desk that the free option was designed to be unendurable, the librarian smiled and said the study rooms simply paid for themselves, which was true, and also completely beside the point.","有学生向前台抱怨说免费区是被故意设计得让人待不下去的，管理员微笑着说自习室不过是自负盈亏——这话没错，但也完全没说到点子上。","Nobody had decided to make the free hall unusable; it had merely been designed by someone whose job was foot traffic, and nobody whose job was concentration had been invited to the meeting.","并没有谁拍板要把免费厅弄得更难用；它只是被一个职责是客流量的人设计了出来，而职责是专注度的人，根本没被请进那间会议室。","The cost of a public service is printed on the wall; the cost of its design is hidden in the floor plan, and you pay the second one every single day without a receipt.","公共服务的价钱印在墙上；它设计的代价藏在平面图里，而这第二笔账你每天都在付，只是从没有收据。","By winter the city added two free quiet rooms in the old post office across the street — same funding, same staff, different department — and the coffee machine, suddenly exposed to actual competition, was moved to the basement.","入冬前，市里在街对面的老邮局里加开了两间免费静音室——同样的经费、同样的人手，只是换了个部门——而那台突然面对真实竞争的咖啡机，被搬进了地下室。"],
+  "The Neighbor's Refund": ["The washing machine arrived on Tuesday, damaged on one corner, and by Wednesday evening the whole building had an opinion about what my neighbor should say to the delivery company.","洗衣机周二送到，一个角磕坏了；到周三晚上，整栋楼对邻居该怎么跟物流公司说这件事，都有了各自的看法。","One faction argued for outrage: shout first, escalate, threaten the reviews; the other believed in sweetness, as if the corner dent were a misunderstanding that politeness could dissolve.","一派主张发飙：先喊、再升级、最后拿差评威胁；另一派主张客气，好像那个瘪角只是一场礼貌就能融化的误会。","My neighbor did neither; she photographed the corner, found the order number, and wrote two sentences — the machine arrived damaged, and she would like a replacement before Friday — and sent them through the official form, then went to bed.","邻居哪样都没做：她拍了瘪角的照片，找到订单号，写了两句话——机器到货时已损坏，希望周五前更换——通过官方表格提交，然后就去睡觉了。","The next morning a reply offered her a partial refund, which she declined in one more sentence, and by noon a courier had booked the swap; the entire war had lasted thirty-nine hours and consisted of four sentences.","第二天上午，对方回复提出部分退款，她又用一句话婉拒；到中午，快递员已经约好了换机时间——整场战争打了三十九小时，全部由四句话组成。","What surprised the building was not the outcome but the tone: everyone had been arguing about whether to be loud or lovely, and the answer had quietly been neither — it was to be specific.","让全楼意外的不是结果而是语气：大家一直争论该凶还是该甜，而答案悄悄是两者都不是——是具体。","Anger tells the company that you are a risk; sweetness tells it that you will go away; specificity tells it exactly what to do, and companies do what is written down.","愤怒告诉公司你是个风险；客气告诉公司你会自行离开；具体则告诉公司该做什么——而公司只照白纸黑字办事。","She framed the first email, not because it was elegant, but because it was the first time any of us had watched someone win an argument by refusing to have one.","她把第一封邮件打印出来裱了框——不是因为写得漂亮，而是因为那是我们当中任何人第一次亲眼看到：有人靠拒绝开战，赢下了一场争论。"],
+  "The Interview That Ran Backwards": [
+    "The interview was going exactly as I had feared: I answered everything perfectly, and I could feel the whole conversation forgetting me before it had even finished.",
+    "面试正一寸一寸滑向我担心的方向：每个问题我都答得完美无缺，而我能感觉到整场对话还没结束就已经在把我忘掉。",
+    "Every candidate before me would say the same — that they were hard-working, that they loved teamwork, that failure had secretly made them stronger — and the interviewer's pen moved across the page like it was copying, not writing.",
+    "我之前的每个候选人都会说一样的话——说自己勤奋刻苦、热爱团队协作、说失败偷偷让他们更强大——面试官的笔在纸上移动，像是在誊抄，而不是在书写。",
+    "Then she put the pen down and asked the question nobody prepares for: 'What do you want to ask us?'",
+    "然后她放下笔，问出了那个没人准备过的问题：「你想问我们什么？」",
+    "I had spent three weeks rehearsing answers, and zero minutes deciding what I actually wanted to know, so for the first time that morning I said something true: 'What happens to people here who admit they were wrong?'",
+    "我花了三个星期排练答案，却花过零分钟决定自己真正想知道什么，于是那天早上我第一次说了一句真话：「在这里，承认自己错了的人后来怎么样了？」",
+    "The pen stayed down. She thought for a moment — actually thought, the way you pause when a question reaches something real — and told me about a project that had failed publicly, and the engineer who had reported the failure himself, and the promotion that came eighteen months later.",
+    "笔没有被拿起来。她想了一会儿——是真的在想，就像问题触到真实之物时人会停顿那样——然后给我讲了一个公开失败的项目，讲了一位主动上报失败的工程师，讲了十八个月之后到来的那次晋升。",
+    "I walked out not knowing whether I had the job, but knowing that I had asked the only question with my own handwriting on it, and that the answer was the first thing in that building that sounded like it belonged to someone.",
+    "我走出大门时不知道自己有没有拿到那份工作，但我知道我问出了唯一一个带着自己笔迹的问题，而那个答案，是那栋楼里第一件听起来像是属于某个真实的人的东西。",
+    "The rejection email arrived two days later, polite and standard, and I filed it next to the one thing I kept from that morning: a question I now ask at every interview, which costs me nothing and has already paid for itself twice.",
+    "拒信两天后到了，客气而标准。我把它归档，和那天上午留下的唯一一样东西放在一起：一个如今我每场面试都会问的问题——它分文不花，却已经两次为我赚回了本钱。"
+  ],
+  "The Bridge That Closed at Five": [
+    "The pedestrian bridge over the river closed at five o'clock sharp, which would have been reasonable if the city had remembered that most people finish work at five, not before it.",
+    "河上的人行天桥五点整关闭——这本来还算合理，如果这座城市还记得大多数人是五点下班、而不是五点之前下班的话。",
+    "The sign explained everything except the reason: CLOSED DAILY 17:00-07:00, BY ORDER OF THE COUNCIL, as if capital letters were a kind of argument.",
+    "告示牌解释了一切，唯独没解释原因：每日 17:00-07:00 关闭，市政委员会令——好像大写字母本身就算一种论证。",
+    "So every evening a small crowd gathered at the closed gate, looked at the bridge they could clearly see on the other side, and then began the forty-minute walk to the nearest crossing — a detour so regular that the shortcut paths beside it had been worn into the grass like a second opinion.",
+    "于是每天傍晚都有一小群人聚在关闭的闸口，望着对岸清晰可见的桥，然后开始走向最近过河点的四十分钟步行——这条绕行路线规律到什么程度呢：旁边的草坪上已经被踩出了一条条小径，像一张投出来的反对票。",
+    "The council's reasoning, when someone finally obtained it through a records request, turned out to be maintenance: the bridge needed nightly inspections, and the inspection company charged by the hour, and it was cheaper to close the bridge for fourteen hours than to pay for a night crew.",
+    "当有人终于通过档案调取拿到委员会的理由时，答案原来是维护：桥需要每夜巡查，巡查公司按小时计费，把桥关上十四个小时，比雇一个夜班组便宜。",
+    "Nobody had asked whether the inspections could happen at seven in the morning, or whether the company might be persuaded to change its schedule, because the decision had never been about the bridge at all — it was about whichever option required the fewest conversations.",
+    "从来没有人问过：巡查能不能改到早上七点？能不能说服那家公司调整排班？因为这项决定压根与桥无关——它只关乎哪个选项需要的对话最少。",
+    "The rules that shape a city are rarely the grand ones; they are the quiet agreements between an office and a clock, signed by nobody you will ever meet, and they decide where you may walk long before you have any say in the matter.",
+    "塑造一座城市的规则很少是那些宏大的；它们只是一个办公室和一只钟表之间的安静协议，签署者你永远不会见到，而它们早在你拥有任何发言权之前，就已经决定了你能走哪条路。",
+    "In spring the council finally moved the closing time to ten at night, and the local paper called it a victory; the maintenance contract had simply expired, and the new one cost less — which is how most victories are actually built.",
+    "开春之后，委员会终于把关闭时间挪到了晚上十点，本地报纸称之为一次胜利；其实只是旧维护合同到期了，新合同更便宜——大多数胜利，实际上就是这样建成的。"
+  ],
+
+  "The Parcel That Needed a Password": [
+    "The notification said my parcel was waiting at the pickup point around the corner, and gave me a code that looked less like a password and more like a riddle: four letters, two digits, and one symbol the font made almost invisible.",
+    "取件通知说我的包裹就在街角的自提点等着我，还给了我一个验证码——与其说像密码，不如说像道谜题：四个字母、两个数字，外加一个被字体渲染得几乎看不见的符号。",
+    "At the counter the clerk asked for the code, and I read it out the way you recite a phone number — confidently, and therefore wrongly.",
+    "柜台职员要验证码，我像背电话号码一样背了出来——信心十足，因此也错得彻底。",
+    "The screen rejected it twice; on the third try I stopped reading from memory and read the characters one by one, and the difference between a letter that looked like a one and a digit that was actually a one turned out to be the whole story.",
+    "屏幕拒收了两次；第三次我不再凭记忆念，而是一个字符一个字符地核对，结果发现：那个长得像数字 1 的字母，和那个真正的数字 1，两者的区别就是全部问题所在。",
+    "The drawer popped open with a small mechanical sigh, and my parcel sat there among strangers' boxes, each of them also waiting for someone to get six characters right.",
+    "抽屉伴着一声轻微的机械叹息弹开，我的包裹躺在陌生人的箱子中间——每一个箱子也都在等某个人把六位字符输对。",
+    "What struck me was not the technology but the etiquette: the machine trusted me exactly as far as the code, no further, and it did not care that I was in a hurry, that the receipt had my name on it, or that I could describe every item inside.",
+    "让我触动的不 是技术，而是规矩：机器对我的信任恰好止于验证码，不多一分；它不管我赶时间，不管单据上写着我的名字，也不管我能说清里面的每件东西。",
+    "I used to find that cold, and I have come to think of it as fair — a system that makes exceptions for persuasive people is a system that eventually makes them for thieves.",
+    "我从前觉得这很冷漠，如今却认为这很公平——一个会为能说会道的人开例外的系统，最终也会为小偷开例外。",
+    "Outside, I tore the tape open right there on the pavement, which no password protects, and which is where the real world begins.",
+    "走到外面，我就在人行道上撕开了胶带——这里没有密码保护，而真实世界正是从这里开始的。"
+  ],
+  "The Haircut Number": [
+    "I asked for a trim, which in my head means two millimetres off the ends, and which in the barber's head apparently means a number between one and three, chosen by feel.",
+    "我说要修一修（a trim），在我脑子里这意味着发梢剪掉两毫米；而在理发师脑子里，这显然意味着一个一到三之间的数字，凭手感选。",
+    "He nodded the way professionals nod when they have already decided, spun the chair away from the mirror, and started — and only the first snip told me which number he had in mind.",
+    "他点点头，那种专业人士拿定主意后的点头，然后把椅子转得背对镜子，动起手来——直到剪下第一声咔嚓，我才知道他心里选的是哪个数字。",
+    "Here is the problem with hair: it is the only purchase where the feedback arrives after the payment and cannot be returned, so every misunderstanding is final by design.",
+    "头发的问题就在这里：它是唯一一种反馈在付款之后才到、且无法退货的商品，所以每一次误会都注定不可挽回。",
+    "I said nothing while the clippers worked, partly because interrupting a man holding scissors seemed unwise, and partly because I did not have the vocabulary to say 'shorter at the back, but not that much shorter' in any language, including my own.",
+    "推子工作的时候我一言不发，一半是因为打断一个手持剪刀的人似乎不明智，另一半是因为无论用哪种语言——包括我自己的母语——我都说不出「后面短一点，但别短那么多」。",
+    "When he spun the chair back, the mirror showed a haircut that was perfectly even, meticulously done, and not what I had ordered — a sentence that describes half the things I have ever bought.",
+    "他把椅子转回来时，镜子里是一个剪得极其整齐、一丝不苟、却不是我点的那款发型——这句话可以形容我买过的东西的一半。",
+    "I paid, tipped, and thanked him, because the work was good; I simply walked out wearing someone else's idea of my hair, and the queue of customers behind me watched me go with the sympathy of people reading their own future.",
+    "我付了钱、给了小费、道了谢，因为手艺确实好；我只是在离开时顶着一头别人对我头发的想象，而身后的顾客队伍目送我走远，眼神里满是读到自身命运般的同情。",
+    "A week later it grew back into exactly what I had wanted, which is the only refund this industry offers, and it arrives on nobody's schedule but its own.",
+    "一周之后，它长回了我原本想要的样子——这是这个行业唯一提供的退款，而且到货时间只听它自己的。"
+  ],
+
+  "The Customs Question That Wasn't a Question": [
+    "The officer at customs did not look up when I put my passport on the counter; he read it the way a bank clerk reads a signature — slowly, and with more attention than politeness.",
+    "我把护照放到柜台上时，海关官员头都没抬；他核对我的护照，就像银行柜员核对签名——慢慢地，审慎多于客气。",
+    "How long are you staying? Where? Who pays for this trip? The questions came flat, one after another, like items on a list he had read a thousand times.",
+    "待几天？去哪？这趟谁出钱？问题一个接一个地平铺过来，像一份他念过一千遍的清单。",
+    "I answered each one and waited, and the silence after my answers did more work than any question: it was where people talked themselves into trouble.",
+    "我逐个回答然后等着，而回答之后的沉默比任何提问都更『有效』：人们就是在那段沉默里把自己说进麻烦的。",
+    "Because that is the trap — the question is short, but your answer does not have to be, and every extra fact you offer is a door you have just opened for him.",
+    "因为这就是圈套——问题很短，但你的回答未必短，你多提供的每一个事实，都是你刚替他打开的一扇门。",
+    "I said I was staying five days. I did not mention that my return ticket was open, that a friend had offered me a job lead, or that I had once overstayed a visa in another country — none of which he asked about, and all of which I was ready to explain before I remembered the first rule of borders: answer the question, the whole question, and nothing but the question.",
+    "我说我待五天。我没有提我的返程票是不定日期的，没有提有朋友给过我一个工作机会，也没有提我曾在一个国家签证逾期滞留过——这些他都没问，而我原本全都准备好了解释，直到我想起边境的第一条铁律：只回答问题，回答完整的问题，只回答被问的问题。",
+    "He stamped my passport and waved me through, and only then did the officer in the next lane call out that the system was down again — proving that after all my rehearsing, the real decision had been made by a machine with a headache.",
+    "他在我护照上盖了章，挥手放行；紧接着旁边通道的官员喊了一嗓子：系统又宕机了——这说明我演练了半天，真正的决定其实是一个『正头疼的机器』做的。",
+    "Borders are not conversations; they are checklists wearing a uniform.",
+    "边境不是对话；它们是穿着制服的清单。"
+  ],
+  "The Refund That Took Eleven Messages": [
+    "The order arrived forty minutes late, cold, and missing the one dish I had actually wanted, which by then felt less like bad luck and more like a coordinated effort.",
+    "外卖迟到了四十分钟，送到时是凉的，还偏偏少了我真正想点的那道菜——到那时候，这已经不像运气差，更像是一场串通好的行动。",
+    "I opened the app and pressed refund, and the app replied the way apps reply: with a form that offered me five yuan and an apology generated by something that has never been hungry.",
+    "我打开应用点了退款，应用的回复也一如应用的风格：一张表单，给我五块钱，外加一句道歉——道歉来自某个从来没饿过的东西。",
+    "So I typed a message to a human — or to whatever answers as one — and laid out the facts in order: order number, promised time, actual time, and a photo of the missing dish, which was also missing.",
+    "于是我给『人工』——或者说给那个冒充人工的东西——发了消息，把事实按顺序列清楚：订单号、承诺送达时间、实际送达时间，还有一张缺菜的照片——照片里的菜，自然也是缺的。",
+    "The first reply asked me to rate my experience with the refund process so far. The second, eleven minutes later, asked for the order number I had already sent. The third offered me a coupon.",
+    "第一条回复让我给『退款流程体验』打分。第二条，十一分钟后，向我要我已经发过的订单号。第三条给了我一张优惠券。",
+    "I wrote back one sentence: 'I do not want a coupon, I want the eleven yuan back, and this is message number four of what I am prepared to make a very long conversation.'",
+    "我回了一句话：『我不要优惠券，我要回那十一块钱，这是我发的第四条消息——我做好了把这场对话变得非常漫长的准备。』",
+    "The refund arrived in nine minutes. I would like to tell you it was my firm tone, but the truth is probably simpler: somewhere a dashboard turned red, and red costs a company more than eleven yuan.",
+    "退款九分钟后到账。我很想说是我语气强硬的功劳，但真相可能更简单：某个后台的仪表盘变红了，而红色对一家公司来说，比十一块钱贵得多。",
+    "The lesson is not that complaining works — it is that complaining works when it is short, numbered, and impossible to forward to the next shift without answering.",
+    "教训不是『投诉有用』——而是投诉只有在简短、编号、且不处理就没法转交下一班的时候才有用。"
+  ],
+  "The Apartment Viewing That Almost Worked": [
+    "The agent met me at the door with a smile that had been rehearsed in front of a mirror, and said, 'You are lucky — three people called about this flat this morning.'",
+    "中介在门口迎接我，笑容像对着镜子练过一样，还说道：『你运气好——今天早上有三个人打电话问这套房。』",
+    "The flat itself was fine: second floor, south-facing windows, and a kitchen so small that two people would have to take turns breathing.",
+    "房子本身还不错：二楼、朝南的窗，还有一个小得两个人得轮流呼吸的厨房。",
+    "I asked about the rent and he gave me a figure, and then — this is the part worth learning — he added, 'But for you, maybe I can talk to the owner.'",
+    "我问了房租，他给了个数，然后——这是值得学的一招——他补了一句：『不过对你嘛，也许我可以去跟房东谈谈。』",
+    "That sentence costs the agent nothing; it is not a discount, it is a feeling of one, and it has closed more deals than any actual reduction.",
+    "这句话对中介毫无成本；它不是折扣，只是折扣的感觉，而它促成的成交比任何真实的降价都多。",
+    "So I did what the taxi driver taught me and the repair shop confirmed: I asked a calm question about alternatives. 'What would the owner say to a one-year lease, paid upfront, at two hundred less?'",
+    "于是我用了出租车司机教会我、维修店验证过的那招：心平气和地问一句别的选择。『一年租约、租金预付、月租少两百，房东会怎么想？』",
+    "He wrote it down. Agents only write down things they intend to pass on, and the pen moving is worth more than any smile.",
+    "他把它记了下来。中介只会记下他们打算转达的话，笔在动比任何微笑都值钱。",
+    "I have not heard back yet, but that is fine — the flat was good, not perfect, and a person who can walk away always negotiates from the stronger chair.",
+    "我还没等到回音，但这没关系——房子好，但不完美，而能转身就走的人，谈判时永远坐在更有力的一边。"
+  ],
+  "The Gym Membership Refund": [
+    "I signed up for a gym membership in September, back when running every morning still felt like a plan instead of a punishment.",
+    "九月份我办了健身卡，那时候每天晨跑还像是个计划，而不是一种刑罚。",
+    "In October the branch closed 'for renovation' — first for two weeks, then for a month, and the receptionist kept saying next week the way weather forecasts keep saying sunshine.",
+    "十月分店『装修』关了门——先说两周，又说一个月，前台一直说『下周就好』，就像天气预报一直说要出太阳。",
+    "By November I wanted my money back, so I sat down and wrote the email I actually should have written in September, before paying: short, dated, and impossible to misunderstand.",
+    "到十一月我想要回钱，于是坐下来写了那封其实九月付款前就该写的邮件：简短、标明日期、不可能被误解。",
+    "Here is what it said: membership number, the dates the gym was closed, and one sentence — 'I am requesting a refund for the months I could not use the facility, as per clause four of the contract.'",
+    "邮件是这么写的：会员号、健身房关门的日期，加一句话——『依据合同第四条，我要求退还无法使用场馆那几个月的费用。』",
+    "The first reply offered a free month instead of money, which is how companies say no while sounding generous; the second reply, after I mentioned the consumer protection hotline, was a transfer to the refund department.",
+    "第一次回复给了个月卡代替退钱——公司就是这样一边显得大方一边说不的；我提到消费者保护热线后，第二次回复把我转给了退款部。",
+    "Ten days later the money came back. Not because I was clever, but because the request was specific, written down, and anchored to a clause someone else had signed.",
+    "十天后钱退回来了。不是因为我聪明，而是因为请求具体、白纸黑字，并且锚定在对方自己也签过字的条款上。",
+    "A complaint that lives in your head is just a mood; a complaint that lives in an email with dates and a clause number is a case.",
+    "只存在于脑子里的投诉只是一种情绪；写在邮件里、带着日期和条款号的投诉才是一个案子。"
+  ],
+  "The Phone That Wasn't Worth Fixing": [
+    "The repair shop smelled like solder and burnt coffee, and the owner took one look at my phone and said, 'Screen and battery — that is almost a new phone.'",
+    "维修店里一股焊锡和煮过头的咖啡味，老板扫了一眼我的手机就说：『屏幕和电池——这差不多等于换台新手机了。』",
+    "He quoted a number that was nearly the price of a new one, and then, seeing my face, added: 'I am not cheating you. The part alone costs this much.'",
+    "他报了个几乎赶上新机价的数，然后看到我的表情，补了一句：『我没坑你，光零件就要这个价。』",
+    "I did not argue about honesty; I argued about alternatives. 'What can you do for two hundred?' I asked — not angrily, the way you ask a taxi driver whether the meter is on.",
+    "我没有在诚信问题上纠缠，而是争别的选择。『两百块你能怎么弄？』我问——不带火气，就像你问出租车司机计价器开了没有那样平常。",
+    "He thought for a moment, then offered a used screen with a ninety-day guarantee, and the price dropped by a third, just like that.",
+    "他想了想，给出一个带九十天保修的二手屏，价格应声降了三分之一，就这么简单。",
+    "If I had accepted the first number, I would have paid for a new part I did not need; if I had walked out, I would have kept my money and lost my photos.",
+    "要是当初接受了第一个报价，我会为一个根本不需要的新零件买单；要是扭头就走，钱是省下了，照片却没了。",
+    "The middle path — one calm question about alternatives — is what bargaining actually is. It is not fighting; it is asking what else is possible.",
+    "中间这条路——就一句心平气和的『还有别的方案吗』——才是讨价还价的本质。它不是吵架，而是问一句：还有什么别的可能。",
+    "No matter how honest the shop, the first number is a starting point, not a price.",
+    "无论店多老实，第一个报价都只是起点，不是最终价格。"
+  ],
+  "The Noise Complaint That Ended in Tea": [
+    "At midnight the drilling started again — three floors up, every evening this week, as punctual as a train.",
+    "半夜，电钻声又响了——楼上三层，这周天天晚上，准时得像列车。",
+    "My first plan was the note under the door, sharp and official, full of words like disturbance and regulations; my second plan was knocking, which felt braver and far more likely to work.",
+    "我的第一套方案是门缝里塞张纸条，措辞尖锐、一本正经，满是『扰民』『规定』这类字眼；第二套方案是直接敲门——这需要更大的勇气，但成功得多。",
+    "The man who opened the door looked more embarrassed than defensive. 'I am so sorry,' he said, 'I am putting up shelves, and I did not realize how far the sound travels.'",
+    "开门的人与其说是戒备，不如说更多的是尴尬。『真不好意思，』他说，『我在装架子，没想到声音传得这么远。』",
+    "I had prepared a whole speech about tenant rights; what I actually said was, 'Could you do the drilling before ten? I start work early.'",
+    "我原本准备好一整段关于租客权益的说辞；实际说出口的却是：『能不能十点前打孔？我上班早。』",
+    "'Before ten,' he repeated, 'done. And please — if the noise ever comes from my side again, knock instead of writing.'",
+    "『十点前，』他重复道，『没问题。还有拜托——要是下次吵到你的反过来是我，直接敲门，别写字条。』",
+    "We ended the conversation with tea I had not planned to stay for, and a promise that cost him nothing: shelves in the afternoon, silence at night.",
+    "谈话最后以一杯我本没打算留下喝的茶收尾，外加一个对他毫无成本的承诺：白天装架子，夜里保安静。",
+    "A note can be read as an attack; a knock is just a person at the door. The same sentence lands differently when your face comes with it.",
+    "纸条可能被读成挑衅；敲门只是门口站着一个人。同样一句话，带着你的脸一起出现，落在对方耳中就不一样了。"
+  ]
+};
+const atrTKEY='arttr';
+const atrVer='v3'; // v3：缓存 key 从序号改标题（批次轮换后序号漂移串文章）+ 全文必须含中文
+function hasChinese(s){return /[一-鿿]/.test(s)}
+async function gtxOnce(text){ // 单次 gtx 请求，返回全文或 ''
+  const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&q='+encodeURIComponent(text));
+  if(!r.ok)return '';
+  const j=await r.json();
+  return j.sentences?j.sentences.map(s=>s.trans||'').join(''):''}
+async function translateArticle(sentences){ // 整篇→逐句→MyMemory 三级：限流不再一票否决
+  try{const full=await gtxOnce(sentences.join('\n'));if(full&&hasChinese(full))return full}catch(e){}
+  // gtx 挂了（实测 429）：逐句请求再试一轮，失败句留原文
+  const parts=[];
+  for(const s of sentences){
+    let t='';
+    try{t=await gtxOnce(s)}catch(e){}
+    if(!t){ // 单句再挂走 MyMemory
+      try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(s)+'&langpair=en|zh-CN');
+        const j=await r.json();const m=j&&j.responseData&&j.responseData.translatedText||'';
+        if(m&&!/MYMEMORY WARNING/.test(m))t=m}catch(e){}}
+    parts.push(hasChinese(t)?t:s)} // 逐句也必须含中文，否则留原文（"全文翻译变英文"事故根因）
+  return hasChinese(parts.join(''))?parts.join('\n'):''} // 整体不含中文=全挂，返回空走失败提示
+async function toggleArticleTr(artIdx,btn){
+  const artBox=document.getElementById('vpanel-'+artIdx).parentNode.querySelector('.article');
+  let tr=artBox.parentNode.querySelector('.arttr');
+  if(tr){tr.remove();btn.textContent='整篇翻译';return} // 再点收起
+  btn.textContent='翻译中…';
+  const cache=store.get(atrTKEY+atrVer);
+  const key='t'+window.ARTICLES[artIdx].title; // key 用标题：序号会随批次轮换漂移
+  let full=cache[key];
+  if(!full){ // 预置翻译优先（本批人工校对版），逐句对齐原文
+    const pre=PRETR[Object.keys(PRETR).find(t=>window.ARTICLES[artIdx].title.includes(t))];
+    if(pre)full=pre.join('\n');}
+  if(!full){
+    const sentences=window.ARTICLES[artIdx].sentences;
+    try{full=await translateArticle(sentences)}catch(e){full=''}
+    if(full){const c=store.get(atrTKEY+atrVer);c[key]=full;store.set(atrTKEY+atrVer,c)}
+  }
+  if(!full){btn.textContent='整篇翻译';toastMsg('翻译失败，稍后再试');return}
+  const div=document.createElement('div');div.className='arttr notes';div.style.background='#f4f8f4';
+  div.innerHTML='<b>全文翻译</b>（中英并非逐句对齐，理解为主）<br>'+esc(full).replace(/\n/g,'<br>');
+  artBox.after(div);btn.textContent='收起翻译'}
+
+// ===== GitHub 同步 =====
+const REPO_OWNER='qianzhu123',REPO_NAME='english-daily',VOCAB_PATH='data/vocab.json';
+// 旧数据升级：数字/1 → 复习条目对象（一次性）；并清洗带标点/大写的旧词条
+(function(){let ch=false;const cleaned={};const today=todayStr();
+for(const k in marks){
+  const ck=cleanWord(k)||k;
+  const v=normEntry(marks[k]);
+  if(!v.day){v.day=/^\d{4}-\d{2}-\d{2}/.test(k)?k.slice(0,10):today;ch=true} // 旧词条无day：带日期键取日期，否则记今天
+  if(cleaned[ck]){const old=cleaned[ck];old.lapses=Math.max(old.lapses||0,v.lapses||0)}
+  else cleaned[ck]=v;
+  if(ck!==k||typeof marks[k]!=='object')ch=true}
+if(ch){marks=cleaned;store.set('vocab',marks)}})();
+// art 字段语义修复（2026-10-31）：旧数据存的是"当屏显示序号"，批次轮换后序号漂移导致词挂错文章。
+// 现在统一改存 A 原索引；旧值若挂错文章（首词在该文章正文匹配不到），按首词回扫正文重定位。
+(function(){let ch=false;
+for(const k in marks){const e=marks[k];if(!e||typeof e!=='object'||typeof e.art!=='number')continue;
+  if(e.art<0)continue; // 训练页生词 art:-1 归「其他」组，不是越界（用户 11-19 白屏根因：A[-1].sentences 崩）
+  if(e.art>=A.length||!A[e.art]||!A[e.art].sentences){e.art=wordHomeIdx(k);ch=true;continue} // 越界/悬空直接重定位
+  const first=k.split(' ')[0].toLowerCase();
+  const text=A[e.art].sentences.join(' ').toLowerCase();
+  if(!new RegExp('\\b'+first.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(text)){e.art=wordHomeIdx(k);ch=true}}
+if(ch)store.set('vocab',marks)})();
+function getToken(){return localStorage.getItem('gh_token')||''}
+function saveToken(){const t=document.getElementById('tokin').value.trim();if(t)localStorage.setItem('gh_token',t);
+document.getElementById('tokstat').textContent=t?'已保存（仅存本机浏览器）':'未填写';syncNow()}
+function clearToken(){localStorage.removeItem('gh_token');document.getElementById('tokin').value='';document.getElementById('tokstat').textContent='已清除'}
+function showToken(){const b=document.getElementById('tokbox');b.classList.toggle('hidden');document.getElementById('tokin').value=getToken();
+document.getElementById('tokstat').textContent=getToken()?'已配置：保存后点同步即可上传':'未配置：无 token 时只显示本机生词'}
+async function ghGet(){ // 读云端 data/vocab.json
+  const r=await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${VOCAB_PATH}`,{cache:'no-store'});
+  if(r.status===404)return{sha:null,data:{}};
+  if(!r.ok)throw new Error('GitHub 读取失败 '+r.status);
+  const j=await r.json();
+  return{sha:j.sha,data:JSON.parse(atob(j.content.replace(/\s/g,'')))}}
+async function ghPut(obj,sha){ // 写回并保留每日备份
+  const token=getToken();if(!token)throw new Error('未配置 token');
+  const files={[VOCAB_PATH]:{content:btoa(unescape(encodeURIComponent(JSON.stringify(obj,null,2))))}};
+  const today=new Date().toISOString().slice(0,10);
+  files['backups/vocab-'+today+'.json']={content:btoa(unescape(encodeURIComponent(JSON.stringify(obj,null,2))))}; // 每日快照
+  const r=await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${VOCAB_PATH}`,{method:'PUT',
+    headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({message:'vocab sync '+today+' ('+Object.keys(obj).length+' items)',content:files[VOCAB_PATH].content,
+      ...(sha?{sha}:{})})});
+  if(!r.ok)throw new Error('GitHub 写入失败 '+r.status+' '+(await r.text()).slice(0,120));
+  return (await r.json()).content.sha}
+function mergeSets(a,b){const o={};
+  function put(k,v){k=cleanWord(k)||k; // 键清洗：云端旧脏键（带标点/大写）归并成干净键
+    if(!o[k]){o[k]=v;return}
+    const av=o[k],bv=v;
+    if(typeof av==='object'&&typeof bv==='object')o[k]={...av,...bv,n:Math.max(av.n||1,bv.n||1),lapses:Math.max(av.lapses||0,bv.lapses||0),seq:Math.min(av.seq??1e12,bv.seq??1e12)};
+    else o[k]=typeof av==='object'?av:bv} // seq 取较小者=保留最早标记顺序
+  for(const k in a)put(k,typeof a[k]==='object'?a[k]:normEntry(a[k]));
+  for(const k in b)put(k,typeof b[k]==='object'?b[k]:normEntry(b[k]));
+  return o} // 取并集，防互删
+let syncing=false;
+async function syncNow(){
+  if(syncing)return;syncing=true;
+  const btn=document.getElementById('syncBtn');if(btn)btn.textContent='…';
+  try{
+    const remote=await ghGet();
+    if(getToken()){
+      const merged=mergeSets(remote.data,marks);
+      const changed=JSON.stringify(merged)!==JSON.stringify(remote.data)||JSON.stringify(merged)!==JSON.stringify(marks);
+      if(changed){const sha=await ghPut(merged,remote.sha);Object.keys(merged).forEach(k=>{});marks=merged;store.set('vocab',marks)}
+      else{marks=merged;store.set('vocab',marks)}
+      document.getElementById('tokstat').textContent='✓ 已同步 '+Object.keys(marks).length+' 条（'+today+'）';
+    }else{
+      // 无 token：只读模式，合并云端进来
+      const merged=mergeSets(remote.data,marks);marks=merged;store.set('vocab',marks);
+      document.getElementById('tokstat').textContent='只读模式：已拉取云端 '+Object.keys(remote.data).length+' 条（配置 token 可上传）';
+    }
+    document.querySelectorAll('w').forEach(w=>w.classList.remove('on'));restoreMarks();renderVocab();
+  }catch(e){document.getElementById('tokstat').textContent='✗ '+e.message}
+  syncing=false;if(btn)btn.textContent='同步'}
+render();
+// ===== 自助更新：一键发布下一批（草稿 draft:true → 正式 + 旧批次归档），经 GitHub API 写 articles.js =====
+// 纯前端无法改文件 → 用 token 直接 PUT articles.js（与生词同步同一 token 权限）。无 token 或无草稿时给出页面内提示。
+async function publishNext(){
+  const drafts=A.filter(x=>x.draft);
+  if(!drafts.length){toastMsg('预备稿是空的，还没有下一批可发——我会在会话里补稿');return}
+  const firstDraft=drafts[0].date||'下一批';
+  if(!getToken()){toastMsg('需要🔑 token 才能自助发布（或直接在会话里说「更新」）');showToken();return}
+  const btn=document.getElementById('pubBtn');if(btn)btn.textContent='发布中…';
+  try{
+    // 1. 拉远端最新 articles.js（防覆盖）
+    const r=await fetch('https://api.github.com/repos/'+REPO_OWNER+'/'+REPO_NAME+'/contents/articles.js',{cache:'no-store'});
+    if(!r.ok)throw new Error('读取 articles.js 失败 '+r.status);
+    const j=await r.json();
+    const src=decodeURIComponent(escape(atob(j.content.replace(/\s/g,''))));
+    // 2. 改写：删掉全部 draft:true 标记（预备稿整批发布）；本地旧 active 批次补 archived:true
+    const targetDate=firstDraft;
+    let out=src.replace(/^[ \t]*draft:\s*true,\s*\n/gm,'');
+    A.filter(x=>!x.draft&&!x.archived).forEach(x=>{
+      const t=x.title.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      out=out.replace(new RegExp('(title:\\s*"'+t+'",\\s*\\n\\s*date:\\s*"[^"]*",\\s*\\n)(?![ \\t]*archived)([ \\t]*)(level:)'),'$1$2archived: true,\n$2$3')});
+    // 3. PUT 回去
+    const content=btoa(unescape(encodeURIComponent(out)));
+    const pr=await fetch('https://api.github.com/repos/'+REPO_OWNER+'/'+REPO_NAME+'/contents/articles.js',{method:'PUT',
+      headers:{Authorization:'Bearer '+getToken(),'Content-Type':'application/json'},
+      body:JSON.stringify({message:'publish batch '+targetDate+' (self-serve button)',content,sha:j.sha})});
+    if(!pr.ok)throw new Error('写入失败 '+pr.status+' '+(await pr.text()).slice(0,100));
+    toastMsg('✓ 已发布 '+targetDate+' 批次（'+drafts.length+' 篇）。GitHub Pages 约 1 分钟生效，届时 Ctrl+F5 强刷即可');
+    if(btn)btn.textContent='✓ 已发布';
+  }catch(e){toastMsg('✗ '+e.message);if(btn)btn.textContent='🔄 更新下一批'}}
+function speak(text,rate){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||0.95;u.voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u)}
+function playAll(){speechSynthesis.cancel();let i=0;
+  const next=()=>{if(i>=sentTexts.length)return;sentEls.forEach(e=>e.classList.remove('active'));
+    const el=sentEls[i];el&&el.classList.add('active');el&&el.scrollIntoView({block:'center',behavior:'smooth'});
+    const u=new SpeechSynthesisUtterance(sentTexts[i]);u.lang='en-US';u.rate=0.95;
+    u.onend=()=>{i++;next()};speechSynthesis.speak(u)};next()}
+function stopAll(){speechSynthesis.cancel();sentEls.forEach(e=>e.classList.remove('active'))}
+// ===== 复习模式（简化 SM-2 间隔重复） =====
+// marks[k] 现为 {n:标记次数, ease:间隔天数, due:到期日ISO, lapses:忘记次数}
+// 兼容旧数据：纯数字/1 视为 {n:1,ease:1,due:today}
+function normEntry(v){return typeof v==='object'&&v?v:{n:Number(v)||1,ease:1,due:new Date().toISOString().slice(0,10),lapses:0}}
+// 复习已迁移至 review.html（独立页面），此处不再有弹窗复习逻辑
+// 打开页面即自动同步（无 token 时为只读拉取）
+syncNow().catch(()=>{});

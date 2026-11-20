@@ -85,9 +85,19 @@ function isDone(title){const e=doneDB()[title];if(!e)return false;
   const a=(window.ARTICLES||[]).find(x=>x.title===title);
   if(a&&a.date&&e.date&&a.date>e.date)return false;
   return !!e}
+function batchDoneState(){ // 当前批次（未归档）文章是否全部已标读完
+  const act=A.filter(a=>!a.draft&&!a.archived);
+  if(!act.length)return false;
+  return act.every(a=>isDone(a.title))}
+function renderPubbar(){ // 全部标记后出现全局「更新文章」；一键发布下一批（草稿→正式+旧批次归档）
+  const bar=document.getElementById('pubbar');if(!bar)return;
+  if(batchDoneState()&&!showOld){
+    bar.innerHTML='<div style="text-align:center;margin:14px 0"><button onclick="publishNext()" id="pubBtn" style="padding:8px 22px;font-size:.95rem;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer">🔄 更新文章（本批已读完）</button></div>'
+  } else bar.innerHTML=''}
 function markDone(title){const db=doneDB();
   db[title]={count:(db[title]&&db[title].count||0)+1,date:studyDay()};
-  store.set('doneread',db);toastMsg('✓ 第 '+db[title].count+' 遍读完，收进往期（看往期可随时回看）');
+  store.set('doneread',db);toastMsg('✓ 已标记读完');
+  syncNow().catch(()=>{}); // 读完全批自动同步，无需手动（用户 11-20）
   render()}
 function toggleOld(){showOld=!showOld;render()}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
@@ -136,12 +146,11 @@ function render(){
   const app=document.getElementById('app');
   app.innerHTML='';sentEls=[];sentTexts=[]; // 幂等：重渲染前清空，杜绝文章叠加
   const list=A.map((a,i)=>({a,i})).filter(x=>!x.a.draft&&(showOld||!x.a.archived&&!isDone(x.a.title)));
-  renderTask(list); // 任务卡：常驻顶部，会话断了也能看到当前任务（用户 10-31 需求）
   if(!list.length)app.innerHTML='<div style="color:var(--dim);padding:40px 0;text-align:center">当前批次已读完 ✓ 点「看往期」回看，或等新文章发布。</div>';
   list.forEach(({a,i},n)=>{ // i=A 原索引（data-a/面板 id 用它——稳定不随批次漂移）；n+1 仅作显示编号
     const d=document.createElement('div');
     d.className='art-wrap';d.style.position='relative';d.dataset.ai=i; // data-ai=原索引：positionPanels 按 DOM 位置配对用（原索引≠DOM 序，旧版卡死根因）
-    d.innerHTML=`<h2>${n+1}. ${esc(a.title)}</h2><div class="meta">${esc(a.date)} · 第 ${readCount(a.title)+1} 遍 · ${esc(a.level)} <button onclick="markDone('${esc(a.title).replace(/'/g,"\\'")}',this)" style="padding:1px 8px;font-size:.72rem;margin-left:6px">✓ 读完了</button><button onclick="playArticle(${i},this)" style="padding:1px 8px;font-size:.72rem">▶ 整篇朗读</button><button onclick="toggleArticleTr(${i},this)" style="padding:1px 8px;font-size:.72rem">整篇翻译</button><button onclick="toggleKeyMode(${i},this)" style="padding:1px 8px;font-size:.72rem">✏️ 画重点句</button><button onclick="showKeyChips(${i},this)" style="padding:1px 8px;font-size:.72rem">⭐ 重点片段</button></div>`;    const box=document.createElement('div');box.className='article';
+    d.innerHTML=`<h2>${n+1}. ${esc(a.title)}</h2><div class="meta">${esc(a.date)} · 第 ${readCount(a.title)+1} 遍 · ${esc(a.level)} <button onclick="markDone('${esc(a.title).replace(/'/g,"\\'")}',this)" style="padding:1px 8px;font-size:.72rem;margin-left:6px">✓ 读完了</button><button onclick="playArticle(${i},this)" style="padding:1px 8px;font-size:.72rem">▶ 整篇朗读</button><button onclick="toggleArticleTr(${i},this)" style="padding:1px 8px;font-size:.72rem">整篇翻译</button></div>`;    const box=document.createElement('div');box.className='article';
     const p=document.createElement('p');
     a.sentences.forEach((s,j)=>{
       // 本句已画片段（可能多条）→ 句内词序号集合：只高亮命中词，不再整句画（用户 11-18）
@@ -173,10 +182,10 @@ function render(){
       box.appendChild(n)}
     // 本文的浮动生词本（跟随文章区间滚动）
     const vp=document.createElement('div');vp.className='vpanel';vp.id='vpanel-'+i;
-    vp.innerHTML=`<h4><span class="fold" onclick="toggleFold(${i})" style="cursor:pointer">▾</span> 生词本·${esc(a.title)} <button onclick="location.href='review.html'" style="padding:1px 6px;font-size:.7rem">复习</button><button onclick="togglePhraseMode(${i})" style="padding:1px 6px;font-size:.7rem">+ 词组</button></h4><ul></ul><div style="color:var(--dim);font-size:.75rem;margin-top:4px">本文全部生词，按标记顺序；跨天不消失，复习页可删</div>`;
+    vp.innerHTML=`<h4><span class="fold" onclick="toggleFold(${i})" style="cursor:pointer">▾</span> 生词本·${esc(a.title)} <button onclick="location.href='review.html'" style="padding:1px 6px;font-size:.7rem">复习</button></h4><ul></ul><div style="color:var(--dim);font-size:.75rem;margin-top:4px">本文全部生词，按标记顺序；跨天不消失，复习页可删</div>`;
     d.appendChild(box);d.appendChild(vp);app.appendChild(d);
   });
-  renderVocab();restoreMarks();positionPanels();
+  renderVocab();restoreMarks();positionPanels();renderPubbar();
   // 手机端默认折叠：面板只露标题条，点 ▸ 展开，不再挡正文点击（folded 状态记忆）
   if(isMobilePanel()&&store.get('vfold')!=='0'){document.querySelectorAll('.vpanel').forEach(vp=>{
     vp.classList.add('folded');const f=vp.querySelector('.fold');if(f)f.textContent='▸'})}
@@ -250,19 +259,26 @@ document.addEventListener('click',e=>{
       else{db[ai].push({j:j,sent:frag,day:studyDay()});toast('⭐ 已画重点片段，复习页按日可看')}
       store.set('userkeys',db);render();return}
     const k=cleanWord(w.dataset.w);
-    if(selState){ // 词组模式
-      if(selState.key==='__start__'){ // 模式刚开启，点第一个词
-        selState={key:k,words:[k],wEl:w};w.classList.add('sel');speak(k,0.9);return}
-      if(k===selState.key){confirmPhrase();return}
-      const prev=selState.words[selState.words.length-1];
-      // 取下一个元素节点（跳过词与词之间的空格文本节点——词组连不上的根因）
-      let nx=selState.wEl.nextSibling;while(nx&&nx.nodeType!==1)nx=nx.nextSibling;
-      const nextClean=nx?cleanWord(nx.dataset.w||''):null;
-      if(nextClean===k){selState.words.push(k);selState.wEl=nx;w.classList.add('sel');speak(k,0.95);return}
-      document.querySelectorAll('w.sel').forEach(x=>x.classList.remove('sel'));
-      if(k===prev){selState=null;return}
-      selState={key:k,words:[k],wEl:w};w.classList.add('sel');speak(k,0.9);return}
-    if(marks[k]){delete marks[k];w.classList.remove('on')}
+    if(selState){ // 选词模式（用户 11-20：无需按钮——点第二个词时判断连续/不连续）
+      if(k===selState.key&&selState.words.length>=2){confirmPhrase();return}
+      if(selState.words.includes(k)&&selState.words.length===1){ // 再点同一个词=取消
+        w.classList.remove('sel');selState=null;return}
+      // 连续判定：新点的词紧跟已选串末尾（DOM 顺序）
+      let nx=selState.wEl;let cont=false;
+      // 已选串末词 → 向后找下一个词元素
+      let nn=selState.wEl;for(;;){let t2=nn.nextSibling;while(t2&&t2.nodeType!==1)t2=t2.nextSibling;
+        if(!t2){ // 跨句子：本句结束，看下一句的首词
+          const sp=nn.closest('.sent');const nxt=sp&&sp.nextElementSibling;
+          nn=nxt?nxt.querySelector('w'):null;if(!nn)break;continue}
+        nn=t2;break}
+      if(nn&&cleanWord(nn.dataset.w||'')===k)cont=true;
+      if(cont){selState.words.push(k);selState.wEl=nn;w.classList.add('sel');speak(k,0.95);return}
+      // 不连续 → 作为句子片段收进（首词→末词的跨句片段也允许）
+      confirmPhraseAsFragment(w,k);return}
+    if(selState&&selState.wEl&&cleanWord(selState.wEl.dataset.w||'')===k){confirmPhraseAsFragment(w,k);return} // 选中串的末词再点=以句子片段收进
+    if(marks[k]){ // 已在生词本的词再点=开始/继续选词组（用户 11-20：无需按钮）
+      if(!selState){selState={key:k,words:[k],wEl:w,w1El:w};w.classList.add('sel');toastMsg('选词中：点相邻词=词组，点不相邻词=句子片段，再点本词=取消');return}
+      return}
     else{const loc=w.dataset.i; // 词的精确位置（句号-句内词序）：只亮你点的那一个，不全文连亮
       addWord(k,w.closest('.sent')?w.closest('.sent').textContent:null,Number(w.dataset.a),loc);w.classList.add('on')}
     store.set('vocab',marks);renderVocab();
@@ -283,23 +299,38 @@ function confirmPhrase(){
   const startW=selState?selState.wEl:null;
   const artIdx=startW&&startW.dataset&&startW.dataset.a?Number(startW.dataset.a):wordHomeIdx(phrase);
   selState=null;document.querySelectorAll('w.sel').forEach(x=>x.classList.remove('sel'));
-  const pb=document.getElementById('phraseBtn');if(pb)pb.textContent='+ 词组';
   if(phrase&&!marks[phrase]){const en=normEntry(1);en.day=studyDay();if(artIdx!=null)en.art=artIdx;
     en.seq=(Number(store.get('seq'))||0)+1;store.set('seq',en.seq);
-    marks[phrase]=en;translate(phrase);speak(phrase,0.9);store.set('vocab',marks);renderVocab();restoreMarks()}
+    marks[phrase]=en;translate(phrase);speak(phrase,0.9);store.set('vocab',marks);renderVocab();restoreMarks();
+    toastMsg('词组已收进：'+phrase)}
   else if(phrase){toastMsg('生词本已有：'+phrase)}}
+// 不连续的多词选择 → 句子片段（不受句号限制，允许跨句）：首词→刚点的词
+function confirmPhraseAsFragment(wEnd,k){
+  const w1=selState.w1El,w2=wEnd;
+  selState=null;document.querySelectorAll('w.sel').forEach(x=>x.classList.remove('sel'));
+  if(!w1||!w2){return}
+  const sp1=w1.closest('.sent'),sp2=w2.closest('.sent');
+  if(!sp1||!sp2)return;
+  const ai=Number(w1.dataset.a);
+  const j1=Number(sp1.dataset.i.split('-')[1]),j2=Number(sp2.dataset.i.split('-')[1]);
+  if(j2<j1){toastMsg('请按阅读顺序选词');return}
+  // 收集首词→末词之间所有词（可能跨句）
+  const parts=[];let cur=sp1;
+  for(let j=j1;j<=j2;j++){
+    const sp=[...document.querySelectorAll('.sent')].find(x=>{const [a,b]=x.dataset.i.split('-').map(Number);return a===ai&&b===j});
+    if(sp)parts.push(sp.textContent.trim())}
+  const frag=parts.join(' ');
+  const db=ukDB();db[ai]=db[ai]||[];
+  const hit=db[ai].find(x=>x.sent===frag);
+  if(hit){db[ai]=db[ai].filter(x=>x.sent!==frag);toastMsg('已取消该片段')}
+  else{db[ai].push({j:j1,sent:frag,day:studyDay()});toastMsg('⭐ 已画句子片段（首词到末词），复习页可看')}
+  store.set('userkeys',db);render()}
 let toastTimer=null;
 const toast=toastMsg; // 兼容别名：重点句等新函数用 toast（此前 toast 未定义→点击静默失败）
 function toastMsg(m){let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';
   t.style.cssText='position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99;max-width:80vw';
   document.body.appendChild(t)}
   t.textContent=m;t.style.opacity='.95';clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.style.opacity='0',2200)}
-function togglePhraseMode(){ // 词组模式入口：开→连点单词；已选→确认入本
-  if(selState){confirmPhrase();
-    document.querySelectorAll('.vpanel button').forEach(b=>{if(b.textContent==='确认 ✓')b.textContent='+ 词组'});return}
-  selState={key:'__start__',words:[],wEl:null};
-  document.querySelectorAll('.vpanel button').forEach(b=>{if(b.textContent==='+ 词组')b.textContent='确认 ✓'});
-  toastMsg('词组模式已开：依次点击连续的单词（变绿），再点「确认 ✓」入本')}
 function isMobilePanel(){ // 与 positionPanels 同判据：右侧空白不够 = 手机端面板
   const wrapEl=document.querySelector('.wrap');if(!wrapEl)return window.innerWidth<=900;
   return window.innerWidth-wrapEl.getBoundingClientRect().right<=320}
@@ -1009,8 +1040,9 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
 "didnt":"（did not 缩写）没有",
 "ask":"动词：问；请求",
 "resume":"名词：简历（résumé）",
+"résumé":"名词：简历",
 "handed":"动词：递、交（hand 过去式；hand in=上交）",
-"broken":"形容词：坏的、 broken 的（break 过去分词）",
+"broken":"形容词：坏的（break 过去分词）",
 "printer":"名词：打印机",
 "fix":"动词：修理；解决；名词：解决办法",
 "front":"名词：前面；正面",
@@ -2268,35 +2300,6 @@ function wordHomeIdx(k){ // 词/词组 → 文章索引（A 原索引，稳定�
     if(dated.length)return dated[0].i}
   return cands[0]}
 // ===== 任务卡：当前批次+当日任务，常驻页顶（防会话过多找不到任务） =====
-const TASKS={
-  '2026-11-19':'①读本批 2 篇新文章（B1+：出租车关表/酒店经理记笔记——信任比执法便宜「Trust is cheaper than enforcement」+ 被处理与被倾听只差一个本子的宽度「the width of a notebook」）②重点片段已是词级高亮：画出的片段只亮那几个词；点「⭐ 重点片段」可逐条删除（原「清空」按钮已废除）③训练页新增右侧生词本侧栏，与阅读页共用同一个生词库',
-  '2026-11-18':'①读本批 2 篇新文章（B1+：图书馆静音室/邻居退款——隐性成本没有收据「pay the second one without a receipt」+ 赢下争论的方式是拒绝开战「win an argument by refusing to have one」）②重点句已升级为片段模式：阅读页点「✏️ 画重点句」后，点片段首词+末词即成；复习页每条片段可单独删除，翻译自动补全',
-  '2026-10-28':'回考：could / won\'t + 原形 ✅ 已过；冠词 an+元音 继续盯',
-  '2026-10-30':'作业：①an/a 按读音判断 ✅ ②例句 I eat an apple... ✅（iPhone 大写）③场景：酒店投诉（打给经理，用投诉三句式）——尚未开练',
-  '2026-10-31':'①读本批 3 篇并标生词（单词只是弹药）②【主任务·对话】酒店投诉：你半夜打电话给前台→要求换房→见经理，目标把三句式用出来：The air conditioner is broken. / This is not as described. / I\'d like to speak to the manager. 回来在对话里打第一句就算开练',
-  '2026-11-02':'①读本批 2 篇（从今天起新节奏：每天 2 篇，读完+对话完成才发下一批；页顶「🔄 更新下一批」可自助发布）②【主任务·对话】酒店投诉续集：前台说客满没房→你争取明天换房或部分退款→前台甩出免费早餐打发→你拒绝并坚持。全部题目在「🎯 训练」页（顶部导航），答案折叠，先写再对',
-  '2026-11-08':'①读本批 2 篇（B1+ 难度档：自助结账/民宿沟通，读的时候留意 have been doing 的持续感）②【主任务·训练】11-08 训练页 4 场景（退换货+排队抱怨，与文章零重叠），写完导出作答发我批改；11-03/11-04/11-05 三天的批改标记已回填到训练页对应场景下（✅/❌ 条），先回看再写今天的',
-  '2026-11-09':'①读本批 2 篇（B1+：出租车纠纷/手机没电求助，重点句式 should have done 本该…却没）②【主任务·训练】11-09 训练页 4 场景（理发店+错过班车，与文章零重叠），写完导出作答发我批改',
-  '2026-11-11':'①读本批 2 篇（B1+：药店三问/插队事件——if 虚拟过去式 + would have done 本该…实际没有）②【主任务·训练】11-10 雅思练一练 5 题还没做的先做（判断+选择即时判分）；读完点「✓ 读完了」我会发下一批',
-  '2026-11-17':'①读本批 2 篇新文章（B1+：面试反向提问/天桥关闭时间——完美的回答为何让人忘记你「my own handwriting on it」+ 塑造城市的规则是办公室和钟表的安静协议）②【主任务·训练】11-17 雅思阅读实战：独立长文混合题型（判断+单选+标题匹配+摘要填空），答案全是同义改写；画重点句用「✏️ 画重点句」按钮：点句子首词+末词即成句',
-  '2026-11-16':'①读本批 2 篇新文章（B1+：快递取件验证码/理发店沟通误差——机器的规矩「trusted me exactly as far as the code」+ 头发是唯一不能退货的商品）②【主任务·训练】11-16 雅思阅读实战：独立长文混合题型（判断+单选+段落标题匹配+摘要填空），本日所有答案都是同义改写——原词照抄多半是陷阱；训练页文章里的生词点一下就能进生词本',
-  '2026-11-15':'①读本批 2 篇新文章（B1+：海关问询/外卖客服——回答问题的边界「nothing but the question」+ 投诉要 short/numbered）②【主任务·训练】11-15 雅思阅读实战：独立长文混合题型（判断+单选+段落标题匹配+摘要填空）；11-14 练一练没做完的补上'
-,
-  '2026-11-14':'①读本批 2 篇新文章（B1+：租房看房/健身退款维权——a feeling of one 话术识破 + as per clause 投诉句式；能走的人谈判地位更高）②【主任务·训练】11-14 雅思练一练 5 题（判断+选择即时判分，就用租房/退款这两篇做载体）；11-12 练一练没做完的补上'
-,
-  '2026-11-12':'①读本批 2 篇新文章（B1+：维修砍价/邻里噪音——if 虚拟双联句三现 + no matter how 让步；砍价＝问替代方案，不争对错）②【主任务·训练】11-12 雅思练一练 5 题（判断+选择即时判分，就用维修/噪音这两篇做载体）；没做完的补上'
-};
-function renderTask(list){
-  let el=document.getElementById('taskcard');
-  if(!el){el=document.createElement('div');el.id='taskcard';app.parentNode.insertBefore(el,app)}
-  if(showOld||!list.length){el.innerHTML='';return} // 往期视图不占地方
-  const today=todayStr();
-  const keys=Object.keys(TASKS).sort();
-  const task=TASKS[today]||TASKS[keys[keys.length-1]]; // 凌晨/跨天沿用最近任务
-  const remain=list.length;
-  el.innerHTML=`<div style="background:#eef6f0;border-left:4px solid var(--accent);border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:.9rem;line-height:1.7">
-  <b style="color:var(--accent)">📋 今日任务</b>（${today} · 还剩 ${remain} 篇未读）<br>${esc(task)}
-  <div style="color:var(--dim);font-size:.78rem;margin-top:4px">阅读是为对话攒弹药——训练题目在「🎯 训练」页；读完+对话完成后点「🔄 更新下一批」自助发下一批</div></div>`}
 function renderVocab(){
   const ks=Object.keys(marks);
   const tc=getTrans();
@@ -2669,11 +2672,11 @@ async function publishNext(){
     toastMsg('✓ 已发布 '+targetDate+' 批次（'+drafts.length+' 篇）。GitHub Pages 约 1 分钟生效，届时 Ctrl+F5 强刷即可');
     if(btn)btn.textContent='✓ 已发布';
   }catch(e){toastMsg('✗ '+e.message);if(btn)btn.textContent='🔄 更新下一批'}}
-function speak(text,rate){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||parseFloat(document.getElementById('rate').value);u.voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u)}
+function speak(text,rate){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||0.95;u.voice=speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u)}
 function playAll(){speechSynthesis.cancel();let i=0;
   const next=()=>{if(i>=sentTexts.length)return;sentEls.forEach(e=>e.classList.remove('active'));
     const el=sentEls[i];el&&el.classList.add('active');el&&el.scrollIntoView({block:'center',behavior:'smooth'});
-    const u=new SpeechSynthesisUtterance(sentTexts[i]);u.lang='en-US';u.rate=parseFloat(document.getElementById('rate').value);
+    const u=new SpeechSynthesisUtterance(sentTexts[i]);u.lang='en-US';u.rate=0.95;
     u.onend=()=>{i++;next()};speechSynthesis.speak(u)};next()}
 function stopAll(){speechSynthesis.cancel();sentEls.forEach(e=>e.classList.remove('active'))}
 // ===== 复习模式（简化 SM-2 间隔重复） =====
