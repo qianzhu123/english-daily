@@ -72,41 +72,7 @@ const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e)
 // ===== 每日训练（Claude 更新；新的在上）=====
 // 2026-11-03 定版规则（用户原话）："我阅读能力和说话能力不是一个层级"＋"不要直接给出具体内容供我直接填写"：
 // ① 题目=纯中文场景，绝不印英文框架/候选句/文章原句 ② 参考答案先写后看（空作答不给看）③ 语音只手动只读英文短句
-// ===== 训练关键词注释（用户 11-18：关键词/重点词/易错词提前写好翻译，展示在题干下）=====
-const TRAIN_KEYWORDS={
- "2026-11-19": {
-  "attendance": "名词：出勤、到场人数",
-  "resigned": "动词：辞职（resign 过去式）",
-  "galleries": "名词：画廊、展厅（gallery 复数）",
-  "ridership": "名词：客流量、乘客数",
-  "conclusion": "名词：结论",
-  "uncomfortable": "形容词：令人不安的；不舒服的",
-  "admission": "名词：入场许可；门票；（景区）入园",
-  "decade": "名词：十年",
-  "flooded": "形容词：被水淹的（flood 过去分词）",
-  "detour": "名词/动词：绕路、绕行",
-  "fare": "名词：车费、票价",
-  "enforcement": "名词：执法、强制执行",
-  "compensation": "名词：补偿、赔偿",
-  "laminated": "形容词：塑封的（laminate 过去分词）",
-  "recited": "动词：背诵、朗诵（recite 过去式）",
-  "unannounced": "形容词：未经预告的",
-  "notebook": "名词：笔记本",
-  "policy": "名词：政策、规定；保险单",
-  "clerk": "名词：职员、前台接待",
-  "apparently": "副词：显然；据说"
- },
- "2026-11-18": {
-  "attendance": "名词：出勤、到场人数",
-  "resigned": "动词：辞职（resign 过去式）"
- },
- "2026-11-17": {
-  "attendance": "名词：出勤、到场人数",
-  "resigned": "动词：辞职（resign 过去式）"
- }
-,
- "2026-11-19": {"admission": "名词：入场许可；门票", "attendance": "名词：出勤、到场人数", "resigned": "动词：辞职（resign 过去式）", "galleries": "名词：展厅（gallery 复数）", "neighbourhoods": "名词：街区（neighbourhood 复数）", "ridership": "名词：客流量", "detour": "名词/动词：绕路", "fare": "名词：车费", "enforcement": "名词：执法", "compensation": "名词：补偿、赔偿", "laminated": "形容词：塑封的", "recited": "动词：背诵（recite 过去式）", "unannounced": "形容词：未预告的", "notebook": "名词：笔记本", "policy": "名词：政策、规定", "clerk": "名词：职员、前台", "apparently": "副词：显然"}
-};
+
 
 const TRAIN=[
 {
@@ -611,9 +577,7 @@ function answerQuiz(day,qn){
   saved[day+'#q'+qn]={pick:picked,ok:ok};store.set('traintry',saved);
   delete quizPick[day+'#q'+qn];
   render();
-  const why=document.getElementById('why-'+qn);if(why)why.classList.add('show')}// 导出作答：只导出**当前选中日期**的作答（用户定版：不要把其他日期混进来）
-// 作答以「输入框实时内容」为准（用户改过多版的最终版），traintry 只是保存兜底
-// ===== 训练页侧栏生词本（用户 11-18：训练页也要能看到生词本）=====
+  const why=document.getElementById('why-'+qn);if(why)why.classList.add('show')}// ===== 训练页侧栏生词本（用户 11-18：训练页也要能看到生词本）=====
 function escT(x){return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
 function renderVocabSide(){ // 训练页独立生词库 vocab-train（与阅读分开）
   const el=document.getElementById('vocaside-list');if(!el)return;
@@ -625,37 +589,6 @@ function renderVocabSide(){ // 训练页独立生词库 vocab-train（与阅读�
 }
 function delVocabSide(k){const marks=store.get(TVKEY);delete marks[k];store.set(TVKEY,marks);renderVocabSide();toast('「'+k+'」已移除')}
 document.addEventListener('DOMContentLoaded',renderVocabSide);
-function exportAnswers(){
-  const saved=store.get('traintry');
-  const day=curDay||TRAIN[0].day;
-  const d=TRAIN.find(x=>x.day===day);if(!d)return;
-  let text='【'+day+' '+d.title+'】\n';let count=0;
-  // 雅思练一练作答（选择/判断，含对错）
-  (d.quiz||[]).forEach((qz,qn)=>{
-    const r=saved[day+'#q'+qn];if(!r)return;
-    count++;
-    text+='练一练'+(qn+1)+'（'+qz.type+'）：'+qz.q+'\n我的选择：'+'ABCD'[r.pick]+'. '+qz.opts[r.pick]+(r.ok?'（✓ 对）':'（✗ 错，正确：'+'ABCD'[qz.ans]+'. '+qz.opts[qz.ans]+'）')+'\n\n'});
-  // 场景作答
-  d.items.forEach((it,n)=>{
-    const ta=document.getElementById('try-'+n);
-    const live=ta?ta.value.trim():'';
-    const snap=(saved[day+'#'+n]||'').trim();
-    const ans=live||snap;
-    if(!ans)return;
-    count++;
-    text+='场景'+(n+1)+'：'+it.q.replace(/\n/g,' ')+'\n我的作答：'+ans+'\n\n'});
-  if(!count){toast('这一天还没有作答——先在场景里写英文或做练一练');return}
-  text=text.replace(/\n+$/,'\n');
-  // 复制到剪贴板（手机/桌面通用），失败降级为弹层手动复制
-  const done=()=>toast('✓ 作答已复制，去会话里粘贴即可批改（'+count+' 题）');
-  if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(text).then(done).catch(()=>fallback(text))
-  }else fallback(text);
-  function fallback(t){
-    const box=document.createElement('div');
-    box.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:70px;background:var(--card);border-radius:10px;box-shadow:0 2px 14px rgba(0,0,0,.2);padding:14px 16px;width:90%;max-width:360px;z-index:9;max-height:50vh;overflow:auto';
-    box.innerHTML='<b style="font-size:.85rem">长按/全选复制以下内容发给 Claude：</b><textarea style="width:100%;height:180px;margin-top:8px;font-size:.82rem;font-family:inherit">'+esc(t)+'</textarea><div style="text-align:right"><button onclick="this.parentNode.parentNode.remove()" style="padding:2px 10px;font-size:.78rem">关闭</button></div>';
-    document.body.appendChild(box)}}
 function saveTry(day,n){ // 输入框失焦即存：编辑后不点对答案也不丢
   const ta=document.getElementById('try-'+n);if(!ta)return;
   const v=ta.value.trim();
