@@ -66,7 +66,6 @@ a.back{color:var(--accent);text-decoration:none;font-size:.9rem}
 <div class="vocabside" id="vocabside"><h3>生词本</h3><ul id="vocaside-list"></ul></div>
 </div>
 <div id="toast"></div>
-<script src="articles.js?v=1121a"></script>
 <script>
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 // ===== 每日训练（Claude 更新；新的在上）=====
@@ -479,12 +478,9 @@ function render(){
   (d.daily&&d.daily.length?`<div class="card"><h2>📌 今日实用句 <span class="tag">听读用 · 别抄进答案</span></h2>`+
     d.daily.map(s=>`<div class="daily"><span class="en">${esc(s.en)}</span> <button class="speak" onclick="speak(this.dataset.s)" data-s="${esc(s.en)}">🔊</button><div class="zh">${esc(s.zh)}</div></div>`).join('')+
     `</div>`:'')+
-  // 完整文章（用户 11-20）：训练日出处文章全文先展示，再做题——不给「只看答案句」降难度
-  (function(){const arts=(window.ARTICLES||[]).filter(a=>a.date===d.day&&!a.draft);
-    if(!arts.length)return '';
-    return arts.map(a=>'<div class="card"><h2>📖 原文全文 · '+esc(a.title)+'<span class="tag">'+esc(a.date)+'</span></h2><div>'+a.sentences.map(x=>'<p style="margin:4px 0">'+esc(x)+'</p>').join('')+'</div></div>').join('')})()+  // 雅思练一练（选择/判断，提交制；作答状态记 traintry，刷新不重置）
-  (d.quiz&&d.quiz.length?`<div class="card"><h2>📝 雅思练一练 <span class="tag">选选项 → 提交判分</span></h2>`+
-    d.quiz.map((qz,qn)=>quizHtml(d.day,qn,qz,saved)).join('')+'</div>':'')+
+  // 雅思练一练（提交制；作答状态记 traintry，刷新不重置）。训练文章与阅读批次完全无关（用户 11-21）：
+  // 同一原文只展示一次，题目挂在原文下——不是每题重复贴段落，更不是展示阅读文章
+  (d.quiz&&d.quiz.length?buildQuizGroups(d,saved):'')+
   d.items.map((it,n)=>{
     const key=d.day+'#'+n;const mine=saved[key]||'';
     const g=it.grade; // 批改标记（Claude 会话批改后录入，用户定版：从 11-03 起回填）
@@ -548,7 +544,18 @@ function markTrainWords(){
     if(marks[w.dataset.w]){w.style.background='#ffe08a';w.classList.add('tadded')}
     else{w.style.background='';w.classList.remove('tadded')}})}
 
-function quizHtml(day,qn,qz,saved){
+// 题组：按原文聚合（同一 passage 的题共享一段原文，只贴一次）
+function buildQuizGroups(d,saved){
+  const groups=[];
+  d.quiz.forEach((qz,qn)=>{
+    const last=groups[groups.length-1];
+    if(last&&last.passage===qz.passage)last.items.push(qn);
+    else groups.push({passage:qz.passage,items:[qn]})});
+  return '<div class="card"><h2>📝 雅思练一练 <span class="tag">选选项 → 提交判分</span></h2>'+
+    groups.map((g,gi)=>'<div style="margin-top:14px;padding-top:10px;border-top:1px dashed #ddd">'+
+      '<div class="passage">'+g.passage.split(/\s+/).map(w2tok).join(' ')+' <span style="color:var(--dim);font-size:.7rem">（点生词加入复习）</span></div>'+
+      g.items.map(qn=>quizHtml(d.day,qn,d.quiz[qn],saved,true)).join('')+'</div>').join('')+'</div>'}
+function quizHtml(day,qn,qz,saved,noPassage){
   const key=day+'#q'+qn;
   const done=saved[key];
   // 提交制（用户 11-20）：点选项只选中，点「提交」才判分
@@ -563,7 +570,7 @@ function quizHtml(day,qn,qz,saved){
   const submit=!done?`<button class="reveal" style="margin:8px 0" ${picked===undefined?'disabled':''} onclick="answerQuiz('${day}',${qn})">提交</button>`:'';
   const res=done?`<div class="qdone ${done.ok?'ok':'no'}">${done.ok?'✓ 答对了':'✗ 答错了——正确答案：'+'ABCD'[qz.ans]}</div>`:'';
   return `<div style="margin-top:14px"><div style="font-size:.72rem;color:var(--dim)">${esc(qz.type)}</div>
-  <div class="passage">${qz.passage.split(/\s+/).map(w2tok).join(' ')} <span style="color:var(--dim);font-size:.7rem">（点生词加入复习）</span></div>
+  ${noPassage?'':`<div class="passage">${qz.passage.split(/\s+/).map(w2tok).join(' ')} <span style="color:var(--dim);font-size:.7rem">（点生词加入复习）</span></div>`}
   <p style="font-weight:700;margin:6px 0">${esc(qz.q)}</p>${opts}${submit}${res}
   <div class="qwhy ${done?'show':''}" id="why-${qn}">💡 ${esc(qz.why)}</div></div>`}
 const quizPick={}; // 未提交的临时选择 {day#qn: idx}

@@ -53,6 +53,9 @@ try {
   vm.runInContext('renderVocabSide();', vm.createContext(sb));
   const side = vm.runInContext('document.getElementById("vocaside-list").innerHTML', vm.createContext(sb));
   console.log('sidebar shows flooded:', side.includes('flooded'));
+  const pc=(html.match(/class=.passage./g)||[]).length;
+  console.log('passage blocks rendered:', pc, '(expect 3 for 6 questions)');
+  console.log('question count:', (html.match(/提交</g)||[]).length);
 } catch (e) {
   console.log('VM ERR:', e.message);
   process.exit(1);
