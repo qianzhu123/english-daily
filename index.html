@@ -67,7 +67,7 @@ w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /
 <textarea id="tokin" style="width:100%;height:60px;margin:8px 0;font-size:.75rem" placeholder="粘贴 token（github_pat_...）"></textarea>
 <div style="display:flex;gap:8px"><button onclick="saveToken()" style="flex:1">保存</button><button onclick="clearToken()" style="flex:1">清除</button><button onclick="document.getElementById('tokbox').classList.add('hidden')">关闭</button></div>
 <div id="tokstat" style="color:var(--dim);margin-top:6px;font-size:.78rem"></div></div>
-<script src="articles.js?v=1121a"></script>
+<script src="articles.js?v=1121b"></script>
 <script src="scenes.js?v=1121a"></script>
 <script>
 const A=window.ARTICLES;
@@ -2197,7 +2197,52 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
 "land":"动词：着陆；获得；名词：陆地",
 "building":"名词：楼房；建筑",
 "thirty-nine":"数词：三十九",
-};
+
+"bakery":"名词：面包店",
+"loaf":"名词：一条（面包）",
+"tray":"名词：托盘",
+"arithmetic":"名词：算术；计算",
+"regular":"名词：常客；（形容词）规律的",
+"newcomer":"名词：新来的人",
+"queue":"名词：队伍；（动词）排队",
+"museum":"名词：博物馆",
+"oven":"名词：烤箱",
+"baker":"名词：面包师",
+"rush":"名词：高峰期；（动词）冲、赶",
+"politely":"副词：礼貌地",
+"tourist":"名词：游客",
+"supermarket":"名词：超市",
+"chain":"名词：连锁店；链条",
+"scarcity":"名词：稀缺、匮乏",
+"advertisement":"名词：广告",
+"neighborhood":"名词：街区、邻里",
+"confidence":"名词：信心",
+"symbol":"名词：符号",
+"criminal":"名词：罪犯",
+"insurance":"名词：保险",
+"portal":"名词：门户网站",
+"lowercase":"名词/形容词：小写（的）",
+"recovery":"名词：找回、恢复",
+"spelling":"名词：拼法、拼写",
+"birthplace":"名词：出生地",
+"border":"名词：边界、国界",
+"reset":"名词/动词：重置",
+"mailbox":"名词：邮箱",
+"theater":"名词：戏院；戏剧（比喻：做戏）",
+"kettle":"名词：烧水壶",
+"madness":"名词：疯狂",
+"locked":"形容词：锁定的（lock 的过去式/过去分词）",
+"sold":"动词：卖（sell 的过去式/过去分词）",
+"baked":"动词：烤（bake 的过去式/过去分词）",
+"considered":"动词：考虑（consider 的过去式）",
+"loyalty":"名词：忠诚（本题干词）",
+"nutritional":"形容词：营养的",
+"efficiency":"名词：效率",
+"verification":"名词：核验、验证",
+"dishonestly":"副词：不诚实地",
+"restored":"动词：恢复、找回（restore 的过去式）",
+"identity":"名词：身份",
+"scarcity,":"名词：稀缺、匮乏"};
 function validTrans(t,k){ // 翻译结果有效性：空/纯标点符号/回显原文/已知垃圾模式都算无效
   if(!t)return false;
   if(!/[一-鿿A-Za-z0-9]/.test(t))return false; // 必须含汉字/字母/数字（滤掉"。"、"…"等）
@@ -2359,6 +2404,38 @@ function playArticle(artIdx,btn){
 // ===== 整篇翻译：显示/隐藏本文全文译文（gtx 整篇 → 失败逐句兜底 → MyMemory 兜底） =====
 // ===== 预置全文翻译：本批两篇已人工校好，点「整篇翻译」直接出，不走在线请求 =====
 const PRETR={
+  "The Bakery That Closed at Noon": [
+"The bakery on the corner opened at six and sold out by eleven, and the owner never once considered baking more.",
+"街角的面包店六点开门，十一点就卖光了，老板娘从没考虑过多烤一点。",
+"When the trays were empty, she turned the sign around, made herself a coffee, and sat by the window reading the paper as if the queue outside were somebody else's problem.",
+"托盘空了，她就翻转招牌，给自己泡杯咖啡，坐在窗边读报纸，仿佛门外的队伍是别人的麻烦。",
+"Regulars learned the arithmetic: arrive at nine and you choose; arrive at ten and you hope; arrive at eleven and you study the empty shelves like a museum of what had been.",
+"熟客们摸清了这道算术：九点到，你来挑；十点到，你碰运气；十一点到，你就只能端详空货架，像参观一座「曾经有过什么」的博物馆。",
+"A newcomer once suggested she could double the oven space, hire a second baker, stay open until the evening rush — she listened politely, the way one listens to a tourist giving directions.",
+"有个新来的曾建议她把烤箱扩容一倍、雇第二个面包师、营业到晚间高峰——她礼貌地听着，那种听法就像听一个游客给你指路。",
+"\"If I bake more,\" she said, \"then bread becomes something you pick up on the way home, and I become somewhere you stop, not somewhere you come to.\"",
+"「如果我多烤，」她说，「面包就变成回家路上顺手买的东西，而我就变成一个你顺路停靠的地方，不再是你专程要来的地方。」",
+"The chain supermarket across the street baked around the clock and sold bread that stayed soft for a week, and nobody walked across the street for it twice.",
+"街对面的连锁超市昼夜不停地烤，卖那种能软上一个星期的面包，而没有人会为它第二次穿过马路。",
+"Scarcity, it turns out, is not always a failure of planning; sometimes it is the plan, and the closed sign at noon is the loudest advertisement in the neighborhood.",
+"稀缺，原来并不总是规划的失误；有时它就是策略本身，而正午翻转的「营业结束」牌，是这片街区最响亮的广告。"
+],
+  "The Password That Was Too Strong": [
+"The password had been created on a rainy Tuesday with the confidence of a man who would never forget anything: sixteen characters, three symbols, a number hidden in the middle like a criminal in a crowd.",
+"这个密码诞生于一个下雨的星期二，带着一个自信绝不会忘记任何事的人的全部信心：十六个字符、三个符号、一个藏在中间的数字，像人群中的一名逃犯。",
+"For two years it opened everything — the insurance portal, the tax office, the folder where the family photos lived — and then one morning in March, it opened nothing.",
+"两年来它打开一切——保险门户、税务局、全家福照片所在的文件夹——然后三月的一个早晨，它什么都打不开了。",
+"He tried the capital letter first, then the lowercase version, then the version with the year at the end, the way one knocks on a door louder and louder hoping the house itself has changed.",
+"他先试大写开头，再试全小写版本，再试把年份加在末尾的版本，就像一个人越敲越响地敲门，盼着房子本身已经变了。",
+"The recovery questions were worse than the lock: his first school turned out to have three spellings in his own memory, and his mother's birthplace depended on which border the year had drawn.",
+"找回问题比锁还难：他的第一所学校在他自己的记忆里就有三种拼法，而他母亲的出生地取决于那一年画的是哪条国界线。",
+"The reset email arrived within a minute, cheerful and instant, and he understood that the system had never cared who he was — only that he could still receive mail at an address he had controlled since university.",
+"重置邮件一分钟内就到了，欢快而即时，他这才明白系统从没在乎过他是谁——只在乎他在一个大学起就掌控的地址上还能收到邮件。",
+"Security, the screen seemed to say, is a theater performed for both sides: the company proves it is serious, the user proves he is careful, and nobody asks whether the play has to be this long.",
+"屏幕仿佛在说，安全是一场演给双方看的戏：公司证明自己认真，用户证明自己小心，却没人问这出戏是否非得这么长。",
+"He now keeps his passwords in a small notebook by the kettle, which every security website calls madness and which has, so far, never once locked him out.",
+"他现在把密码记在烧水壶旁的小本子上，所有安全网站都管这叫疯狂，而这个本子迄今为止一次都没把他锁在门外。"
+],
   "The Meter That Ran Kindly": ["The taxi meter in that city started at a flat fee that covered the first two kilometers, and every driver explained it the same way, with the same tired pride, as if they had personally invented generosity.","那座城市的出租车计价器从一笔起步费开始，起步费覆盖前两公里，每个司机都用同样的话、带着同样疲惫的骄傲解释这件事，仿佛慷慨是他们亲自发明的。","One night a driver took a longer route because the short one was flooded, announced the detour before making it, and then turned the meter off for the flooded stretch, charging only for the dry road.","一天夜里，一位司机因为近路被淹而绕了远路——绕之前先说明——然后在水淹的那一段直接关掉了计价器，只按干燥的路面收费。","Nothing in the regulations required any of it; the rules cared about the maximum a driver could charge, and had apparently never considered the maximum a passenger could be trusted to pay.","这些举动没有任何一条规定要求；规则只关心司机最多能收多少钱，显然从来没想过乘客最多可以被信任到主动多付多少。","When I asked why he switched the meter off, he shrugged and said the machine only knew distance, and distance on a flooded road was nobody's journey, so it belonged to no one's fare.","我问他为什么关表，他耸耸肩说：机器只认距离，而水淹路上的距离不属于任何人的行程，所以也不该进任何人的账单。","The city had spent years installing cameras, printing complaints hotlines on every receipt, and building an entire appeals process for disputes, and this driver had solved the same problem in one sentence and a shrug.","这座城市花了很多年装摄像头、在每张收据上印投诉热线、为纠纷建起整套申诉流程——而这位司机用一句话加一个耸肩，解决了同一个问题。","Trust, it turns out, is cheaper than enforcement: the cameras cost millions, the hotline costs salaries, and a driver deciding that a flooded road is free costs nothing at all and works every single time.","事实证明，信任比执法便宜：摄像头要花几百万，热线要发工资，而一个司机认定水淹路不收钱，分文不花，且每次都管用。","I have forgotten the fare and the street and even the color of the car; what stayed is the small click of a meter being switched off, which was, for one night, the sound of a system deciding to be kind.","车费、街道、甚至车的颜色我都忘了；留下的是计价器被关掉时那一声轻响——那一晚，那是一个系统决定善良的声音。"],
   "The Manager Who Took Notes": ["The hotel had a policy for complaints that was written in three languages, laminated behind the front desk, and visible to every guest except the ones actually complaining.","这家酒店有一套投诉处理规定，用三种语言写成、塑封在前台后面，每位客人都能看到——唯独真正在投诉的看不到。","When the air conditioner failed at midnight, the clerk recited the policy like a poem he had memorized without understanding: an engineer would come within twenty-four hours, and compensation followed a fixed table of rates.","半夜空调坏了，前台像背诵一首背熟却不懂的诗一样背诵规定：工程师二十四小时内到场，赔偿按固定费率表执行。","What he could not do was walk to the room; that, apparently, was not in the policy, and the policy, the clerk implied with every carefully neutral word, was not something a night clerk could improve.","他不能做的是走到房间去看一眼；这显然不在规定里，而规定——他用每一个字斟句酌的中性词暗示——不是夜班前台能改进的东西。","The manager arrived unannounced at seven in the morning, holding a small notebook, and asked to hear the whole story again, from the beginning, including the part about the poem.","早上七点，经理没有事先通知就来了，手里拿着一个小本子，要求把整件事从头再讲一遍，包括「背诗」那一段。","He wrote for two full minutes without interrupting, then closed the notebook and said only that the engineer's report would arrive by noon, and that I would hear from him personally, whatever it said.","他整整写了两分钟没有打断，然后合上本子，只说：工程师的报告中午前会到，无论报告写什么，他都会亲自告诉我。","The report did arrive by noon, the discount did follow the fixed table, and yet the entire experience felt different, because the policy had finally been delivered by a person instead of recited at one.","报告确实中午前到了，折扣也确实按费率表执行——但整个体验完全不同了，因为规定终于由一个人「执行」给我，而不是对着一个人「背诵」。","The difference between being handled and being heard is roughly the width of a notebook, but no laminated policy in three languages has ever managed to cross it.","「被处理」和「被倾听」之间的距离大约只有一个本子那么宽，但没有任何一份三语塑封规定成功跨越过它。"],
   "The Library That Charged for Silence": ["The new library charged nothing for books, nothing for borrowing, and nothing for sitting — and then it introduced a study room that cost four pounds an hour, and half the neighbourhood quietly learned that silence had become a subscription.","新图书馆看书不收钱、借书不收钱、坐着也不收钱——然后它推出了每小时四英镑的自习室，于是半个街区悄悄明白了一件事：安静已经变成一种订阅服务。","The free reading hall stayed open, of course, but it had been arranged so that every table faced the entrance, where the door announced each arrival and the coffee machine performed its small concert every nine minutes.","免费阅览厅当然还开着，只是布局经过精心安排：每张桌子都正对大门——门会播报每一次进出，咖啡机每九分钟举办一场小型音乐会。","The paid rooms, by contrast, had thick walls, soft chairs, and a kind of lighting that made you want to finish your thesis rather than your coffee.","相比之下，付费房间墙厚、椅子软，还有一种让你想先把论文写完、而不是先把咖啡喝完的灯光。","When a student complained to the front desk that the free option was designed to be unendurable, the librarian smiled and said the study rooms simply paid for themselves, which was true, and also completely beside the point.","有学生向前台抱怨说免费区是被故意设计得让人待不下去的，管理员微笑着说自习室不过是自负盈亏——这话没错，但也完全没说到点子上。","Nobody had decided to make the free hall unusable; it had merely been designed by someone whose job was foot traffic, and nobody whose job was concentration had been invited to the meeting.","并没有谁拍板要把免费厅弄得更难用；它只是被一个职责是客流量的人设计了出来，而职责是专注度的人，根本没被请进那间会议室。","The cost of a public service is printed on the wall; the cost of its design is hidden in the floor plan, and you pay the second one every single day without a receipt.","公共服务的价钱印在墙上；它设计的代价藏在平面图里，而这第二笔账你每天都在付，只是从没有收据。","By winter the city added two free quiet rooms in the old post office across the street — same funding, same staff, different department — and the coffee machine, suddenly exposed to actual competition, was moved to the basement.","入冬前，市里在街对面的老邮局里加开了两间免费静音室——同样的经费、同样的人手，只是换了个部门——而那台突然面对真实竞争的咖啡机，被搬进了地下室。"],

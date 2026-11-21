@@ -79,7 +79,7 @@ padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:no
 <div id="main"></div>
 </div>
 <div id="toast"></div>
-<script src="../articles.js?v=1121a"></script>
+<script src="../articles.js?v=1121b"></script>
 <script>
 
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -1821,7 +1821,52 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
   "board":"名词：板、牌；（动词）登机、上（车/船）",
   "land":"动词：着陆；获得；名词：陆地",
   "building":"名词：楼房；建筑",
-  "thirty-nine":"数词：三十九"};
+  "thirty-nine":"数词：三十九",
+"bakery":"名词：面包店",
+"loaf":"名词：一条（面包）",
+"tray":"名词：托盘",
+"arithmetic":"名词：算术；计算",
+"regular":"名词：常客；（形容词）规律的",
+"newcomer":"名词：新来的人",
+"queue":"名词：队伍；（动词）排队",
+"museum":"名词：博物馆",
+"oven":"名词：烤箱",
+"baker":"名词：面包师",
+"rush":"名词：高峰期；（动词）冲、赶",
+"politely":"副词：礼貌地",
+"tourist":"名词：游客",
+"supermarket":"名词：超市",
+"chain":"名词：连锁店；链条",
+"scarcity":"名词：稀缺、匮乏",
+"advertisement":"名词：广告",
+"neighborhood":"名词：街区、邻里",
+"confidence":"名词：信心",
+"symbol":"名词：符号",
+"criminal":"名词：罪犯",
+"insurance":"名词：保险",
+"portal":"名词：门户网站",
+"lowercase":"名词/形容词：小写（的）",
+"recovery":"名词：找回、恢复",
+"spelling":"名词：拼法、拼写",
+"birthplace":"名词：出生地",
+"border":"名词：边界、国界",
+"reset":"名词/动词：重置",
+"mailbox":"名词：邮箱",
+"theater":"名词：戏院；戏剧（比喻：做戏）",
+"kettle":"名词：烧水壶",
+"madness":"名词：疯狂",
+"locked":"形容词：锁定的（lock 的过去式/过去分词）",
+"sold":"动词：卖（sell 的过去式/过去分词）",
+"baked":"动词：烤（bake 的过去式/过去分词）",
+"considered":"动词：考虑（consider 的过去式）",
+"loyalty":"名词：忠诚（本题干词）",
+"nutritional":"形容词：营养的",
+"efficiency":"名词：效率",
+"verification":"名词：核验、验证",
+"dishonestly":"副词：不诚实地",
+"restored":"动词：恢复、找回（restore 的过去式）",
+"identity":"名词：身份",
+"scarcity,":"名词：稀缺、匮乏"};
 function validTrans(t,k){if(!t)return false;if(!/[一-鿿A-Za-z0-9]/.test(t))return false;
 if(/^[：:，,。;；\s]/.test(t))return false; // 残缺符号开头的碎片（hundred→"：一百"事故）
 if(t.toLowerCase()===k.toLowerCase())return false;if(/MYMEMORY WARNING|QUERY LENGTH|%s|ALL AVAILABLE FREE TRANSLATIONS/i.test(t))return false;return true}

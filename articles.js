@@ -1063,4 +1063,53 @@ window.ARTICLES = [
       "the width of a notebook —— 度量隐喻点题：被处理与被倾听之间只差一个本子的宽度"
     ]
   }
+,
+  {
+    title: "The Bakery That Closed at Noon (B1+)",
+    date: "2026-11-21",
+    level: "B1+ · 小店经营/稀缺的价值",
+    sentences: [
+      "The bakery on the corner opened at six and sold out by eleven, and the owner never once considered baking more.",
+      "When the trays were empty, she turned the sign around, made herself a coffee, and sat by the window reading the paper as if the queue outside were somebody else's problem.",
+      "Regulars learned the arithmetic: arrive at nine and you choose; arrive at ten and you hope; arrive at eleven and you study the empty shelves like a museum of what had been.",
+      "A newcomer once suggested she could double the oven space, hire a second baker, stay open until the evening rush — she listened politely, the way one listens to a tourist giving directions.",
+      "\u0022If I bake more,\u0022 she said, \u0022then bread becomes something you pick up on the way home, and I become somewhere you stop, not somewhere you come to.\u0022",
+      "The chain supermarket across the street baked around the clock and sold bread that stayed soft for a week, and nobody walked across the street for it twice.",
+      "Scarcity, it turns out, is not always a failure of planning; sometimes it is the plan, and the closed sign at noon is the loudest advertisement in the neighborhood."
+    ],
+    notes: [
+      "as if the queue outside were somebody else's problem —— as if + 过去式虚拟：门外排队与她无关",
+      "arrive at nine and you choose —— 祈使+and = 条件句：早到就有得选（排比三层递减）",
+      "study the empty shelves like a museum of what had been —— 明喻+what 名词性从句：空货架成了遗迹展",
+      "the way one listens to a tourist giving directions —— the way 后省略从句连词：本地人听游客指路（反讽）",
+      "somewhere you stop, not somewhere you come to —— 定语从句对仗：顺路停靠 vs 专程前往",
+      "bread that stayed soft for a week —— that 定语从句+拟物：工业面包的\u0022优点\u0022恰是它的失败",
+      "Scarcity, it turns out, is not always a failure of planning; sometimes it is the plan —— 插入语+分号对仗：稀缺不是失误而是策略（点题金句）"
+    ]
+  }
+,
+  {
+    title: "The Password That Was Too Strong (B1+)",
+    date: "2026-11-21",
+    level: "B1+ · 数字生活/安全与遗忘",
+    sentences: [
+      "The password had been created on a rainy Tuesday with the confidence of a man who would never forget anything: sixteen characters, three symbols, a number hidden in the middle like a criminal in a crowd.",
+      "For two years it opened everything — the insurance portal, the tax office, the folder where the family photos lived — and then one morning in March, it opened nothing.",
+      "He tried the capital letter first, then the lowercase version, then the version with the year at the end, the way one knocks on a door louder and louder hoping the house itself has changed.",
+      "The recovery questions were worse than the lock: his first school turned out to have three spellings in his own memory, and his mother's birthplace depended on which border the year had drawn.",
+      "The reset email arrived within a minute, cheerful and instant, and he understood that the system had never cared who he was — only that he could still receive mail at an address he had controlled since university.",
+      "Security, the screen seemed to say, is a theater performed for both sides: the company proves it is serious, the user proves he is careful, and nobody asks whether the play has to be this long.",
+      "He now keeps his passwords in a small notebook by the kettle, which every security website calls madness and which has, so far, never once locked him out."
+    ],
+    notes: [
+      "with the confidence of a man who would never forget anything —— who 定语从句+反讽：创建时的自信为后文埋雷",
+      "a number hidden in the middle like a criminal in a crowd —— 过去分词后置修饰+明喻：数字藏在密码里像人群中的逃犯",
+      "the way one knocks on a door louder and louder —— the way 方式状语从句：越敲越响，房子却不会变",
+      "his mother's birthplace depended on which border the year had drawn —— which 宾语从句：国界随年份变，\u0022标准答案\u0022本身不可靠",
+      "the system had never cared who he was —— who 宾语从句+省略 that：系统只认邮箱不认人",
+      "a theater performed for both sides —— 过去分词作后置定语：安全是演给双方看的戏（隐喻贯穿末段）",
+      "which every security website calls madness and which has never once locked him out —— 双 which 非限制性从句对仗：权威眼中的蠢办法 vs 两年零失误（点题）"
+    ]
+  }
+
 ];

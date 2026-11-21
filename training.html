@@ -80,6 +80,49 @@ const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e)
 
 const TRAIN=[
 {
+  day:'2026-11-21',
+  title:'雅思阅读实战 · 独立长文混合题型（对比结构与目的题专练）',
+  brief:'题型轮换日：判断+单选+句子结尾匹配。本日重点：作者常用「多数人怎么做 vs 主角怎么做」的对比立意，正确答案往往在对比的落点（后半句），不在前半句的铺垫里；目的题问的是「为什么写这句」，不是「这句说了什么」。',
+  daily:[
+    {en:'If I bake more, then bread becomes something you pick up on the way home.',zh:'如果我多烤，面包就变成回家顺路随手买的东西'},
+    {en:'Scarcity is not always a failure of planning; sometimes it is the plan.',zh:'稀缺不总是规划失误；有时它本身就是策略'},
+    {en:'Security is a theater performed for both sides.',zh:'安全是一场演给双方看的戏'}
+  ],
+  items:[],
+  quiz:[
+    {passage:"The bakery on the corner opened at six and sold out by eleven. The owner never baked more than her fixed number of trays, and when the last loaf went, she turned the sign around and read her newspaper. A supermarket across the street baked around the clock; its bread stayed soft for a week, and its shelves were never empty. Yet regulars crossed the road to her shop and accepted the risk of finding nothing.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The owner refuses to bake more because she cannot afford a second baker.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:2,
+     why:'她拒绝多烤的理由是「多烤会让面包变成顺路货」（后面单选可见），成本原因原文完全没提——NOT GIVEN。别把「她没扩产」脑补成「她扩不起」'},
+    {passage:"The bakery on the corner opened at six and sold out by eleven. The owner never baked more than her fixed number of trays, and when the last loaf went, she turned the sign around and read her newspaper. A supermarket across the street baked around the clock; its bread stayed soft for a week, and its shelves were never empty. Yet regulars crossed the road to her shop and accepted the risk of finding nothing.",
+     type:'单选（Multiple Choice）',
+     q:'What point does the passage make with the supermarket contrast?',
+     opts:['Constant production does not guarantee customer loyalty','Supermarket bread is of lower nutritional quality','The owner could learn efficiency from the supermarket','Customers prefer shops with longer opening hours'],ans:0,
+     why:'对比的落点在后半句：超市全年无休却没人回头第二次（walked across the street for it twice 的改写），说明产能≠忠诚（A）。B 的「营养」无中生有；C/D 与作者立场相反'},
+    {passage:"A password created with sixteen characters and three symbols opened everything for two years, then one morning opened nothing. The recovery questions asked for a first school with three possible spellings and a birthplace that depended on which border the year had drawn. The reset email arrived within a minute, and the account was restored to whoever controlled that mailbox.",
+     type:'单选（Multiple Choice）',
+     q:'Why does the writer describe the recovery questions in detail?',
+     opts:['To show that memory-based verification can itself be unreliable','To prove that the user answered the questions dishonestly','To suggest the questions should be written in several languages','To explain why the reset email was slow to arrive'],ans:0,
+     why:'目的题：写「三个拼法/国界随年份变」是为了说明——依赖记忆的校验问题本身就没有稳定答案（A，unreliable 是 depend on which border 的同义概括）。B 说谎、C 多语言、D 慢，原文都不支持'},
+    {passage:"A password created with sixteen characters and three symbols opened everything for two years, then one morning opened nothing. The recovery questions asked for a first school with three possible spellings and a birthplace that depended on which border the year had drawn. The reset email arrived within a minute, and the account was restored to whoever controlled that mailbox.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The account was restored without the user proving his identity.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:0,
+     why:'原文说系统只关心「谁控制着那个邮箱」（restored to whoever controlled that mailbox），收得到邮件=拿回账号，身份核验形同虚设——TRUE。这是 no-proving 与 only-mailbox 的同义改写'},
+    {passage:"The owner explained: if she baked more, bread would become something picked up on the way home, and her shop would become somewhere people stopped by rather than somewhere people came to. The closed sign at noon, she believed, was itself a kind of advertisement.",
+     type:'句子结尾匹配（Sentence Ending）',
+     q:'The owner treats the closed sign as…',
+     opts:['evidence that her shop has become ordinary','a signal that the product is worth planning around','proof that customer demand has collapsed','an accident she plans to correct next year'],ans:1,
+     why:'她的逻辑：限时售罄=值得专程规划的东西，午休关门本身就是广告（B，worth planning around 是 the plan / come to 的改写）。A「变得平庸」、C「需求崩塌」方向相反；D「明年修正」原文没说'},
+    {passage:"The owner explained: if she baked more, bread would become something picked up on the way home, and her shop would become somewhere people stopped by rather than somewhere people came to. The closed sign at noon, she believed, was itself a kind of advertisement.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The owner believes scarcity protects the special status of her shop.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:1,
+     why:'雅思判断题的 FALSE 用得狠：她不是「相信稀缺保护地位」，她是**主动把稀缺当成经营策略**（scarcity IS the plan），believe 一词弱化了她的主动性——语义强度不对等即 FALSE。注意：这题考的是「主动策略」vs「被动相信」的边界'}
+  ]
+},
+{
   day:'2026-11-19',
   title:'雅思阅读实战 · 独立长文混合题型（推理与作者态度专练）',
   brief:'题型轮换日：判断+单选+作者观点匹配+句子结尾匹配。本日重点不再是找原词，而是推理：正确答案往往换个说法，甚至只给态度不下结论；遇到 not given 先问自己「原文有没有直接说过这句话」。',
