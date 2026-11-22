@@ -947,7 +947,7 @@ function quizHtml(day,qn,qz,saved,noPassage){
       if(i===qz.ans)cls+=' good';
       else if(i===done.pick)cls+=' badv'}
     else if(picked===i)cls+=' picked';
-    return `<button class="${cls}" ${done?'disabled':''} onclick="pickOpt('${day}',${qn},${i})">${'ABCD'[i]}. ${esc(o)}</button>`}).join('');
+    return `<button class="${cls}" ${done?'disabled':''} onclick="pickOpt('${day}',${qn},${i},event)">${'ABCD'[i]}. ${esc(o)}</button>`}).join('');
   const submit=!done?`<button class="reveal" style="margin:8px 0" ${picked===undefined?'disabled':''} onclick="answerQuiz('${day}',${qn})">提交</button>`:'';
   const res=done?`<div class="qdone ${done.ok?'ok':'no'}">${done.ok?'✓ 答对了':'✗ 答错了——正确答案：'+'ABCD'[qz.ans]}</div>`:'';
   return `<div style="margin-top:14px"><div style="font-size:.72rem;color:var(--dim)">${esc(qz.type)}</div>
