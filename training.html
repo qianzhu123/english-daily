@@ -84,43 +84,98 @@ const TRAIN=[
   title:'雅思阅读实战 · 独立长文混合题型（对比结构与目的题专练）',
   brief:'题型轮换日：判断+单选+句子结尾匹配。本日重点：作者常用「多数人怎么做 vs 主角怎么做」的对比立意，正确答案往往在对比的落点（后半句），不在前半句的铺垫里；目的题问的是「为什么写这句」，不是「这句说了什么」。',
   daily:[
-    {en:'If I bake more, then bread becomes something you pick up on the way home.',zh:'如果我多烤，面包就变成回家顺路随手买的东西'},
-    {en:'Scarcity is not always a failure of planning; sometimes it is the plan.',zh:'稀缺不总是规划失误；有时它本身就是策略'},
-    {en:'Security is a theater performed for both sides.',zh:'安全是一场演给双方看的戏'}
-  ],
+ {
+  "en": "The gardeners come for the company as much as the harvest.",
+  "zh": "园艺者来这儿是为陪伴，不亚于为收成"
+ },
+ {
+  "en": "Regularity predicted health outcomes better than total hours slept.",
+  "zh": "作息规律比总睡眠时长更能预测健康"
+ },
+ {
+  "en": "The finding may not transfer to people with conventional schedules.",
+  "zh": "该结论未必适用于作息正常的人"
+ }
+],
   items:[],
   quiz:[
-    {passage:"The bakery on the corner opened at six and sold out by eleven. The owner never baked more than her fixed number of trays, and when the last loaf went, she turned the sign around and read her newspaper. A supermarket across the street baked around the clock; its bread stayed soft for a week, and its shelves were never empty. Yet regulars crossed the road to her shop and accepted the risk of finding nothing.",
-     type:'判断 TRUE/FALSE/NOT GIVEN',
-     q:'The owner refuses to bake more because she cannot afford a second baker.',
-     opts:['TRUE','FALSE','NOT GIVEN'],ans:2,
-     why:'她拒绝多烤的理由是「多烤会让面包变成顺路货」（后面单选可见），成本原因原文完全没提——NOT GIVEN。别把「她没扩产」脑补成「她扩不起」'},
-    {passage:"The bakery on the corner opened at six and sold out by eleven. The owner never baked more than her fixed number of trays, and when the last loaf went, she turned the sign around and read her newspaper. A supermarket across the street baked around the clock; its bread stayed soft for a week, and its shelves were never empty. Yet regulars crossed the road to her shop and accepted the risk of finding nothing.",
-     type:'单选（Multiple Choice）',
-     q:'What point does the passage make with the supermarket contrast?',
-     opts:['Constant production does not guarantee customer loyalty','Supermarket bread is of lower nutritional quality','The owner could learn efficiency from the supermarket','Customers prefer shops with longer opening hours'],ans:0,
-     why:'对比的落点在后半句：超市全年无休却没人回头第二次（walked across the street for it twice 的改写），说明产能≠忠诚（A）。B 的「营养」无中生有；C/D 与作者立场相反'},
-    {passage:"A password created with sixteen characters and three symbols opened everything for two years, then one morning opened nothing. The recovery questions asked for a first school with three possible spellings and a birthplace that depended on which border the year had drawn. The reset email arrived within a minute, and the account was restored to whoever controlled that mailbox.",
-     type:'单选（Multiple Choice）',
-     q:'Why does the writer describe the recovery questions in detail?',
-     opts:['To show that memory-based verification can itself be unreliable','To prove that the user answered the questions dishonestly','To suggest the questions should be written in several languages','To explain why the reset email was slow to arrive'],ans:0,
-     why:'目的题：写「三个拼法/国界随年份变」是为了说明——依赖记忆的校验问题本身就没有稳定答案（A，unreliable 是 depend on which border 的同义概括）。B 说谎、C 多语言、D 慢，原文都不支持'},
-    {passage:"A password created with sixteen characters and three symbols opened everything for two years, then one morning opened nothing. The recovery questions asked for a first school with three possible spellings and a birthplace that depended on which border the year had drawn. The reset email arrived within a minute, and the account was restored to whoever controlled that mailbox.",
-     type:'判断 TRUE/FALSE/NOT GIVEN',
-     q:'The account was restored without the user proving his identity.',
-     opts:['TRUE','FALSE','NOT GIVEN'],ans:0,
-     why:'原文说系统只关心「谁控制着那个邮箱」（restored to whoever controlled that mailbox），收得到邮件=拿回账号，身份核验形同虚设——TRUE。这是 no-proving 与 only-mailbox 的同义改写'},
-    {passage:"The owner explained: if she baked more, bread would become something picked up on the way home, and her shop would become somewhere people stopped by rather than somewhere people came to. The closed sign at noon, she believed, was itself a kind of advertisement.",
-     type:'句子结尾匹配（Sentence Ending）',
-     q:'The owner treats the closed sign as…',
-     opts:['evidence that her shop has become ordinary','a signal that the product is worth planning around','proof that customer demand has collapsed','an accident she plans to correct next year'],ans:1,
-     why:'她的逻辑：限时售罄=值得专程规划的东西，午休关门本身就是广告（B，worth planning around 是 the plan / come to 的改写）。A「变得平庸」、C「需求崩塌」方向相反；D「明年修正」原文没说'},
-    {passage:"The owner explained: if she baked more, bread would become something picked up on the way home, and her shop would become somewhere people stopped by rather than somewhere people came to. The closed sign at noon, she believed, was itself a kind of advertisement.",
-     type:'判断 TRUE/FALSE/NOT GIVEN',
-     q:'The owner believes scarcity protects the special status of her shop.',
-     opts:['TRUE','FALSE','NOT GIVEN'],ans:1,
-     why:'雅思判断题的 FALSE 用得狠：她不是「相信稀缺保护地位」，她是**主动把稀缺当成经营策略**（scarcity IS the plan），believe 一词弱化了她的主动性——语义强度不对等即 FALSE。注意：这题考的是「主动策略」vs「被动相信」的边界'}
-  ]
+    {
+     "passage": "Municipal allotments — small plots of land rented to residents for growing vegetables — were introduced in many European cities during wartime shortages. A century later, waiting lists in some districts exceed ten years. The gardeners are retired teachers, nurses, and bus drivers rather than farmers, and most say they come for the company as much as the harvest. One association has begun assigning each newcomer a mentor for the first season.",
+     "type": "判断 TRUE/FALSE/NOT GIVEN",
+     "q": "The allotments were created because the cities wanted to profit from renting land.",
+     "opts": [
+      "TRUE",
+      "FALSE",
+      "NOT GIVEN"
+     ],
+     "ans": 1,
+     "why": "原文说自留地是「战时短缺时期」推出的——目的是粮食供应，不是赚钱（FALSE）。租金是否盈利原文只字未提，但「因短缺而设」与「为盈利而设」矛盾"
+    },
+    {
+     "passage": "Municipal allotments — small plots of land rented to residents for growing vegetables — were introduced in many European cities during wartime shortages. A century later, waiting lists in some districts exceed ten years. The gardeners are retired teachers, nurses, and bus drivers rather than farmers, and most say they come for the company as much as the harvest. One association has begun assigning each newcomer a mentor for the first season.",
+     "type": "单选（Multiple Choice）",
+     "q": "What does the passage suggest about the gardeners' motives?",
+     "opts": [
+      "Social contact matters to them as much as produce",
+      "They hope the plots will raise the value of their homes",
+      "Most of them previously worked in agriculture",
+      "They joined mainly to avoid paying for vegetables"
+     ],
+     "ans": 0,
+     "why": "原文明说「为陪伴而来不亚于为收成而来」（the company as much as the harvest 的同义改写=A）。B 房价、C 农业背景（原文恰说是退休教师/护士/司机）、D 省菜钱均无据"
+    },
+    {
+     "passage": "Sleep researchers distinguish between sleep quantity and sleep regularity — going to bed and waking at consistent times. A large study found regularity predicted long-term health outcomes better than total hours slept. The authors caution that their participants were all shift workers, so the finding may not transfer to people with conventional schedules.",
+     "type": "判断 TRUE/FALSE/NOT GIVEN",
+     "q": "The study included participants with a range of work schedules.",
+     "opts": [
+      "TRUE",
+      "FALSE",
+      "NOT GIVEN"
+     ],
+     "ans": 1,
+     "why": "作者自己警告「参与者全是轮班工人」（all shift workers）——不是多种作息都有（FALSE）。题目考的是 not transfer 提示的样本局限"
+    },
+    {
+     "passage": "Sleep researchers distinguish between sleep quantity and sleep regularity — going to bed and waking at consistent times. A large study found regularity predicted long-term health outcomes better than total hours slept. The authors caution that their participants were all shift workers, so the finding may not transfer to people with conventional schedules.",
+     "type": "单选（Multiple Choice）",
+     "q": "Why do the authors mention the participants' occupation?",
+     "opts": [
+      "To limit the strength of their own conclusion",
+      "To explain why shift work damages health",
+      "To recommend that everyone adopt fixed bedtimes",
+      "To criticise earlier studies on sleep duration"
+     ],
+     "ans": 0,
+     "why": "作者提职业是为了自我设限：样本特殊，结论未必适用于普通作息（limit the strength 的改写）。B 因果、D 批前人、C 建议均非目的"
+    },
+    {
+     "passage": "The museum's audio guide was recorded by a single narrator whose voice visitors either adored or could not tolerate. Attendance figures showed no difference between the two groups' visiting patterns, and the gift shop sold the narrator's memoir alongside the standard souvenirs.",
+     "type": "单选（Multiple Choice）",
+     "q": "What can be inferred from the attendance figures?",
+     "opts": [
+      "Reactions to the narrator did not affect how people visited",
+      "Visitors who disliked the voice stayed away entirely",
+      "The narrator's memoir outsold the souvenirs",
+      "Liking the voice made visits longer"
+     ],
+     "ans": 0,
+     "why": "「两组参观模式没有差异」= 好恶不影响参观行为（A）。B 相反；C 只说有卖没说卖得更好；D 时长原文没提"
+    },
+    {
+     "passage": "The museum's audio guide was recorded by a single narrator whose voice visitors either adored or could not tolerate. Attendance figures showed no difference between the two groups' visiting patterns, and the gift shop sold the narrator's memoir alongside the standard souvenirs.",
+     "type": "句子结尾匹配（Sentence Ending）",
+     "q": "The narrator's voice divided visitors…",
+     "opts": [
+      "but changed nothing about their behaviour",
+      "and the museum replaced it within a year",
+      "so the memoir was withdrawn from sale",
+      "although most visitors never noticed it"
+     ],
+     "ans": 0,
+     "why": "好恶分明但参观模式无差=声音分裂了评价却没改变行为（A）。B/C/D 原文都没有"
+    }
+   ],
 },
 {
   day:'2026-11-19',
@@ -133,37 +188,82 @@ const TRAIN=[
   ],
   items:[],
   quiz:[
-    {passage:"The library study rooms charged four pounds an hour while the free hall stayed open with every table facing the entrance, where the door announced each arrival. A student complained that the free option had been designed to be unendurable; the librarian said the study rooms simply paid for themselves.",
-     type:'判断 TRUE/FALSE/NOT GIVEN',
-     q:'The librarian admitted that the free hall had been designed badly.',
-     opts:['TRUE','FALSE','NOT GIVEN'],ans:2,
-     why:'图书管理员只说了自习室「自负盈亏」，既没承认也没否认设计问题——NOT GIVEN。别把「没否认」当成「默认」：雅思里沉默≠承认'},
-    {passage:"The library study rooms charged four pounds an hour while the free hall stayed open with every table facing the entrance, where the door announced each arrival. A student complained that the free option had been designed to be unendurable; the librarian said the study rooms simply paid for themselves.",
-     type:'单选（Multiple Choice）',
-     q:'What does the passage suggest about the free hall\'s layout?',
-     opts:['It was designed to concentrate visitors near the exit','Its design served goals other than concentration','It was arranged by the paid-room designer','Students preferred tables near the door'],ans:1,
-     why:'原文说设计者是「管客流量的」而不是「管专注度的」——布局服务于其他目标（B）。A 偷换概念（不是疏散是引流）；C 无中生有；D 原文没说偏好'},
-    {passage:"The taxi driver turned the meter off for the flooded stretch of road, charging only for the dry part. The city, meanwhile, had spent years building cameras, hotlines and appeals processes. The writer concludes that trust is cheaper than enforcement.",
-     type:'作者观点匹配（Does the writer agree?）',
-     q:'The writer believes most drivers would switch the meter off in the same situation.',
-     opts:['YES','NO','NOT GIVEN'],ans:2,
-     why:'作者只讲了这一位司机的故事并评价了信任的成本，从头到尾没提其他司机会不会这么做——NOT GIVEN。作者的观点≠普遍事实的统计'},
-    {passage:"The taxi driver turned the meter off for the flooded stretch of road, charging only for the dry part. The city, meanwhile, had spent years building cameras, hotlines and appeals processes. The writer concludes that trust is cheaper than enforcement.",
-     type:'单选（Multiple Choice）',
-     q:'Which sentence best captures the writer\'s main point?',
-     opts:['Cameras and hotlines make taxi rides safer','One driver\'s honesty exposes how expensive enforcement really is','Flooded roads should be free by law','Passengers should always pay the full meter'],ans:1,
-     why:'主旨=最后一段：信任比执法便宜。一位司机的判断分文不花且每次管用，反衬整套监管的昂贵（B）。A/C/D 都是细节或无中生有'},
-    {passage:"The clerk recited the complaints policy like a poem memorized without understanding. The manager, by contrast, wrote for two minutes without interrupting and promised to reply personally whatever the engineer's report said.",
-     type:'句子结尾匹配（Sentence Ending）',
-     q:'The writer uses the word "poem" to suggest that the clerk…',
-     opts:['enjoyed reciting rules aloud','delivered the policy fluently but without engaging with it','had written the policy himself','was being deliberately unhelpful'],ans:1,
-     why:'「背熟却不懂的诗」=流利但没走心（B）。A 只取字面；C 无中生有；D 程度过重——他是没权限，不是故意刁难'},
-    {passage:"The clerk recited the complaints policy like a poem memorized without understanding. The manager, by contrast, wrote for two minutes without interrupting and promised to reply personally whatever the engineer's report said.",
-     type:'判断 TRUE/FALSE/NOT GIVEN',
-     q:'The manager gave the writer a larger discount than the standard rate.',
-     opts:['TRUE','FALSE','NOT GIVEN'],ans:2,
-     why:'原文说折扣「确实按费率表执行」——金额与标准一致，差别在态度不在钱数。金额没变所以不是 TRUE，但「有没有多给」原文没直接比较。最稳的答案是 NOT GIVEN'},
-  ]
+    {
+     "passage": "Lighthouses were funded for decades by shipping levies collected at ports rather than by governments. Economists later used them as a textbook example of a public good, though historians point out that the early systems were often run privately and that enforcement of payment was surprisingly effective.",
+     "type": "判断 TRUE/FALSE/NOT GIVEN",
+     "q": "Governments paid for the earliest lighthouses.",
+     "opts": [
+      "TRUE",
+      "FALSE",
+      "NOT GIVEN"
+     ],
+     "ans": 1,
+     "why": "原文说资金来自「港口征收的航运税而非政府」（levies... rather than by governments）——FALSE"
+    },
+    {
+     "passage": "Lighthouses were funded for decades by shipping levies collected at ports rather than by governments. Economists later used them as a textbook example of a public good, though historians point out that the early systems were often run privately and that enforcement of payment was surprisingly effective.",
+     "type": "单选（Multiple Choice）",
+     "q": "What tension does the passage describe?",
+     "opts": [
+      "An economic theory conflicts with the historical record",
+      "Historians refuse to study public goods",
+      "Shipping companies supported government control",
+      "Levies were impossible to collect at ports"
+     ],
+     "ans": 0,
+     "why": "经济学家拿灯塔当「公共品」教科书案例，史学家指出早期实为私营且收费有效——理论与史料的张力（A）。B/C/D 无中生有"
+    },
+    {
+     "passage": "In elite chess, players below the top ten are said to play for second place. A statistician tested this by comparing game outcomes before and after a famous champion's retirement and found no measurable difference in how the remaining players scored against each other.",
+     "type": "判断 TRUE/FALSE/NOT GIVEN",
+     "q": "The statistician's finding supported the popular claim.",
+     "opts": [
+      "TRUE",
+      "FALSE",
+      "NOT GIVEN"
+     ],
+     "ans": 1,
+     "why": "流行说法是「前十以外只能争第二」，而统计结果是「棋手间胜负没有可测差异」——发现不支持说法（FALSE）"
+    },
+    {
+     "passage": "In elite chess, players below the top ten are said to play for second place. A statistician tested this by comparing game outcomes before and after a famous champion's retirement and found no measurable difference in how the remaining players scored against each other.",
+     "type": "单选（Multiple Choice）",
+     "q": "The statistician's method relied on…",
+     "opts": [
+      "comparing results across two periods",
+      "interviewing the retired champion",
+      "replaying games with computers",
+      "surveying players' confidence levels"
+     ],
+     "ans": 0,
+     "why": "方法=对比退役前后两个时期的比赛结果（A）。B/C/D 都是没出现的方法"
+    },
+    {
+     "passage": "City cycling maps traditionally mark streets by traffic speed alone. A new project overlays surface quality, collected by phones mounted on handlebars whose sensors log vibration. Streets with smooth pavement but heavy buses now appear twice: once in each ranking.",
+     "type": "判断 TRUE/FALSE/NOT GIVEN",
+     "q": "The new map ranks streets by two separate criteria.",
+     "opts": [
+      "TRUE",
+      "FALSE",
+      "NOT GIVEN"
+     ],
+     "ans": 0,
+     "why": "「同一条街在两个排名里各出现一次」（twice: once in each ranking）= 两套标准并行（TRUE）"
+    },
+    {
+     "passage": "City cycling maps traditionally mark streets by traffic speed alone. A new project overlays surface quality, collected by phones mounted on handlebars whose sensors log vibration. Streets with smooth pavement but heavy buses now appear twice: once in each ranking.",
+     "type": "单选（Multiple Choice）",
+     "q": "The vibration data is collected by…",
+     "opts": [
+      "devices attached to bicycles",
+      "sensors installed under the road",
+      "municipal survey vehicles",
+      "cyclists' wristwatches"
+     ],
+     "ans": 0,
+     "why": "手机装在车把上记录震动（handlebars 的改写=A）。B 埋路面、C 市政车、D 手表均无"
+    }
+   ],
 },
 {
   day:'2026-11-17',
@@ -299,32 +399,82 @@ const TRAIN=[
   daily:[],
   items:[],
   quiz:[
-    {passage:"The agent met me at the door with a smile that had been rehearsed in front of a mirror, and said, 'You are lucky — three people called about this flat this morning.'",
-     type:'判断 TRUE/FALSE/NOT GIVEN',
-     q:'Three other people had already rented the flat that morning.',
-     opts:['TRUE','FALSE','NOT GIVEN'],ans:2,
-     why:'原文只说三个人「打电话问过」（called about），没说租下（rented）——NOT GIVEN。雅思经典陷阱：把「有人感兴趣」偷换成「已被租走」'},
-    {passage:"That sentence costs the agent nothing; it is not a discount, it is a feeling of one, and it has closed more deals than any actual reduction.",
-     type:'单选',
-     q:'What does the writer think of the agent\'s promise to "talk to the owner"?',
-     opts:['It is a real discount in disguise','It costs the agent nothing but creates the feeling of getting a deal','It will definitely lead to a price reduction'],ans:1,
-     why:'costs nothing / not a discount but a feeling of one / more deals than actual reduction——三个信号都指向「话术营造感觉，不是真降价」'},
-    {passage:"He wrote it down. Agents only write down things they intend to pass on, and the pen moving is worth more than any smile.",
-     type:'单选',
-     q:'Why does the writer think "the pen moving" matters?',
-     opts:['The agent writes down things he plans to pass to the owner, so it is a real sign of progress','The agent has a habit of writing everything down','Writing looks more professional than smiling'],ans:0,
-     why:'Agents only write down things they intend to pass on——笔动=打算转达=真进展。A 是同义改写，B/C 都是原文没支持的个人发挥'},
-    {passage:"The first reply offered a free month instead of money, which is how companies say no while sounding generous.",
-     type:'单选',
-     q:'The writer describes the offer of a free month as...',
-     opts:['A genuine apology','A generous gift that solved the problem','A polite way of refusing the refund'],ans:2,
-     why:'say no while sounding generous——听着大方地说不。给月卡不给钱=变相拒绝退款。考点：while+doing 的反讽读法'},
-    {passage:"A complaint that lives in your head is just a mood; a complaint that lives in an email with dates and a clause number is a case.",
-     type:'判断 TRUE/FALSE/NOT GIVEN',
-     q:'The writer believes a written complaint with specific details is more effective than one that is not written down.',
-     opts:['TRUE','FALSE','NOT GIVEN'],ans:0,
-     why:'金句同义改写：mood（情绪）vs case（案子）= 心里想想没用，写下来带细节才有效 → TRUE。呼应前文 specific / written down / anchored to a clause'}
-  ]
+    {
+     "passage": "Rooftop beehives have appeared on hotels, offices, and restaurants in many cities. Critics argue they mainly improve the image of the buildings' owners, because urban honey output is small and wild pollinators — bees, hoverflies, moths — benefit little from extra competition. Supporters answer that the hives pay for themselves in publicity alone.",
+     "type": "判断 TRUE/FALSE/NOT GIVEN",
+     "q": "Urban rooftop hives produce a large share of the honey sold in these cities.",
+     "opts": [
+      "TRUE",
+      "FALSE",
+      "NOT GIVEN"
+     ],
+     "ans": 1,
+     "why": "批评者说「城市蜂蜜产量很小」（output is small）——与「占大头」矛盾（FALSE）"
+    },
+    {
+     "passage": "Rooftop beehives have appeared on hotels, offices, and restaurants in many cities. Critics argue they mainly improve the image of the buildings' owners, because urban honey output is small and wild pollinators — bees, hoverflies, moths — benefit little from extra competition. Supporters answer that the hives pay for themselves in publicity alone.",
+     "type": "单选（Multiple Choice）",
+     "q": "What is the critics' main objection?",
+     "opts": [
+      "The hives serve branding more than ecology",
+      "The honey is unsafe to eat",
+      "Hives cost more than they return",
+      "Hotel guests complain about stings"
+     ],
+     "ans": 0,
+     "why": "批评者认为蜂箱主要是给业主形象加分、对野生传粉者没帮助=服务品牌而非生态（A）。B 安全、C 经济账（那是支持者的说法反用）、D 客诉均无"
+    },
+    {
+     "passage": "A railway preserved its steam services by charging heritage fares: tickets priced far above normal routes, sold months ahead, with passengers often dressed in period costume. The company says without this pricing the locomotives would have been scrapped decades ago.",
+     "type": "判断 TRUE/FALSE/NOT GIVEN",
+     "q": "Heritage tickets cost more than ordinary rail tickets.",
+     "opts": [
+      "TRUE",
+      "FALSE",
+      "NOT GIVEN"
+     ],
+     "ans": 0,
+     "why": "「票价远高于正常线路」（priced far above normal routes）= TRUE"
+    },
+    {
+     "passage": "A railway preserved its steam services by charging heritage fares: tickets priced far above normal routes, sold months ahead, with passengers often dressed in period costume. The company says without this pricing the locomotives would have been scrapped decades ago.",
+     "type": "单选（Multiple Choice）",
+     "q": "According to the company, the heritage fares exist in order to…",
+     "opts": [
+      "keep the old trains running",
+      "cover the cost of costumes",
+      "discourage casual travellers",
+      "match government price rules"
+     ],
+     "ans": 0,
+     "why": "公司自述：没有这种定价机车几十年前就报废了=目的是让老火车活下去（A）。B/D 无据；C 涨价或许劝退人但非所述目的"
+    },
+    {
+     "passage": "Bilingual street signs in one region were first installed for practical reasons: postal workers and emergency crews made fewer errors with duplicate labels. Only later did the signs become a symbol in political debates, and several councils report that replacing damaged signs now takes longer because of the extra approval steps.",
+     "type": "判断 TRUE/FALSE/NOT GIVEN",
+     "q": "Political disputes made the maintenance of signs slower.",
+     "opts": [
+      "TRUE",
+      "FALSE",
+      "NOT GIVEN"
+     ],
+     "ans": 0,
+     "why": "「更换受损标志牌因额外审批步骤变慢」（takes longer because of the extra approval steps）= TRUE"
+    },
+    {
+     "passage": "Bilingual street signs in one region were first installed for practical reasons: postal workers and emergency crews made fewer errors with duplicate labels. Only later did the signs become a symbol in political debates, and several councils report that replacing damaged signs now takes longer because of the extra approval steps.",
+     "type": "单选（Multiple Choice）",
+     "q": "The original purpose of the dual labels was to…",
+     "opts": [
+      "reduce mistakes by services",
+      "attract political attention",
+      "promote the local language",
+      "comply with a new law"
+     ],
+     "ans": 0,
+     "why": "「邮政和急救人员出错更少」（fewer errors 的改写=A）。B 是后来的效果、C/D 无据"
+    }
+   ],
 },
 {
   day:'2026-11-12',
@@ -333,32 +483,82 @@ const TRAIN=[
   daily:[],
   items:[],
   quiz:[
-    {passage:"He quoted a number that was nearly the price of a new one, and then, seeing my face, added: 'I am not cheating you. The part alone costs this much.'",
-     type:'判断 TRUE/FALSE/NOT GIVEN',
-     q:'The repair shop owner admitted that his first price was too high.',
-     opts:['TRUE','FALSE','NOT GIVEN'],ans:2,
-     why:'老板只说「我没坑你、零件就这价」，从头到尾没承认报价高——NOT GIVEN。雅思陷阱：把「辩解」当成「承认」'},
-    {passage:"If I had accepted the first number, I would have paid for a new part I did not need; if I had walked out, I would have kept my money and lost my photos.",
-     type:'单选',
-     q:'What can we learn about what the writer actually did?',
-     opts:['He accepted the first price','He paid for a new part he did not need','He found a middle option between paying full price and walking away'],ans:2,
-     why:'两个 if 虚拟句描述的都是没发生的分支（接受/走人），真实情况在两者之间——下一句 the middle path 直接点明。考点：虚拟语气反推事实'},
-    {passage:"He thought for a moment, then offered a used screen with a ninety-day guarantee, and the price dropped by a third, just like that.",
-     type:'单选',
-     q:'What made the price drop by a third?',
-     opts:['The writer threatened to leave','The writer asked about alternatives, prompting the owner to offer a different option','The owner lowered the price out of sympathy'],ans:1,
-     why:'前文 writer 问 what can you do for two hundred（争替代方案），老板才换方案降价。不是威胁也不是同情——是「问别的可能」'},
-    {passage:"No matter how honest the shop, the first number is a starting point, not a price.",
-     type:'单选',
-     q:'The underlined sentence tells us that...',
-     opts:['Honest shops do not need bargaining','Even in an honest shop, the first quote is not the final price','Shops always cheat customers'],ans:1,
-     why:'no matter how 让步：让步的对象是 honest（再老实也一样），结论落在 starting point not a price。不是「都宰客」，也不是「老实店免砍」'},
-    {passage:"A note can be read as an attack; a knock is just a person at the door. The same sentence lands differently when your face comes with it.",
-     type:'判断 TRUE/FALSE/NOT GIVEN',
-     q:'The writer believes the way a message is delivered matters as much as the message itself.',
-     opts:['TRUE','FALSE','NOT GIVEN'],ans:0,
-     why:'金句同义改写：同一句话 lands differently（效果不同）取决于纸条还是敲门（传递方式）→ TRUE。雅思考点：结尾金句往往就是主旨题答案'}
-  ]
+    {
+     "passage": "Supermarkets in one country have begun selling \"imperfect\" produce at a discount: bent carrots, two-legged carrots being the classic example. Farm groups report that acceptance of the scheme varies by crop, with consumers accepting odd-shaped carrots far more readily than bruised apples.",
+     "type": "判断 TRUE/FALSE/NOT GIVEN",
+     "q": "Consumers accept irregular apples as willingly as irregular carrots.",
+     "opts": [
+      "TRUE",
+      "FALSE",
+      "NOT GIVEN"
+     ],
+     "ans": 1,
+     "why": "「歪胡萝卜比碰伤苹果更容易被接受」（far more readily）——两者接受度不等（FALSE）"
+    },
+    {
+     "passage": "Supermarkets in one country have begun selling \"imperfect\" produce at a discount: bent carrots, two-legged carrots being the classic example. Farm groups report that acceptance of the scheme varies by crop, with consumers accepting odd-shaped carrots far more readily than bruised apples.",
+     "type": "单选（Multiple Choice）",
+     "q": "The passage suggests the scheme's success depends on…",
+     "opts": [
+      "which vegetable or fruit is involved",
+      "how large the discount is",
+      "the time of day the produce is displayed",
+      "the reputation of the supermarket"
+     ],
+     "ans": 0,
+     "why": "「接受度因作物而异」（varies by crop 的改写=A）。折扣幅度/时段/商誉原文都没说"
+    },
+    {
+     "passage": "Old harbour cranes left standing after the docks closed have become a problem of affection rather than engineering: the steel is sound, but every proposal to reuse them — viewing platforms, climbing walls, a restaurant in the operator's cabin — has failed on safety certification written for modern structures.",
+     "type": "判断 TRUE/FALSE/NOT GIVEN",
+     "q": "The cranes cannot be reused because their steel has corroded.",
+     "opts": [
+      "TRUE",
+      "FALSE",
+      "NOT GIVEN"
+     ],
+     "ans": 1,
+     "why": "「钢材完好」（the steel is sound）——问题出在安全认证按现代标准写，不是腐蚀（FALSE）"
+    },
+    {
+     "passage": "Old harbour cranes left standing after the docks closed have become a problem of affection rather than engineering: the steel is sound, but every proposal to reuse them — viewing platforms, climbing walls, a restaurant in the operator's cabin — has failed on safety certification written for modern structures.",
+     "type": "单选（Multiple Choice）",
+     "q": "The reuse proposals fail because of…",
+     "opts": [
+      "regulations designed for newer buildings",
+      "public opposition to change",
+      "the cost of repairing the steel",
+      "a shortage of interested operators"
+     ],
+     "ans": 0,
+     "why": "「为现代结构写的安全认证」（certification written for modern structures 的改写=A）。B/C/D 无据"
+    },
+    {
+     "passage": "A tide gauge on a northern pier has recorded sea level since 1887. The logbooks survive, but the early entries were kept by the harbourmaster in shorthand that only two living researchers can read, and one of them is retiring this spring.",
+     "type": "判断 TRUE/FALSE/NOT GIVEN",
+     "q": "All of the gauge's early records have been transcribed.",
+     "opts": [
+      "TRUE",
+      "FALSE",
+      "NOT GIVEN"
+     ],
+     "ans": 1,
+     "why": "早期记录是只有两位研究者能读的速记（only two living researchers can read）——谈不上全部转写完成（FALSE）"
+    },
+    {
+     "passage": "A tide gauge on a northern pier has recorded sea level since 1887. The logbooks survive, but the early entries were kept by the harbourmaster in shorthand that only two living researchers can read, and one of them is retiring this spring.",
+     "type": "句子结尾匹配（Sentence Ending）",
+     "q": "The logbooks are at risk because…",
+     "opts": [
+      "so few people can decipher them",
+      "the pier is scheduled for demolition",
+      "the paper has been damaged by seawater",
+      "the harbourmaster destroyed the key"
+     ],
+     "ans": 0,
+     "why": "速记只有两人能读、其中一位即将退休=能解读的人太少（A）。B 拆码头、C 海水损毁、D 销毁密钥均无"
+    }
+   ],
 },
 {
   day:'2026-11-10',
@@ -367,32 +567,82 @@ const TRAIN=[
   daily:[],
   items:[],
   quiz:[
-    {passage:'I did not raise my voice; I held up my phone and said, calmly, that I knew this route, that the app showed nine euros, and that I would pay what the app said.',
-     type:'判断 TRUE/FALSE/NOT GIVEN',
-     q:'The writer shouted at the taxi driver.',
-     opts:['TRUE','FALSE','NOT GIVEN'],ans:1,
-     why:'原文 I did not raise my voice（没有提高声音）→ FALSE。雅思判断题考点：not + 动词 的直接否定'},
-    {passage:'The meter said twenty-two euros; the map on my phone said the trip should have cost nine.',
-     type:'单选',
-     q:'What does "should have cost" tell us?',
-     opts:['The trip actually cost nine euros','Nine euros was the expected fair price, but the real cost was different','The app made a mistake'],ans:1,
-     why:'should have done = 本该…（而实际不是）——预期 9 欧，实收 22 欧。这是本结构的核心语义'},
-    {passage:'She did not speak English, but she recognized the street name, made a face that said \'far\', and then — instead of pointing — simply waved at me to follow her.',
-     type:'单选',
-     q:'How did the woman help?',
-     opts:['She called a taxi for the writer','She pointed at the map carefully','She personally led the way'],ans:2,
-     why:'instead of pointing — waved at me to follow her：没指路，而是带着走。instead of + doing 是雅思高频替换信号'},
-    {passage:'Asking a stranger for help used to feel expensive, like I owed them something; now I understand it is just a small trade.',
-     type:'判断 TRUE/FALSE/NOT GIVEN',
-     q:'The writer now thinks asking for help costs nothing socially.',
-     opts:['TRUE','FALSE','NOT GIVEN'],ans:0,
-     why:'used to feel expensive（过去觉得）→ now... just a small trade（现在觉得只是小交换）→ TRUE。考点：used to 与 now 的今昔对比'},
-    {passage:'Convenience does not always save time; sometimes it just moves the work, quietly, from someone paid to do it onto you.',
-     type:'单选',
-     q:'What is the writer\'s view of self-checkout?',
-     opts:['It is always faster than a cashier','It transfers effort from staff to customers','It should be removed from stores'],ans:1,
-     why:'moves the work... onto you（把活儿转移到你身上）——同义替换：transfer effort from staff to customers。雅思阅读考的就是这种改写识别'}
-  ]
+    {
+     "passage": "Night trains returned to several European routes after decades away. Operators found the constraint was not demand but rolling stock: sleeper carriages cannot be built quickly, and refurbished ones from closed lines sell within weeks of being listed.",
+     "type": "判断 TRUE/FALSE/NOT GIVEN",
+     "q": "Demand for night trains was the main obstacle to their return.",
+     "opts": [
+      "TRUE",
+      "FALSE",
+      "NOT GIVEN"
+     ],
+     "ans": 1,
+     "why": "原文说「制约不是需求而是车厢」（not demand but rolling stock）——与题目矛盾（FALSE）"
+    },
+    {
+     "passage": "Night trains returned to several European routes after decades away. Operators found the constraint was not demand but rolling stock: sleeper carriages cannot be built quickly, and refurbished ones from closed lines sell within weeks of being listed.",
+     "type": "单选（Multiple Choice）",
+     "q": "What limits the expansion of night trains?",
+     "opts": [
+      "A shortage of usable carriages",
+      "Slow ticket sales",
+      "Government route bans",
+      "Competition from airlines"
+     ],
+     "ans": 0,
+     "why": "卧铺车厢造得慢、翻新的一上架几周就卖光=可用车厢短缺（A）。B 需求没问题；C/D 无"
+    },
+    {
+     "passage": "The tradition of throwing worn-out shoes onto overhead wires has no agreed origin. Folklore links it to military initiations; police in some cities read it as gang territory marks; one anthropologist spent two years mapping shoe pairs and concluded that most clusters simply sit where the local shop sells the cheapest laces.",
+     "type": "单选（Multiple Choice）",
+     "q": "The anthropologist's conclusion differs from the other explanations because it points to…",
+     "opts": [
+      "ordinary shopping behaviour",
+      "military rituals",
+      "territorial signalling",
+      "a shoe-recycling scheme"
+     ],
+     "ans": 0,
+     "why": "人类学家的解释=「鞋挂最多的地方恰好是卖便宜鞋带的店」=普通消费行为（A），与帮派/军队的符号解释都不同"
+    },
+    {
+     "passage": "The tradition of throwing worn-out shoes onto overhead wires has no agreed origin. Folklore links it to military initiations; police in some cities read it as gang territory marks; one anthropologist spent two years mapping shoe pairs and concluded that most clusters simply sit where the local shop sells the cheapest laces.",
+     "type": "判断 TRUE/FALSE/NOT GIVEN",
+     "q": "Police and folklorists agree on why shoes are thrown onto wires.",
+     "opts": [
+      "TRUE",
+      "FALSE",
+      "NOT GIVEN"
+     ],
+     "ans": 1,
+     "why": "民俗说军队仪式、警察读成帮派标记——两者解释不同（FALSE）"
+    },
+    {
+     "passage": "A bridge library in the Netherlands lends books from a converted lock keeper's cottage. Readers pay no fee but must write one sentence in the margin log about any book they return. The founder says the marginalia are the real collection: some visitors come to read the notes rather than the novels.",
+     "type": "判断 TRUE/FALSE/NOT GIVEN",
+     "q": "Borrowers must pay a small fee to use the bridge library.",
+     "opts": [
+      "TRUE",
+      "FALSE",
+      "NOT GIVEN"
+     ],
+     "ans": 1,
+     "why": "「读者不付费」（pay no fee），代价是还书时写一句边注——FALSE"
+    },
+    {
+     "passage": "A bridge library in the Netherlands lends books from a converted lock keeper's cottage. Readers pay no fee but must write one sentence in the margin log about any book they return. The founder says the marginalia are the real collection: some visitors come to read the notes rather than the novels.",
+     "type": "单选（Multiple Choice）",
+     "q": "Some visitors come to the library mainly to…",
+     "opts": [
+      "read other readers' notes",
+      "borrow the founder's favourite novels",
+      "see the converted cottage",
+      "attend reading evenings"
+     ],
+     "ans": 0,
+     "why": "「有人来读批注而不是小说」（read the notes rather than the novels 的改写=A）"
+    }
+   ],
 },
 {
   day:'2026-11-09',
@@ -705,7 +955,14 @@ function quizHtml(day,qn,qz,saved,noPassage){
   <p style="font-weight:700;margin:6px 0">${esc(qz.q)}</p>${opts}${submit}${res}
   <div class="qwhy ${done?'show':''}" id="why-${qn}">💡 ${esc(qz.why)}</div></div>`}
 const quizPick={}; // 未提交的临时选择 {day#qn: idx}
-function pickOpt(day,qn,i){quizPick[day+'#q'+qn]=i;render()}
+function pickOpt(day,qn,i,ev){quizPick[day+'#q'+qn]=i;
+  // 只更新本题按钮样式，不整页重渲染（用户 11-23：点击无反馈的根因是 render 重建丢状态）
+  if(!ev)return;
+  const card=ev.target.closest('div');
+  (card||document).querySelectorAll('button.opt').forEach(b=>b.classList.remove('picked'));
+  ev.target.classList.add('picked');
+  const submitBtn=card?card.querySelector('button.reveal'):null;
+  if(submitBtn)submitBtn.disabled=false}
 function answerQuiz(day,qn){
   const picked=quizPick[day+'#q'+qn];
   if(picked===undefined){toast('先选一个选项再提交');return}
@@ -721,11 +978,20 @@ function renderVocabSide(){ // 训练页独立生词库 vocab-train（与阅读�
   const el=document.getElementById('vocaside-list');if(!el)return;
   const marks=store.get(TVKEY);const ks=Object.keys(marks);
   const tc=store.get('translations-train');
-  if(!ks.length){el.innerHTML='<li style="color:var(--dim);font-size:.8rem">还没有生词——点文章/训练里的生词即可加入</li>';return}
-  el.innerHTML=ks.slice(-40).reverse().map(k=>{const q=k.replace(/'/g,"\'").replace(/"/g,'&quot;');
+  const tday=curDay||TRAIN[0].day;
+  const fdb=store.get('trainfrags');
+  const fragHtml=(fdb[tday]||[]).map((f,fi)=>'<li style="display:block"><span style="color:#c77b2f;font-size:.78rem">⭐ '+escT(f.sent.length>50?f.sent.slice(0,50)+'…':f.sent)+'</span><span class="del" onclick="delTrainFrag('+fi+')" title="移除">×</span></li>').join('');
+  if(!ks.length&&!fragHtml){el.innerHTML='<li style="color:var(--dim);font-size:.8rem">还没有生词——点文章/训练里的生词即可加入</li>';return}
+  if(!ks.length&&fragHtml){el.innerHTML=fragHtml;return}
+  el.innerHTML=fragHtml+ks.slice(-40).reverse().map(k=>{const q=k.replace(/'/g,"\'").replace(/"/g,'&quot;');
     return `<li><span class="w" onclick="speak('${q}',0.9)">${escT(k)}</span><span class="del" onclick="delVocabSide('${q}')" title="移除">×</span><span class="tr">${tc[k]?escT(tc[k]):'<span style="color:var(--dim)">查译…</span>'}</span></li>`}).join('');
 }
-function delVocabSide(k){const marks=store.get(TVKEY);delete marks[k];store.set(TVKEY,marks);renderVocabSide();toast('「'+k+'」已移除')}
+function delTrainFrag(fi){const day=curDay||TRAIN[0].day;const fdb=store.get('trainfrags');
+  (fdb[day]||[]).splice(fi,1);store.set('trainfrags',fdb);renderVocabSide();markTrainWords();toast('片段已移除')}
+function delVocabSide(k){const marks=store.get(TVKEY);delete marks[k];store.set(TVKEY,marks);
+  // 同步清掉页面上的黄底标记（用户 11-23：删了侧栏词文章里还亮着）
+  document.querySelectorAll('w[data-w]').forEach(w=>{if(w.dataset.w===k){w.style.background='';w.classList.remove('tadded')}});
+  renderVocabSide();markTrainWords();toast('「'+k+'」已移除')}
 document.addEventListener('DOMContentLoaded',renderVocabSide);
 function saveTry(day,n){ // 输入框失焦即存：编辑后不点对答案也不丢
   const ta=document.getElementById('try-'+n);if(!ta)return;
