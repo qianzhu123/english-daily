@@ -926,7 +926,7 @@ window.ARTICLES = [
   }
 ,  {
     title: "The Interview That Ran Backwards (B1+)",
-    date: "2026-11-17",
+    date: "2026-11-17",archived:true,
     level: "B1+ · 求职面试/反向提问",
     sentences: [
       "The interview was going exactly as I had feared: I answered everything perfectly, and I could feel the whole conversation forgetting me before it had even finished.",
@@ -944,11 +944,11 @@ window.ARTICLES = [
       "actually thought, the way you pause when a question reaches something real —— the way 类比 + when 从句",
       "the only question with my own handwriting on it —— 隐喻金句：自己的笔迹=真实的自己",
       "which costs me nothing and has already paid for itself twice —— 非限制性定语从句收尾；成本/回报双关"
-    ]
+    ],
   },
   {
     title: "The Bridge That Closed at Five (B1+)",
-    date: "2026-11-17",
+    date: "2026-11-17",archived:true,
     level: "B1+ · 城市规则/时间政治",
     sentences: [
       "The pedestrian bridge over the river closed at five o'clock sharp, which would have been reasonable if the city had remembered that most people finish work at five, not before it.",
@@ -972,7 +972,7 @@ window.ARTICLES = [
 ,
   {
     title: "The Library That Charged for Silence (B1+)",
-    date: "2026-11-18",
+    date: "2026-11-18",archived:true,
     level: "B1+ · 公共服务/隐性收费",
     sentences: [
       "The new library charged nothing for books, nothing for borrowing, and nothing for sitting — and then it introduced a study room that cost four pounds an hour, and half the neighbourhood quietly learned that silence had become a subscription.",
@@ -991,11 +991,11 @@ window.ARTICLES = [
       "which was true, and also completely beside the point —— 非限制性定语从句；真话≠相关的话（金句）",
       "designed by someone whose job was foot traffic, and nobody... had been invited —— whose 定语从句+被动语态：部门目标冲突",
       "you pay the second one every single day without a receipt —— 隐性成本=无收据的账单（结尾金句）"
-    ]
+    ],
   },
   {
     title: "The Neighbor's Refund (B1+)",
-    date: "2026-11-18",
+    date: "2026-11-18",archived:true,
     level: "B1+ · 邻里纠纷/讲道理的分寸",
     sentences: [
       "The washing machine arrived on Tuesday, damaged on one corner, and by Wednesday evening the whole building had an opinion about what my neighbor should say to the delivery company.",
@@ -1019,7 +1019,7 @@ window.ARTICLES = [
 ,
   {
     title: "The Meter That Ran Kindly (B1+)",
-    date: "2026-11-19",
+    date: "2026-11-19",archived:true,
     level: "B1+ · 出租车计费/信任经济",
     sentences: [
       "The taxi meter in that city started at a flat fee that covered the first two kilometers, and every driver explained it the same way, with the same tired pride, as if they had personally invented generosity.",
@@ -1038,11 +1038,11 @@ window.ARTICLES = [
       "the maximum a passenger could be trusted to pay —— 省略 that 的定语从句；规则只防多收钱，从没想过乘客愿意多付钱",
       "Trust, it turns out, is cheaper than enforcement —— 插入语 it turns out；金句：信任比执法便宜",
       "the small click of a meter being switched off —— 动名词被动 being switched off；一次关表声=系统在行善"
-    ]
+    ],
   },
   {
     title: "The Manager Who Took Notes (B1+)",
-    date: "2026-11-19",
+    date: "2026-11-19",archived:true,
     level: "B1+ · 酒店投诉/被认真对待",
     sentences: [
       "The hotel had a policy for complaints that was written in three languages, laminated behind the front desk, and visible to every guest except the ones actually complaining.",
