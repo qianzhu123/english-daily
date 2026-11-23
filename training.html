@@ -80,6 +80,89 @@ const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e)
 
 const TRAIN=[
 {
+  day:'2026-11-23',
+  title:'雅思阅读实战 · 独立长文混合题型（让步与转折信号词专练）',
+  brief:'题型轮换日：判断+单选+摘要填空。本日重点：作者观点往往藏在让步结构后面（"虽然 X，但 Y"）——考的是 Y；NOT GIVEN 的典型陷阱是"原文说了相邻的事，但没说题目这件事"；摘要题先判断空格词性再回原文定位。',
+  daily:[],
+  quiz:[
+    {
+     "passage": "For decades, city planners assumed that widening roads reduces congestion. A well-known study later showed the opposite: added lanes were filled within five years by traffic that had not existed before, a phenomenon now called induced demand. Some planners argue that removing urban highways altogether improves flow, citing cities that dismantled elevated roads with no increase in journey times.",
+     "type": "判断 TRUE/FALSE/NOT GIVEN",
+     "q": "The study found that congestion returned to previous levels within five years.",
+     "opts": [
+      "TRUE",
+      "FALSE",
+      "NOT GIVEN"
+     ],
+     "ans": 0,
+     "why": "新增车道五年内被原本不存在的车流填满=拥堵回到甚至超过原水平（TRUE，filled within five years 的改写）。诱导需求的定义就是新增容量被吃掉"
+    },
+    {
+     "passage": "For decades, city planners assumed that widening roads reduces congestion. A well-known study later showed the opposite: added lanes were filled within five years by traffic that had not existed before, a phenomenon now called induced demand. Some planners argue that removing urban highways altogether improves flow, citing cities that dismantled elevated roads with no increase in journey times.",
+     "type": "单选（Multiple Choice）",
+     "q": "Why do the planners mention cities that removed elevated roads?",
+     "opts": [
+      "To support the claim that fewer roads can still mean better flow",
+      "To prove that elevated roads are dangerous",
+      "To show that journey times always increase after demolition",
+      "To criticise the engineers who built the roads"
+     ],
+     "ans": 0,
+     "why": "引用拆除案例是为了佐证「拆了高速反而通行更顺」（A 的改写）。B 危险性、C 相反、D 批评工程师原文都没有"
+    },
+    {
+     "passage": "Beekeepers in mountain regions have long noted that their hives produce honey with a distinctly herbal flavour, which they attribute to the wild thyme growing above 1,500 metres. A commercial laboratory tested samples from different altitudes and confirmed a measurable chemical difference, though it cautioned that flavour perception also depends on storage and age.",
+     "type": "判断 TRUE/FALSE/NOT GIVEN",
+     "q": "The laboratory believed altitude is the only factor affecting honey flavour.",
+     "opts": [
+      "TRUE",
+      "FALSE",
+      "NOT GIVEN"
+     ],
+     "ans": 1,
+     "why": "实验室明确提醒「风味感知还取决于储存和年份」——所以海拔绝不是唯一因素（FALSE）。考的就是 though 让步后的补充"
+    },
+    {
+     "passage": "Beekeepers in mountain regions have long noted that their hives produce honey with a distinctly herbal flavour, which they attribute to the wild thyme growing above 1,500 metres. A commercial laboratory tested samples from different altitudes and confirmed a measurable chemical difference, though it cautioned that flavour perception also depends on storage and age.",
+     "type": "单选（Multiple Choice）",
+     "q": "What does the passage suggest about the beekeepers' explanation?",
+     "opts": [
+      "It attributes the flavour to a specific plant",
+      "It was rejected by the laboratory",
+      "It relies on measurements of altitude",
+      "It concerns the cost of honey"
+     ],
+     "ans": 0,
+     "why": "养蜂人把风味归因于 1500 米以上的野生百里香（attribute to the wild thyme=A 的改写）。B 实验室没否认反而部分证实；C 是实验室做的不是养蜂人；D 无关"
+    },
+    {
+     "passage": "A century ago, most office letters were written by specialist typists who worked in a shared pool and were assigned tasks from a queue. The introduction of personal computers was expected to eliminate this role, yet surveys of modern firms find that dedicated administrative support remains common, particularly where senior staff handle confidential material.",
+     "type": "单选（Multiple Choice）",
+     "q": "According to the passage, what was the expectation when personal computers arrived?",
+     "opts": [
+      "That the typist role would disappear",
+      "That typists would earn higher salaries",
+      "That letters would become confidential",
+      "That firms would hire more typists"
+     ],
+     "ans": 0,
+     "why": "「预期消除这个角色」=eliminate this role 的改写（A）。yet 后才是现实——考的是预期与事实的对比。B/C/D 原文没有"
+    },
+    {
+     "passage": "A century ago, most office letters were written by specialist typists who worked in a shared pool and were assigned tasks from a queue. The introduction of personal computers was expected to eliminate this role, yet surveys of modern firms find that dedicated administrative support remains common, particularly where senior staff handle confidential material.",
+     "type": "摘要填空（Summary Completion）",
+     "q": "Typists once worked in a shared ______, taking tasks from a queue.",
+     "opts": [
+      "pool",
+      "tower",
+      "market"
+     ],
+     "ans": 0,
+     "why": "原文直接说 worked in a shared pool（共享打字池）。同义照应题干原词，考定位而非改写"
+    }
+   ],
+},
+{
   day:'2026-11-21',
   title:'雅思阅读实战 · 独立长文混合题型（对比结构与目的题专练）',
   brief:'题型轮换日：判断+单选+句子结尾匹配。本日重点：作者常用「多数人怎么做 vs 主角怎么做」的对比立意，正确答案往往在对比的落点（后半句），不在前半句的铺垫里；目的题问的是「为什么写这句」，不是「这句说了什么」。',

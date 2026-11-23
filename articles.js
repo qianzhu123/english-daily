@@ -1066,7 +1066,7 @@ window.ARTICLES = [
 ,
   {
     title: "The Bakery That Closed at Noon (B1+)",
-    date: "2026-11-21",
+    date: "2026-11-21",archived:true,
     level: "B1+ · 小店经营/稀缺的价值",
     sentences: [
       "The bakery on the corner opened at six and sold out by eleven, and the owner never once considered baking more.",
@@ -1090,7 +1090,7 @@ window.ARTICLES = [
 ,
   {
     title: "The Password That Was Too Strong (B1+)",
-    date: "2026-11-21",
+    date: "2026-11-21",archived:true,
     level: "B1+ · 数字生活/安全与遗忘",
     sentences: [
       "The password had been created on a rainy Tuesday with the confidence of a man who would never forget anything: sixteen characters, three symbols, a number hidden in the middle like a criminal in a crowd.",
@@ -1111,5 +1111,66 @@ window.ARTICLES = [
       "which every security website calls madness and which has never once locked him out —— 双 which 非限制性从句对仗：权威眼中的蠢办法 vs 两年零失误（点题）"
     ]
   }
-
+,
+  {
+    title: "The Ferry That Waits for No Alarm (B1+)",
+    date: "2026-11-23",
+    level: "B1+ · 出行/时刻表的哲学",
+    sentences: [
+      "The island ferry leaves at seven, and the notice at the dock says so in letters large enough that missing it cannot be blamed on reading.",
+      "岛上的渡船七点开，码头的告示用足够大的字写着这件事，错过了不能怪眼睛。",
+      "I learned this from a fisherman who watched me sprint down the road at seven-oh-three, carrying my bag and a paper cup of coffee, while the ferry shrank calmly toward the horizon.",
+      "这是一个渔民教给我的：他看着我七点零三分提着包和一杯纸杯咖啡沿路狂奔，而渡船正平静地驶向地平线。",
+      "He did not laugh, and he did not comfort me either; he simply pointed at the timetable and said the sea does not negotiate, which he offered as a kindness rather than a criticism.",
+      "他没有笑，也没有安慰我；他只是指了指时刻表，说大海不谈判——这话他是当善意递过来的，不是当批评。",
+      "There was another ferry at noon, but the morning one was the one that mattered, because it connected with the market day on the mainland, and the market was the entire reason I had come.",
+      "中午还有一班，但早班才是要紧的那班，因为它接得上对岸的集市日，而集市是我此行的全部目的。",
+      "So I sat on the dock for four hours with the fisherman, who was also waiting, in no hurry at all, and who told me that the ferry timetable had not changed in thirty years, which is longer than most marriages and nearly all phone companies.",
+      "于是我在码头上和那位渔民坐了四个小时——他也在等，一点都不着急——他告诉我渡船时刻表三十年没变过，比大多数婚姻都长久，几乎比所有电话公司都长久。",
+      "By the time the noon ferry pulled in, I had heard the whole history of the island's storms, learned which pier the fish actually arrive at, and been given, without my asking, the exact seat that avoids the engine smell.",
+      "等中午那班船靠岸时，我已经听完了这座岛屿风暴的全部历史，知道了鱼真正到岸的是哪个码头，还被没等我开口就告知了哪个座位闻不到引擎味。",
+      "I made the market in the end, bought what I had come for, and missed nothing except the morning; and I have never since confused being early with being on time, because the ferry taught me they are different subjects entirely.",
+      "最后我赶上了集市，买到了要买的东西，除了那个早晨什么也没错过；从那以后我再也没把『早到』和『准时』混为一谈，因为渡船教会我这是两门完全不同的功课。"
+    ],
+    notes: [
+      "leaves at seven（七点开船）—— 时刻表事件用一般现在时，不用 will",
+      "cannot be blamed on reading（不能怪眼睛/怪读漏）—— blame sth on sb 的被动式",
+      "the sea does not negotiate（大海不谈判）—— 拟人+格言句式；negotiate 在此=讨价还价",
+      "connected with（衔接、接驳）—— 交通接驳高频；market day（赶集日）",
+      "in no hurry at all（一点也不急）—— not at all 加强否定",
+      "which is longer than most marriages —— which 指代前面整件事（三十年不变），非限制性从句的幽默用法",
+      "confused A with B（把 A 和 B 混为一谈）—— confuse 经典搭配；they are different subjects entirely（完全是两门功课）—— subject 双关：学科/主题"
+    ]
+  },
+  {
+    title: "The Apprentice Who Counted Wrong on Purpose (B1+)",
+    date: "2026-11-23",
+    level: "B1+ · 手艺/诚实的边界",
+    sentences: [
+      "The workshop took apprentices twice a year, and the master rejected every application that promised to work hard, which confused me until I served my own turn.",
+      "作坊每年收两次学徒，师傅拒掉所有保证『会努力干活』的申请——这让我困惑，直到我自己当了学徒。",
+      "His reason, repeated to each new intake, was that everyone promises to work hard, so the promise carries no information, the way an umbrella promises rain.",
+      "他对每一批新人的解释都一样：人人都保证努力，所以这句话不含任何信息，就像雨伞承诺下雨一样。",
+      "What he wanted instead was an account of a mistake, told plainly, with the part where it was your fault left in.",
+      "他想要的是一段对错误的陈述，平平实实地讲出来，其中属于你的那部分责任不许删。",
+      "I discovered later that he had hired the one applicant who wrote that he had once miscounted change for a week before anyone noticed, and had spent his own Saturday redoing the till records.",
+      "我后来才知道，他录用的是唯一一个写着自己曾经算错一周零钱、直到有人发现，然后用自己整个周六重做账本的申请者。",
+      "In my second month I broke a beam joint by forcing it, and I stood there rehearsing three versions of the story, each one sliding a little more of the fault toward the wood.",
+      "入行第二个月，我硬敲敲裂了一个梁榫，站在那儿排练了三个版本的说辞，每个版本都把责任往木料那边挪一点。",
+      "I gave him the fourth version, the true one, and he looked at the joint, then at me, and said the repair would take an hour and the habit would take longer, and that he was glad the wood had caught it before a customer did.",
+      "我说了第四个版本——真的那个——他看了看榫，又看了看我，说修要一个小时，习惯要更久，还说幸亏是木料先发现，而不是客户。",
+      "The beam held, and so, I think, did something else: I have never since been able to tell a story without checking whether the fault in it has been honestly assigned.",
+      "那根梁后来很结实，我想还有别的东西也一样结实了：从此以后我讲故事之前，总会先检查故事里的责任有没有分派得诚实。"
+    ],
+    notes: [
+      "served my own turn（轮到自己经历）—— serve one's turn = 轮到/经历",
+      "carries no information（不含信息量）—— 信息论式表达；the way...（就像…一样）作类比连词",
+      "an account of（一段陈述）—— account 此处=叙述，不是账户",
+      "with the part where it was your fault left in（属于你的责任部分要保留）—— with 复合结构+left in 过去分词补语",
+      "miscounted change（算错找零）—— count change 收找零；till records（收银记录）till=收银台",
+      "rehearsing three versions（排练三个版本）—— rehearse 本义排练，此处=心里打腹稿",
+      "sliding the fault toward（把责任往…推）—— slide 此处=悄悄转移",
+      "the habit would take longer（习惯要更久才能改）—— take 表耗时；the wood had caught it（木料先逮住了问题）—— catch=发现问题"
+    ]
+  }
 ];

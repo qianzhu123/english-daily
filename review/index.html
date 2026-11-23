@@ -79,7 +79,7 @@ padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:no
 <div id="main"></div>
 </div>
 <div id="toast"></div>
-<script src="../articles.js?v=1121c"></script>
+<script src="../articles.js?v=1123a"></script>
 <script>
 
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -1866,7 +1866,49 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
 "dishonestly":"副词：不诚实地",
 "restored":"动词：恢复、找回（restore 的过去式）",
 "identity":"名词：身份",
-"scarcity,":"名词：稀缺、匮乏"};
+"scarcity,":"名词：稀缺、匮乏",
+"island":"名词：岛；岛屿",
+"ferry":"名词：渡船；渡轮",
+"notice":"名词：告示；通知；动词：注意到",
+"dock":"名词：码头；船坞",
+"fisherman":"名词：渔民",
+"sprint":"动词：冲刺；快跑",
+"carrying":"动词：携带（carry 现在分词）",
+"shrank":"动词：缩小（shrink 过去式）",
+"calmly":"副词：平静地（calm 副词）",
+"horizon":"名词：地平线",
+"comfort":"动词：安慰；名词：舒适",
+"timetable":"名词：时刻表",
+"kindness":"名词：善意（kind 名词形式）",
+"criticism":"名词：批评",
+"mattered":"动词：要紧（matter 过去式）",
+"connected":"动词：衔接、连接（connect 过去式）",
+"mainland":"名词：大陆；本土",
+"marriages":"名词：婚姻（marriage 复数）",
+"pier":"名词：码头；栈桥",
+"storms":"名词：风暴（storm 复数）",
+"engine":"名词：发动机；引擎",
+"confused":"动词：混淆（confuse 过去式）；confuse A with B 把 A 和 B 搞混",
+"workshop":"名词：作坊；车间",
+"apprentices":"名词：学徒（apprentice 复数）",
+"rejected":"动词：拒绝（reject 过去式）",
+"application":"名词：申请；应用",
+"promised":"动词：保证（promise 过去式）",
+"intake":"名词：一批新收录的人；摄入",
+"promises":"名词/动词：承诺（promise 三单/复数）",
+"account":"名词：陈述、叙述；账户",
+"plainly":"副词：平实地；直白地",
+"hired":"动词：雇用（hire 过去式）",
+"applicant":"名词：申请者",
+"miscounted":"动词：算错（miscount 过去式）",
+"till":"名词：收银台；直到（连词/介词）",
+"beam":"名词：梁；横梁",
+"joint":"名词：接合处；榫；关节",
+"forcing":"动词：强行（force 现在分词）",
+"versions":"名词：版本（version 复数）",
+"repair":"名词/动词：修理",
+"assigned":"动词：分派（assign 过去式）"
+};
 function validTrans(t,k){if(!t)return false;if(!/[一-鿿A-Za-z0-9]/.test(t))return false;
 if(/^[：:，,。;；\s]/.test(t))return false; // 残缺符号开头的碎片（hundred→"：一百"事故）
 if(t.toLowerCase()===k.toLowerCase())return false;if(/MYMEMORY WARNING|QUERY LENGTH|%s|ALL AVAILABLE FREE TRANSLATIONS/i.test(t))return false;return true}
