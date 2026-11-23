@@ -89,7 +89,7 @@ function batchDoneState(){ // 当前批次（未归档）文章是否全部已�
   const act=A.filter(a=>!a.draft&&!a.archived);
   if(!act.length)return false;
   return act.every(a=>isDone(a.title))}
-function renderPubbar(){ // 全部标记后出现全局「更新文章」；一键发布下一批（草稿→正式+旧批次归档）
+function renderPubbar(){ // 全部标记后出现「更新文章」按钮：有预备稿则一键发布，无则提示新文章由会话直接发布
   const bar=document.getElementById('pubbar');if(!bar)return;
   if(batchDoneState()&&!showOld){
     bar.innerHTML='<div style="text-align:center;margin:14px 0"><button onclick="publishNext()" id="pubBtn" style="padding:8px 22px;font-size:.95rem;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer">🔄 更新文章（本批已读完）</button></div>'
@@ -2831,11 +2831,11 @@ async function syncNow(){
   }catch(e){document.getElementById('tokstat').textContent='✗ '+e.message}
   syncing=false;if(btn)btn.textContent='同步'}
 render();
-// ===== 自助更新：一键发布下一批（草稿 draft:true → 正式 + 旧批次归档），经 GitHub API 写 articles.js =====
+// ===== 自助更新：读完后可一键发布下一批（有预备稿则发布，无则提示新文章由会话直接发布），经 GitHub API 写 articles.js =====
 // 纯前端无法改文件 → 用 token 直接 PUT articles.js（与生词同步同一 token 权限）。无 token 或无草稿时给出页面内提示。
 async function publishNext(){
   const drafts=A.filter(x=>x.draft);
-  if(!drafts.length){toastMsg('预备稿是空的，还没有下一批可发——我会在会话里补稿');return}
+  if(!drafts.length){toastMsg('本批已读完。新文章由会话直接发布：跟 Claude 说「更新文章」，下一批会连同训练一起上线，无需预备稿');return}
   const firstDraft=drafts[0].date||'下一批';
   if(!getToken()){toastMsg('需要🔑 token 才能自助发布（或直接在会话里说「更新」）');showToken();return}
   const btn=document.getElementById('pubBtn');if(btn)btn.textContent='发布中…';
