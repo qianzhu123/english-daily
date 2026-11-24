@@ -79,7 +79,7 @@ padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:no
 <div id="main"></div>
 </div>
 <div id="toast"></div>
-<script src="../articles.js?v=1123b"></script>
+<script src="../articles.js?v=1125a"></script>
 <script>
 
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -2039,7 +2039,10 @@ function delUserKey(ai,sent){const db=ukDB();
   store.set('userkeys',db);render()}
 document.addEventListener('click',e=>{
   const rm=e.target.closest('.rm[data-ukai]');
-  if(rm){delUserKey(rm.dataset.ukai,rm.dataset.uksent)}
+  if(rm){const ai=Number(rm.dataset.ukai),xi=Number(rm.dataset.ukxi);
+    const db=ukDB();if(!db[ai]||!db[ai][xi])return;
+    db[ai].splice(xi,1);if(!db[ai].length)delete db[ai];
+    store.set('userkeys',db);render()}
 });
 function gotoDay(d){view.mode='day';view.day=d;
   const p=d.slice(2).replace(/-/g,'');
@@ -2108,7 +2111,7 @@ function dayHtml(db){ // 单日:按文章分组——单词→词组→句子片
     if(frags.length){
       html+=`<div class="dayh" style="font-size:.85rem">✏️ 重点片段 <span class="tag">${frags.length}</span></div>`+
         frags.map((x,xi)=>{const gi='uktr-'+x.ai+'-'+xi;
-          return `<div class="gcard"><span class="rm" data-ukai="${x.ai}" data-uksent="${esc(x.sent)}" style="float:right;cursor:pointer;color:var(--bad,#c0392b);font-size:1.05rem" title="删除该片段">×</span><b>${esc(x.sent)}</b><div class="src" id="${gi}"> —— 翻译中…</div></div>`}).join('');
+          return `<div class="gcard"><span class="rm" data-ukai="${x.ai}" data-ukxi="${xi}" style="float:right;cursor:pointer;color:var(--bad,#c0392b);font-size:1.05rem" title="删除该片段">×</span><b>${esc(x.sent)}</b><div class="src" id="${gi}"> —— 翻译中…</div></div>`}).join('');
       frags.forEach((x,xi)=>{const id='uktr-'+x.ai+'-'+xi;
         setTimeout(()=>{const sp=document.getElementById(id);if(!sp)return;
           translateFrag(x.sent).then(tr=>{if(tr)sp.textContent='—— '+tr;else sp.textContent=''}).catch(()=>sp.textContent='')},0)})}

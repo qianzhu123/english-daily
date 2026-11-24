@@ -67,7 +67,7 @@ w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /
 <textarea id="tokin" style="width:100%;height:60px;margin:8px 0;font-size:.75rem" placeholder="粘贴 token（github_pat_...）"></textarea>
 <div style="display:flex;gap:8px"><button onclick="saveToken()" style="flex:1">保存</button><button onclick="clearToken()" style="flex:1">清除</button><button onclick="document.getElementById('tokbox').classList.add('hidden')">关闭</button></div>
 <div id="tokstat" style="color:var(--dim);margin-top:6px;font-size:.78rem"></div></div>
-<script src="articles.js?v=1123b"></script>
+<script src="articles.js?v=1125a"></script>
 <script src="scenes.js?v=1121a"></script>
 <script>
 const A=window.ARTICLES;
@@ -300,21 +300,19 @@ function pmClick(w,k){
   if(!pmode.w1){pmode.w1=w;pmode.k1=k;w.classList.add('sel');
     toast('起点已选「'+k+'」，再点片段最后一个词');return}
   confirmFrag(w)}
-function confirmFrag(w2){ // 收集首词→末词之间所有句子文本（DOM 顺序，可跨句）
+function confirmFrag(w2){ // 收集首词→末词之间的词（DOM 顺序，可跨句；只存选中的词，不存整句）
   const w1=pmode.w1,ai=pmode.ai;pmodeClear();
-  const sp1=w1.closest('.sent'),sp2=w2.closest('.sent');
-  if(!sp1||!sp2){toast('请点文章里的词');return}
-  // 同一文章块内按 DOM 顺序从 sp1 走到 sp2（不分先后，自动纠正方向）
-  const boxA=w1.closest('.art-wrap')||sp1.parentNode;
-  if((w2.closest('.art-wrap')||sp2.parentNode)!==boxA){toast('两个词不在同一篇文章里');return}
-  let s1=sp1,s2=sp2;
-  {let cur=sp1.parentNode.contains(sp2)?sp1:sp2; // 确定先后
-   const order=(a,b)=>!!(a.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING);
-   if(order(sp1,sp2)){s1=sp1;s2=sp2}else{s1=sp2;s2=sp1}}
-  const parts=[];let cur=s1;
-  while(cur){parts.push(cur.textContent.trim());if(cur===s2)break;cur=cur.nextElementSibling}
-  const frag=parts.join(' ').replace(/\s+/g,' ');
-  if(!frag||parts.length>12){toast('片段太长（最多跨 12 句）');return}
+  const boxA=w1.closest('.art-wrap')||w1.parentNode;
+  if((w2.closest('.art-wrap')||w2.parentNode)!==boxA){toast('两个词不在同一篇文章里');return}
+  const order=(a,b)=>!!(a.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING);
+  let [q1,q2]=order(w1,w2)?[w1,w2]:[w2,w1];
+  const all=[...boxA.querySelectorAll('w[data-w]')];
+  const i1=all.indexOf(q1),i2=all.indexOf(q2);
+  if(i1<0||i2<0){toast('请点文章里的词');return}
+  const frag=all.slice(i1,i2+1).map(x=>x.textContent.trim()).join(' ').replace(/\s+/g,' ');
+  if(!frag){toast('请点文章里的词');return}
+  const sp1=q1.closest('.sent');
+  const j=sp1&&sp1.dataset.i?Number(sp1.dataset.i.split('-')[1]):-1;
   const db=ukDB();db[ai]=db[ai]||[];
   const hit=db[ai].find(x=>x.sent===frag);
   if(hit){db[ai]=db[ai].filter(x=>x.sent!==frag);toast('已取消该片段')}
@@ -2387,6 +2385,16 @@ function wordHomeIdx(k){ // 词/词组 → 文章索引（A 原索引，稳定�
     const dated=cands.map(i=>({i,date:A[i].date})).filter(x=>x.date<=day).sort((x,y)=>y.date.localeCompare(x.date));
     if(dated.length)return dated[0].i}
   return cands[0]}
+async function fragTranslate(frag){ // 片段在线翻译（gtx→MyMemory），uktrv1 缓存与复习页共用
+  const c=store.get('uktrv1');
+  if(c[frag])return c[frag];
+  let t='';
+  try{t=await gtxOnce(frag)}catch(e){}
+  if(!t){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(frag)+'&langpair=en|zh-CN');
+    const j=await r.json();const m=j&&j.responseData&&j.responseData.translatedText||'';
+    if(m&&!/MYMEMORY WARNING|QUERY LENGTH/i.test(m))t=m}catch(e){}}
+  if(t&&/[\u4e00-\u9fff]/.test(t)){c[frag]=t;store.set('uktrv1',c);return t}
+  return ''}
 // ===== 任务卡：当前批次+当日任务，常驻页顶（防会话过多找不到任务） =====
 function renderVocab(){
   const ks=Object.keys(marks);
@@ -2404,7 +2412,7 @@ function renderVocab(){
     ul.innerHTML=ws.map(k=>{const e=normEntry(marks[k]);const dtag=e.day===todayStr()?'':'<span style="color:#bbb;font-size:.68rem">'+(e.day||'').slice(5)+' </span>';
       return `<li data-k="${esc(k)}"><span class="w">${esc(k)}</span><span class="del" data-del="${esc(k)}">×</span>${tc[k]?`<span class="tr">${esc(tc[k])}</span>`:`<span class="tr dim">查译…</span>`}</li>`}).join('')
       +(ws.length?'':'<li style="color:var(--dim);cursor:default;font-size:.78rem">本文还没标生词</li>')
-      +frags.map((f,fi)=>'<li style="display:block"><span style="color:#c77b2f;font-size:.78rem">⭐ '+esc(f.sent.length>60?f.sent.slice(0,60)+'…':f.sent)+'</span><span class="del" data-fdel="'+fi+'" title="删除片段">×</span></li>').join('');
+      +frags.map((f,fi)=>'<li style="display:block"><span style="color:#c77b2f;font-size:.78rem">⭐ '+esc(f.sent)+'</span><span class="del" data-fdel="'+fi+'" title="删除片段">×</span><span class="tr dim" data-ftr="'+fi+'" style="display:block;color:#555;font-size:.76rem;padding-left:8px">查译…</span></li>').join('');
     ul.querySelectorAll('li[data-k]').forEach(li=>{
       const k=li.dataset.k;
       if(!getTrans()[k])translate(k).then(t=>{const sp=li.querySelector('.tr');if(sp&&li.dataset.k===k){sp.textContent=t;sp.classList.remove('dim')}});
@@ -2414,13 +2422,17 @@ function renderVocab(){
             const ph=Object.keys(marks).find(pk=>pk.includes(' ')&&pk.split(' ').includes(cleanWord(w.dataset.w)));
             if(!ph)w.classList.remove('inphrase')});renderVocab();return}
         speak(k,0.9)}})});
-  // 片段删除绑定（renderVocab 里 ul 已重建，需在 innerHTML 后追加）
+  // 片段删除绑定（renderVocab 里 ul 已重建，需在 innerHTML 后追加）+ 片段在线翻译
   A.forEach((a,i)=>{
     const ul2=document.querySelector('#vpanel-'+i+' ul');if(!ul2)return;
     const frags=ukDB()[i]||[];
     ul2.querySelectorAll('li[data-fdel]').forEach(li=>{
-      li.querySelector('.del').onclick=()=>{const db=ukDB();db[i].splice(Number(li.dataset.fdel),1);
-        store.set('userkeys',db);renderVocab();toast('片段已删除')}});
+      const fi=Number(li.dataset.fdel);
+      li.querySelector('.del').onclick=()=>{const db=ukDB();if(!db[i]||!db[i][fi])return;
+        db[i].splice(fi,1);store.set('userkeys',db);renderVocab();toast('片段已删除')};
+      const f=frags[fi];
+      if(f){const trEl=li.querySelector('[data-ftr]');
+        fragTranslate(f.sent).then(t=>{if(trEl&&document.body.contains(trEl)){trEl.textContent=t||'';trEl.classList.remove('dim')}})}})
 });
   positionPanels()}
 function exportVocab(){const t=Object.keys(marks).join(', ');navigator.clipboard&&navigator.clipboard.writeText(t);toastMsg('已复制生词：\n'+t)}
@@ -2730,25 +2742,16 @@ async function toggleArticleTr(artIdx,btn){
   // 逐句双语行（用户 11-23）：英文行可点词收生词、标记同步，中文行紧跟其下
   const lines2=full.split(/\n/);
   const sens=window.ARTICLES[artIdx].sentences;
-  let html='<b>全文翻译</b>（点英文单词可直接收进生词本）<br>';
+  let html='<b>全文翻译</b><br>'; // 回退定版（用户 11-25）：纯中文译文，正文里的英文才能点词收生词
   const aligned=lines2.length===sens.length;
   if(aligned){
-    sens.forEach((en,j)=>{
-      html+='<div class="sent" data-i="'+artIdx+'-'+j+'" style="margin:6px 0">'+
-        en.split(/\s+/).map(w2tokArt).join(' ')+
-        '<div style="color:#555;font-size:.86rem;margin-top:2px">'+esc(lines2[j]||'')+'</div></div>'});
+    lines2.forEach((zh,j)=>{
+      html+='<div style="margin:6px 0;color:#555;font-size:.9rem">'+esc(zh||'')+'</div>'});
   }else{
-    html+='<div style="color:#8a6d3b;font-size:.78rem;margin:4px 0">（本篇译文与原句数不一致：下方为整段中文；逐句点词请用正文）</div>';
-    html+='<div style="margin:6px 0">'+sens.map(en=>en.split(/\s+/).map(w2tokArt).join(' ')).join(' ')+
-      '<div style="color:#555;font-size:.86rem;margin-top:6px;white-space:pre-line">'+esc(full)+'</div></div>';
+    html+='<div style="color:#555;font-size:.9rem;margin:6px 0;white-space:pre-line">'+esc(full)+'</div>';
   }
   div.innerHTML=html;
   artBox.after(div);
-  // 标记同步：正文已标的词在翻译区也亮
-  div.querySelectorAll('w[data-w]').forEach(x=>{
-    const kk=cleanWord(x.dataset.w);
-    if(marks[kk])x.classList.add('on');
-    else if(Object.keys(marks).some(pk=>pk.includes(' ')&&pk.split(' ').includes(kk)))x.classList.add('inphrase')});
   btn.textContent='收起翻译'}
 // 全文翻译区的词元素（词点击走 document 级统一流程，无 onclick 属性）
 function w2tokArt(t){const m=t.match(/^([^A-Za-z0-9\u00c0-\u024f]*)([A-Za-z0-9\u00c0-\u024f''-]+)([\s\S]*)$/);
