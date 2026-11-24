@@ -80,6 +80,90 @@ const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e)
 
 const TRAIN=[
 {
+  day:'2026-11-25',
+  title:'雅思阅读实战 · 独立长文混合题型（对比结构与实验结论专练）',
+  brief:'题型轮换日：判断+单选+句子结尾匹配。本日重点：实验类文章的结论常带限定条件（only/in this study）——把限定词当考点；对比结构（A 而 B）里，题目往往把 A 的特征安到 B 头上；匹配题先找专有名词/数字定位。',
+  daily:[],
+  items:[],
+  quiz:[
+    {
+     "passage": "A trial at a Scottish university gave one group of students printed lecture summaries and another group the same summaries read aloud as podcasts. After six weeks, test scores were almost identical, but the podcast group reported spending twice as long reviewing. The researchers cautioned that their volunteers were all volunteers with strong study habits, so the finding may not transfer to students who normally cram before exams.",
+     "type": "判断 TRUE/FALSE/NOT GIVEN",
+     "q": "The researchers believed their results applied to all students.",
+     "opts": [
+      "TRUE",
+      "FALSE",
+      "NOT GIVEN"
+     ],
+     "ans": 1,
+     "why": "研究人员明确提醒 volunteers 都有强学习习惯，结论未必适用于考前突击的学生（FALSE）。考的就是结论后的限定条件"
+    },
+    {
+     "passage": "A trial at a Scottish university gave one group of students printed lecture summaries and another group the same summaries read aloud as podcasts. After six weeks, test scores were almost identical, but the podcast group reported spending twice as long reviewing. The researchers cautioned that their volunteers were all volunteers with strong study habits, so the finding may not transfer to students who normally cram before exams.",
+     "type": "单选（Multiple Choice）",
+     "q": "What did the trial find about the two groups?",
+     "opts": [
+      "Their scores were similar, but one group took longer to review",
+      "Printed summaries produced clearly better scores",
+      "Podcasts made no difference to study time",
+      "Cramming students scored higher than volunteers"
+     ],
+     "ans": 0,
+     "why": "分数几乎相同 + 播客组复习时间多一倍（A 的改写）。B 相反；C 与事实相反；D 志愿者/突击学生的对比试验没测"
+    },
+    {
+     "passage": "Saffron was once worth more than its weight in gold, and most of it came from a band of countryside where the soil drained poorly. Growers discovered that corms planted on raised beds produced three times the flowers of those in flat fields, though the raised beds demanded twice the labour at planting time. The extra work, one grower noted, pays for itself only where land is scarce and hands are cheap.",
+     "type": "判断 TRUE/FALSE/NOT GIVEN",
+     "q": "Raised beds always cost more money than flat fields.",
+     "opts": [
+      "TRUE",
+      "FALSE",
+      "NOT GIVEN"
+     ],
+     "ans": 1,
+     "why": "种植时人工翻倍，但 grower 明说只有在地贵工贱的地方才划算——言外之意其他地方未必更贵（FALSE）。always 是绝对词陷阱"
+    },
+    {
+     "passage": "Saffron was once worth more than its weight in gold, and most of it came from a band of countryside where the soil drained poorly. Growers discovered that corms planted on raised beds produced three times the flowers of those in flat fields, though the raised beds demanded twice the labour at planting time. The extra work, one grower noted, pays for itself only where land is scarce and hands are cheap.",
+     "type": "句子结尾匹配（Matching Sentence Endings）",
+     "q": "Raised beds produced more flowers but required ...",
+     "opts": [
+      "double the work when planting",
+      "better soil drainage than anywhere else",
+      "cheaper land than flat fields",
+      "fewer growers than before"
+     ],
+     "ans": 0,
+     "why": "demanded twice the labour at planting time（A 的改写）。B 排水差才用高畦；C 地贵才划算；D 无关"
+    },
+    {
+     "passage": "When a coastal town replaced its pay-and-display parking with free parking, shop owners predicted ruin: customers would park all day and commuters would clog every space. A council review a year later found turnover had actually fallen, because drivers no longer circulated looking for change, and the average stay had shortened. The review's authors admitted the sample covered one street and one year, and that tourist seasons had been unusually calm.",
+     "type": "单选（Multiple Choice）",
+     "q": "Why did turnover fall after free parking was introduced?",
+     "opts": [
+      "Drivers stopped circling while searching for coins",
+      "Commuters occupied every space all day",
+      "Shop owners shortened their opening hours",
+      "Tourists stopped visiting the town"
+     ],
+     "ans": 0,
+     "why": "司机不用再绕圈找零钱（A 的改写）。B 是预测不是事实；C 无据；D 是旅游季平静的限定条件，非周转下降原因"
+    },
+    {
+     "passage": "When a coastal town replaced its pay-and-display parking with free parking, shop owners predicted ruin: customers would park all day and commuters would clog every space. A council review a year later found turnover had actually fallen, because drivers no longer circulated looking for change, and the average stay had shortened. The review's authors admitted the sample covered one street and one year, and that tourist seasons had been unusually calm.",
+     "type": "判断 TRUE/FALSE/NOT GIVEN",
+     "q": "The review lasted longer than one tourist season.",
+     "opts": [
+      "TRUE",
+      "FALSE",
+      "NOT GIVEN"
+     ],
+     "ans": 1,
+     "why": "样本覆盖一条街、一年，且当年旅游季异常平静——一年=至少跨了一个旅游季（FALSE）。时间推理题"
+    }
+   ]
+},
+{
   day:'2026-11-23',
   title:'雅思阅读实战 · 独立长文混合题型（让步与转折信号词专练）',
   brief:'题型轮换日：判断+单选+摘要填空。本日重点：作者观点往往藏在让步结构后面（"虽然 X，但 Y"）——考的是 Y；NOT GIVEN 的典型陷阱是"原文说了相邻的事，但没说题目这件事"；摘要题先判断空格词性再回原文定位。',

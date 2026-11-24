@@ -1115,6 +1115,7 @@ window.ARTICLES = [
   {
     title: "The Ferry That Waits for No Alarm (B1+)",
     date: "2026-11-23",
+    archived: true,
     level: "B1+ · 出行/时刻表的哲学",
     sentences: [
       "The island ferry leaves at seven, and the notice at the dock says so in letters large enough that missing it cannot be blamed on reading.",
@@ -1138,6 +1139,7 @@ window.ARTICLES = [
   {
     title: "The Apprentice Who Counted Wrong on Purpose (B1+)",
     date: "2026-11-23",
+    archived: true,
     level: "B1+ · 手艺/诚实的边界",
     sentences: [
       "The workshop took apprentices twice a year, and the master rejected every application that promised to work hard, which confused me until I served my own turn.",
@@ -1159,4 +1161,54 @@ window.ARTICLES = [
       "the habit would take longer（习惯要更久才能改）—— take 表耗时；the wood had caught it（木料先逮住了问题）—— catch=发现问题"
     ]
   }
+,
+  {
+    title: "The Bakery That Sold Out on Purpose (B1+)",
+    date: "2026-11-25",
+    level: "B1+ · 经营/稀缺的智慧",
+    sentences: [
+      "The bakery on the corner closes at two, or earlier, whenever the bread runs out, and the sign explaining this has been taped to the same window for eleven years.",
+      "People used to complain, especially in the first year, when a customer who arrived at half past two would stand at the counter and demand a loaf as if hunger were an argument.",
+      "The owner, a short woman with flour on her forearms, would point at the empty shelves and say, we did not run out, we sold out, and the difference matters.",
+      "Running out is failure: it means you guessed wrong, planned badly, wasted what you baked.",
+      "Selling out is success: it means you made exactly enough, and the person who came late learned something the shelf could not say.",
+      "Over time the complaint stopped, partly because regulars began arriving earlier, and partly because the bakery added one twist: whatever is left at half past one goes to the shelter two streets away.",
+      "Nothing is wasted, nobody is shamed, and the queue that forms before opening is not a queue of the frustrated but of people who have learned what time means."
+    ],
+    notes: [
+      "runs out（卖完/用完）—— run out of sth 用完；不及物用法 the bread runs out",
+      "as if hunger were an argument（仿佛饥饿是个理由）—— as if + 虚拟语气 were",
+      "we did not run out, we sold out（不是卖光了，是卖完了）—— run out 被动失利 vs sell out 主动售罄",
+      "the person who came late learned something the shelf could not say（迟到的人从空货架学到了柜台说不出的道理）—— 定语从句省略 that",
+      "whatever is left（剩下的所有东西）—— whatever 主语从句",
+      "a queue of the frustrated（一支由没买到的人排成的队）—— the + 形容词=一类人",
+      "learned what time means（学会了时间的意义）—— what 宾语从句"
+    ]
+  },
+  {
+    title: "The Ladder That Was Never Returned (B1+)",
+    date: "2026-11-25",
+    level: "B1+ · 邻里/信任的账本",
+    sentences: [
+      "My father lent our ladder to the neighbor in 1998 and mentioned, every year after, that it had never come back.",
+      "He was not angry in a loud way; he folded the grievance into ordinary conversation, the way you fold a map that no longer fits the territory.",
+      "The neighbor, for his part, seemed to have absorbed the ladder into his house so completely that denying its origin would have taken an act of imagination.",
+      "When my father died, we found the ledger he kept, not of money but of things: who borrowed what, when, and whether it was returned.",
+      "The ladder's line ended with two letters and a dash: N.R., never returned.",
+      "But the same ledger showed that the same neighbor had shoveled our walk every winter for thirty years, unprompted, at dawn, before his own front door.",
+      "We kept the ladder's entry open and the shovel's unrecorded, because some debts are paid in a currency the ledger was never designed to hold."
+    ],
+    notes: [
+      "had never come back（从未归还）—— 过去完成时：借出动作之前的状态延续",
+      "folded the grievance into ordinary conversation（把不满折进日常谈话）—— fold A into B 比喻",
+      "the way you fold a map that no longer fits the territory（就像折一张已对不上地形的旧地图）—— the way 引导方式状语从句",
+      "absorbed the ladder into his house（把梯子彻底据为己有）—— absorb into",
+      "would have taken an act of imagination（得靠想象力才办得到）—— 虚拟语气完成式",
+      "not of money but of things（记的不是钱而是东西）—— not A but B 平行结构",
+      "unprompted（没人要求）—— 过去分词作状语",
+      "a currency the ledger was never designed to hold（一本账本设计时就没打算容纳的货币）—— 定语从句修饰 currency"
+    ]
+  }
+
+  
 ];
