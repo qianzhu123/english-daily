@@ -169,7 +169,7 @@ function render(){
         if(!m)return esc(t);
         const wIdx=wi++;
         const cls=fragWords.includes(wIdx)?' class="fragon"':'';
-        return esc(m[1])+`<w${cls} data-w="${esc(m[2].toLowerCase())}" data-a="${i}" data-i="${j}-${wIdx}">${esc(m[2])}</w>`+esc(m[3])};
+        return esc(m[1])+`<w${cls} data-w="${esc(m[2].toLowerCase())}" data-a="${i}" data-i="${i}-${j}-${wIdx}">${esc(m[2])}</w>`+esc(m[3])};
       sp.innerHTML=s.split(/\s+/).map(tokHtml).join(' ');
       // 句尾☆已废弃（toast 未定义致点击静默失败）：改「✏️ 画重点句」模式，点首词+末词即成句
       p.appendChild(sp);p.appendChild(document.createTextNode(' '));sentEls.push(sp);sentTexts.push(s)});
@@ -346,7 +346,7 @@ function toggleFold(i){ // 手机端折叠：默认收起（只露标题条）�
   positionPanels()}
 function restoreMarks(){ // 已标词高亮：只亮你点过的位置（e.locs 精确到句-词序）；旧数据无 locs 时按所属文章亮该篇全部出现处
   const home={}; // 词 → 所属文章
-  Object.keys(marks).forEach(k=>{home[k]=wordHomeIdx(k)});
+  Object.keys(marks).forEach(k=>{const ee=marks[k];home[k]=(ee&&typeof ee==="object"&&typeof ee.art==="number"&&!isNaN(ee.art)&&A[ee.art]&&!A[ee.art].archived)?ee.art:wordHomeIdx(k)});
   document.querySelectorAll('w').forEach(w=>{
     const cw=cleanWord(w.dataset.w);
     const wArt=Number(w.dataset.a);
@@ -2438,7 +2438,7 @@ function renderVocab(){
     ul.innerHTML=ws.map(k=>{const e=normEntry(marks[k]);const dtag=e.day===todayStr()?'':'<span style="color:#bbb;font-size:.68rem">'+(e.day||'').slice(5)+' </span>';
       return `<li data-k="${esc(k)}"><span class="w">${esc(k)}</span><span class="del" data-del="${esc(k)}">×</span>${tc[k]?`<span class="tr">${esc(tc[k])}</span>`:`<span class="tr dim">查译…</span>`}</li>`}).join('')
       +(ws.length?'':'<li style="color:var(--dim);cursor:default;font-size:.78rem">本文还没标生词</li>')
-      +frags.map((f,fi)=>'<li style="display:block"><span style="color:#c77b2f;font-size:.78rem">⭐ '+esc(f.sent)+'</span><span class="del" data-fdel="'+fi+'" title="删除片段">×</span><span class="tr dim" data-ftr="'+fi+'" style="display:block;color:#555;font-size:.76rem;padding-left:8px">查译…</span></li>').join('');
+      +frags.map((f,fi)=>'<li style="display:block;border-top:1px dashed #eee;padding:4px 0 2px"><span class="del" data-fdel="'+fi+'" title="删除片段" style="float:right;cursor:pointer;margin-left:8px">×</span><span style="color:#c77b2f;font-size:.78rem;word-break:break-word">'+esc(f.sent)+'</span><span class="tr dim" data-ftr="'+fi+'" style="display:block;color:#555;font-size:.76rem;clear:both">查译…</span></li>').join('');
     ul.querySelectorAll('li[data-k]').forEach(li=>{
       const k=li.dataset.k;
       if(!getTrans()[k])translate(k).then(t=>{const sp=li.querySelector('.tr');if(sp&&li.dataset.k===k){sp.textContent=t;sp.classList.remove('dim')}});
@@ -2461,6 +2461,28 @@ function renderVocab(){
         fragTranslate(f.sent).then(t=>{if(trEl&&document.body.contains(trEl)){trEl.textContent=t||'';trEl.classList.remove('dim')}})}})
 });
   positionPanels()}
+// 片段翻译失败 → 点译文行重试（事件委托，renderVocab 重建后仍有效）
+document.addEventListener('click',function(ev){
+  const sp=ev.target.closest('[data-ftr]');if(!sp)return;
+  if(sp.textContent.indexOf('翻译失败')<0)return;
+  const fi=Number(sp.dataset.ftr);if(isNaN(fi))return;
+  const panel=sp.closest('.vpanel');if(!panel)return;
+  const ai=Number((panel.id||'').replace('vpanel-',''));if(isNaN(ai))return;
+  const f=(ukDB()[ai]||[])[fi];if(!f)return;
+  sp.textContent='查译中…';
+  fragTranslate(f.sent).then(function(t){sp.textContent=t||'翻译失败·点此重试'})});
+// 词行翻译失败 → 点一下重查（清缓存重走三路链）
+document.addEventListener('click',async function(ev){
+  const sp=ev.target.closest('[data-k] .tr');if(!sp)return;
+  if(sp.textContent.indexOf('暂无释义')<0)return;
+  const li=sp.closest('li[data-k]');if(!li)return;
+  const k=li.dataset.k;
+  const c=getTrans();if(c[k])delete c[k];
+  sp.textContent='重查中…';
+  try{await translate(k)}catch(e){}
+  const v=getTrans()[k]||'';
+  sp.textContent=v;
+  sp.classList.toggle('dim',!v)});
 function exportVocab(){const t=Object.keys(marks).join(', ');navigator.clipboard&&navigator.clipboard.writeText(t);toastMsg('已复制生词：\n'+t)}
 // ===== 场景池：随机抽场景（不重复，抽完一轮重洗） =====
 let sceneBag=[];
@@ -2839,6 +2861,23 @@ for(const k in marks){const e=marks[k];if(!e||typeof e!=='object'||typeof e.art!
   const text=A[e.art].sentences.join(' ').toLowerCase();
   if(!new RegExp('\\b'+first.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(text)){e.art=wordHomeIdx(k);ch=true}}
 if(ch)store.set('vocab',marks)})();
+// locs 语义迁移：旧 locs 无文章前缀（句-词），跨文章会误命中——删掉旧格式，保留带文章前缀的新格式
+(function(){let ch3=false;
+for(const k in marks){const e=marks[k];if(!e||typeof e!=='object'||!Array.isArray(e.locs))continue;
+  const keep=e.locs.filter(l=>typeof l==='string'&&(l.match(/-/g)||[]).length>=2);
+  if(keep.length!==e.locs.length){if(keep.length)e.locs=keep;else delete e.locs;ch3=true}}
+if(ch3)store.set('vocab',marks)})();
+// art 挂在已归档文章：重定位到含该词的最新未归档文章（否则词亮着但任何生词本面板都找不到——11-25 bakery 事故根因）
+(function(){let ch2=false;const escRe=function(x){return x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')};
+for(const k in marks){const e=marks[k];if(!e||typeof e!=='object'||typeof e.art!=='number'||isNaN(e.art)||e.art<0)continue;
+  if(!A[e.art]||!A[e.art].archived)continue;
+  const first=k.split(' ')[0].toLowerCase();
+  const cands=[];
+  for(let i2=0;i2<A.length;i2++){if(!A[i2]||A[i2].archived)continue;
+    if(new RegExp('\\b'+escRe(first)+'\\b').test(A[i2].sentences.join(' ').toLowerCase()))cands.push(i2)}
+  if(cands.length){const newest=cands.sort((a,b)=>(A[b].date||'').localeCompare(A[a].date||''))[0];
+    if(newest!==e.art){e.art=newest;delete e.locs;ch2=true}}}
+if(ch2)store.set('vocab',marks)})();
 function getToken(){return localStorage.getItem('gh_token')||''}
 function saveToken(){const t=document.getElementById('tokin').value.trim();if(t)localStorage.setItem('gh_token',t);
 document.getElementById('tokstat').textContent=t?'已保存（仅存本机浏览器）':'未填写';syncNow()}

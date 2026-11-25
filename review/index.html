@@ -2234,6 +2234,18 @@ const _d0=parsePath();
 if(_d0){view.mode='day';view.day=_d0}
 render();
 
+// （暂无释义）点一下=重查（清缓存后重新走三路翻译链）
+document.addEventListener('click',async function(ev){
+  const sp=ev.target.closest('span.tr');if(!sp)return;
+  if(sp.textContent.indexOf('暂无释义')<0)return;
+  const row=sp.closest('.wrow');if(!row)return;
+  const wEl=row.querySelector('span.w');if(!wEl)return;
+  const k=Array.from(Object.keys(marks)).find(function(x){return x===wEl.textContent})||wEl.textContent;
+  const c=getTrans();if(c[k])delete c[k];
+  sp.innerHTML='<i style=color:#bbb>重查中…</i>';
+  try{await translate(k)}catch(e){}
+  sp.textContent=getTrans()[k]||'（暂无释义）';
+});
 </script>
 </body>
 </html>
