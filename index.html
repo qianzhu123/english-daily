@@ -67,7 +67,7 @@ w.inphrase{border-bottom:2px solid var(--hard);background:rgba(230,57,70,.06)} /
 <textarea id="tokin" style="width:100%;height:60px;margin:8px 0;font-size:.75rem" placeholder="粘贴 token（github_pat_...）"></textarea>
 <div style="display:flex;gap:8px"><button onclick="saveToken()" style="flex:1">保存</button><button onclick="clearToken()" style="flex:1">清除</button><button onclick="document.getElementById('tokbox').classList.add('hidden')">关闭</button></div>
 <div id="tokstat" style="color:var(--dim);margin-top:6px;font-size:.78rem"></div></div>
-<script src="articles.js?v=1125a"></script>
+<script src="articles.js?v=1127a"></script>
 <script src="scenes.js?v=1121a"></script>
 <script>
 const A=window.ARTICLES;
@@ -268,7 +268,7 @@ document.addEventListener('click',e=>{
     else{addWord(k,w.closest('.sent')?w.closest('.sent').textContent:null,Number(w.dataset.a),loc);w.classList.add('on')}
     store.set('vocab',marks);renderVocab();
   });
-function cleanWord(s){return s.replace(/[.,!?;:"'()“”’]/g,'').toLowerCase().trim()}
+function cleanWord(s){var bare=s.toLowerCase().trim();if(/['’]s$/.test(bare))bare=bare.replace(/['’]s$/,'');return bare.replace(/[.,!?;:"'()“”’]/g,'').trim()}
 function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function addWord(k,ctx,artIdx,loc){if(!k)return;
   if(marks[k]){const e=normEntry(marks[k]);e.n=(e.n||1)+1;if(!e.day)e.day=studyDay();if(typeof artIdx==='number')e.art=artIdx;
@@ -2308,7 +2308,50 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
 "unprompted":"形容词：无人要求的；主动的",
 "dawn":"名词：黎明；破晓",
 "unrecorded":"形容词：未记录的",
-"currency":"名词：货币；通货"
+"currency":"名词：货币；通货",
+"nodding":"动词：点头（nod 的现在分词）",
+"rewrite":"动词：重写（re- 再一次 + write）",
+"scheduling":"名词：排期、日程安排；动词：安排（schedule 现在分词）",
+"leaned":"动词：倾斜、倚靠（lean 的过去式）",
+"position":"名词：职位；位置；姿势",
+"role":"名词：角色；职责",
+"naming":"动词：说出、命名（name 的现在分词）",
+"beautifully":"副词：漂亮地、美好地",
+"blur":"动词：使模糊；名词：模糊不清的事物",
+"wake":"动词：唤醒、醒来",
+"village":"名词：村庄",
+"streetlights":"名词：路灯（street+light 复数）",
+"thanking":"动词：感谢（thank 的现在分词）",
+"residents":"名词：居民（resident 复数）",
+"unsafe":"形容词：不安全的（un- 否定前缀）",
+"stars":"名词：星星；明星（star 复数）",
+"garden":"名词：花园；菜园",
+"retired":"形容词：退休的；动词：退休（retire 过去式）",
+"torch":"名词：手电筒（英式）；火把",
+"counted":"动词：数、清点（count 过去式）",
+"neighbours":"名词：邻居（neighbour 英式复数；美式 neighbor）",
+"spoken":"动词：说话（speak 的过去分词）",
+"darkness":"名词：黑暗（dark+ness 名词后缀）",
+"curious":"形容词：好奇的；奇怪的",
+"pub":"名词：酒馆（public house 缩写）",
+"candles":"名词：蜡烛（candle 复数）",
+"tables":"名词：桌子；表格（table 复数）",
+"borrowed":"动词：借入（borrow 过去分词）",
+"improved":"动词：改善、提高（improve 过去式）",
+"fell":"动词：摔倒、跌落（fall 的过去式）",
+"unlit":"形容词：未点灯的（un- + lit）",
+"church":"名词：教堂",
+"relight":"动词：重新点亮（re- + light）",
+"dimmed":"动词：调暗（dim 过去式）",
+"grid":"名词：网格；电网",
+"reflective":"形容词：反光的；深思的",
+"paint":"名词：油漆；动词：刷漆、绘画",
+"kerb":"名词：路缘石（英式；美式 curb）",
+"compromise":"名词：折中、妥协；动词：妥协",
+"sides":"名词：边；一方（side 复数）",
+"won":"动词：赢得（win 的过去式）",
+"permission":"名词：许可、允许",
+
 };
 function validTrans(t,k){ // 翻译结果有效性：空/纯标点符号/回显原文/已知垃圾模式都算无效
   if(!t)return false;
@@ -2462,6 +2505,15 @@ function renderVocab(){
 });
   positionPanels()}
 // 片段翻译失败 → 点译文行重试（事件委托，renderVocab 重建后仍有效）
+// 片段删除（事件委托兜底：renderVocab 直绑可能被重渲染打断）
+document.addEventListener('click',function(ev){
+  const d=ev.target.closest('.del[data-fdel]');if(!d)return;
+  const panel=d.closest('.vpanel');if(!panel)return;
+  const ai=Number((panel.id||'').replace('vpanel-',''));if(isNaN(ai))return;
+  const fi=Number(d.dataset.fdel);if(isNaN(fi))return;
+  const db=ukDB();if(!db[ai]||!db[ai][fi])return;
+  db[ai].splice(fi,1);if(!db[ai].length)delete db[ai];
+  store.set('userkeys',db);renderVocab();toast('片段已删除')});
 document.addEventListener('click',function(ev){
   const sp=ev.target.closest('[data-ftr]');if(!sp)return;
   if(sp.textContent.indexOf('翻译失败')<0)return;
@@ -2762,6 +2814,38 @@ const PRETR={
 "抱怨渐渐停了，一部分原因是熟客们开始早点来，另一部分原因是面包房加了一条新规矩：一点半剩下的所有东西，都送去两条街外的收容所。",
 "Nothing is wasted, nobody is shamed, and the queue that forms before opening is not a queue of the frustrated but of people who have learned what time means.",
 "什么都不浪费，也没有人被羞辱；开门前排起的队伍，不再是失意者的长队，而是一群学会了时间意味着什么的人。"
+],
+  "The Job Interview That Went Sideways": [
+"The interview was going exactly as I had feared: I answered everything perfectly, and I could feel the whole conversation forgetting me before it had even finished.",
+"这场面试正朝着我担心的方向进行：我每个问题都答得完美，却能感觉到整场谈话在它结束之前就把我遗忘了。",
+"Every candidate before me would say the same — that they were hard-working, that they loved teamwork, that failure had secretly made them stronger — and the interviewer was nodding the way you nod at weather.",
+"我之前的每个候选人都会说一样的话——说自己勤奋、说自己热爱团队合作、说失败暗中让他们更强大——面试官点头的样子，就像你对天气预报点头。",
+"Then she asked what I was worst at, and I put my coffee down and told her the truth: I avoid phone calls, I rewrite emails four times, and once I hid a scheduling mistake for three days until it fixed itself.",
+"然后她问我最不擅长什么，我放下咖啡，说了实话：我害怕打电话，邮件要改四遍，还有一次我把一个排期错误藏了三天，直到它自己好了。",
+"The room changed; she leaned forward for the first time and asked who else knew about the hidden mistake.",
+"房间的气氛变了；她第一次身体前倾，问还有谁知道那个被藏起来的错误。",
+"My manager, I said, found out on day two, and we built a system together so it could not happen again — and I still use that system, five years later, at jobs she has never heard of.",
+"我说，我经理第二天就发现了，我们一起搭了一套系统，让它不可能再发生——五年后的今天，在她从没听说过的几份工作里，我还在用那套系统。",
+"I did not get that position, but the interviewer wrote to me a month later about a different role, saying they needed someone who could name problems early instead of naming them beautifully.",
+"我没得到那个职位，但一个月后面试官写信给我说另一个岗位，说他们需要的是能及早说出问题的人，而不是把问题说得很漂亮的人。",
+"Since then I have sat on the other side of the desk, and I can tell you the perfectly prepared answers all blur together, while the honest ones wake the room like a window opened in winter.",
+"从那以后我也坐到了桌子另一侧，我可以告诉你：准备完美的回答全都混成一片，而诚实的回答像冬天里推开的一扇窗，能把整个房间叫醒。"
+],
+  "The Village That Turned Off Its Streetlights": [
+"When the village switched off half its streetlights to save money, the council expected complaints and got letters instead — half thanking them, half demanding the lights back.",
+"村里为省钱关掉了一半路灯，议会本以为会收到抱怨，收到的却是信——一半致谢，一半要求把灯装回去。",
+"The dark streets, some residents wrote, felt unsafe; others said they had not seen stars from their garden in twenty years.",
+"一些居民写道，漆黑的街道让人不安；另一些人说，二十年来第一次在自家院子里看见星星。",
+"A retired teacher started walking the same route every night with a torch, and within a month she had counted eleven neighbours she had never spoken to, because darkness made everyone slower and more curious.",
+"一位退休教师开始每晚打着手电走同一条路线，一个月之内她数出了十一个从没交谈过的邻居——因为黑暗让所有人都慢了下来，也多了几分好奇。",
+"The pub put candles on its tables, and the owner noticed people stayed longer and talked more quietly, as if the evening had been returned to them from somewhere it had been borrowed.",
+"酒馆在桌上点了蜡烛，老板发现人们待得更久、说话更轻，仿佛夜晚被人从某个借走它的地方还了回来。",
+"Not everything improved: two elderly residents fell on the unlit lane by the church, and the council had to relight that stretch within weeks, which taught everyone a lesson about the difference between a decision and its exceptions.",
+"并非一切都变好了：两位老人在教堂旁没灯的小巷摔倒，议会不得不在几周内重新点亮那一段——这给所有人上了一课：决定和决定的例外是两回事。",
+"A year later the village kept the dimmed grid but added reflective paint to every kerb, and the compromise held because both sides could point to something they had won.",
+"一年后，村庄保留了调暗的灯网，但给每处路缘刷了反光漆，这个折中方案守住了，因为双方都能指出自己赢到了什么。",
+"The teacher still walks at night, and she says the best part was never the stars; it was learning how many people had been waiting for permission to slow down.",
+"老师仍然夜里散步，她说最珍贵的从来不是星星，而是发现原来有那么多人在等一个被允许慢下来的许可。"
 ],
   "The Ladder That Was Never Returned": [
 "My father lent our ladder to the neighbor in 1998 and mentioned, every year after, that it had never come back.",

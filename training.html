@@ -80,6 +80,49 @@ const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e)
 
 const TRAIN=[
 {
+  day:'2026-11-27',
+  title:'雅思阅读实战 · 独立长文混合题型（叙事意图与例外陷阱专练）',
+  brief:'题型轮换日：判断+单选+句子结尾匹配+摘要填空。本日重点：第一人称叙事里，作者举自己的例子是为了立一个普遍观点（例子为观点服务，别把例子当考点本体）；判断题爱在例外处设陷——原文承认例外（Not everything improved）不等于否定主体结论；匹配题先抓句子主干再看结尾选项。',
+  daily:[
+    {en:'The perfectly prepared answers all blur together, while the honest ones wake the room.',zh:'准备完美的回答全都混成一片，而诚实的回答能把房间叫醒'},
+    {en:'It taught everyone a lesson about the difference between a decision and its exceptions.',zh:'这给所有人上了一课：决定和决定的例外是两回事'},
+    {en:'Both sides could point to something they had won.',zh:'双方都能指出自己赢到了什么'}
+  ],
+  items:[],
+  quiz:[
+    {passage:"The interview was going exactly as I had feared: I answered everything perfectly, and I could feel the whole conversation forgetting me before it had even finished. Then she asked what I was worst at, and I told her the truth: I avoid phone calls, I rewrite emails four times, and once I hid a scheduling mistake for three days until it fixed itself. The room changed; she leaned forward for the first time and asked who else knew about the hidden mistake.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The writer believes admitting weaknesses is always the best interview strategy.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:2,
+     why:'原文只说了这一次诚实让房间气氛变了、后来还得到了机会——没说 always、也没把它上升为普遍策略（NOT GIVEN）。all/always 这类绝对词先圈出来：原文只给了一次实例，永远撑不起 always'},
+    {passage:"The interview was going exactly as I had feared: I answered everything perfectly, and I could feel the whole conversation forgetting me before it had even finished. Then she asked what I was worst at, and I told her the truth. The room changed; she leaned forward for the first time. I did not get that position, but the interviewer wrote to me a month later about a different role, saying they needed someone who could name problems early instead of naming them beautifully.",
+     type:'单选（Multiple Choice）',
+     q:'Why does the writer describe the perfect answers at the start?',
+     opts:['To set up the contrast with what actually woke the room up','To prove he was the most qualified candidate present','To show that interviewers forget answers on purpose','To suggest he had prepared for the wrong job'],ans:0,
+     why:'意图题：开头 perfect/forgetting me 是铺垫，落点是后面 honest ones wake the room——先立「完美无用」，诚实的对比才有冲击力（A）。B 他也没拿到那个职位；C/D 原文无据'},
+    {passage:"A year later the village kept the dimmed grid but added reflective paint to every kerb, and the compromise held because both sides could point to something they had won.",
+     type:'句子结尾匹配（Matching Sentence Endings）',
+     q:'The compromise held because…',
+     opts:['the council relit every street in the village','each side had gained something concrete','residents stopped writing letters entirely','the village reversed its original decision'],ans:1,
+     why:'both sides could point to something they had won 的同义改写（each side had gained something concrete）。A 只说了教堂那段路的例外；C 信件停止原文没说；D 决定主体保留（kept the dimmed grid），只是加了例外'},
+    {passage:"A year later the village kept the dimmed grid but added reflective paint to every kerb, and the compromise held because both sides could point to something they had won.",
+     type:'判断 TRUE/FALSE/NOT GIVEN',
+     q:'The village removed all the streetlights permanently.',
+     opts:['TRUE','FALSE','NOT GIVEN'],ans:1,
+     why:'kept the dimmed grid=保留了调暗的灯网——灯还在，只是暗（FALSE，与 removed all 矛盾）。摘要词义题常考 dim 这个词：调暗≠关掉'},
+    {passage:"Not everything improved: two elderly residents fell on the unlit lane by the church, and the council had to relight that stretch within weeks, which taught everyone a lesson about the difference between a decision and its exceptions. A year later the village kept the dimmed grid but added reflective paint to every kerb, and the compromise held because both sides could point to something they had won.",
+     type:'单选（Multiple Choice）',
+     q:'What point does the church-lane episode make in the passage?',
+     opts:['Good decisions still need their exceptions handled','Elderly residents should avoid walking at night','The council made the wrong decision overall','Reflective paint should replace streetlights everywhere'],ans:0,
+     why:'作者明写 lesson：difference between a decision and its exceptions——决定整体成立，例外要单独处理（A）。C 整体否定与 kept the dimmed grid 相反；B/D 均为无中生有'},
+    {passage:"Not everything improved: two elderly residents fell on the unlit lane by the church, and the council had to relight that stretch within weeks.",
+     type:'摘要填空（Summary Completion）',
+     q:'填空：After the falls, the council relighted the unlit ______ by the church.',
+     opts:['stretch','grid','kerb','lane'],ans:3,
+     why:'原文原位：unlit lane by the church（教堂旁没灯的小巷）。stretch 是被 relight 的那一段（that stretch），但空格前已有 unlit 修饰、位置定的是 lane；grid 是全镇灯网；kerb 后来刷的是漆——近义陷阱要靠原位搭配锁定'}
+  ]
+},
+{
   day:'2026-11-25',
   title:'雅思阅读实战 · 独立长文混合题型（对比结构与实验结论专练）',
   brief:'题型轮换日：判断+单选+句子结尾匹配。本日重点：实验类文章的结论常带限定条件（only/in this study）——把限定词当考点；对比结构（A 而 B）里，题目往往把 A 的特征安到 B 头上；匹配题先找专有名词/数字定位。',
@@ -158,8 +201,8 @@ const TRAIN=[
       "FALSE",
       "NOT GIVEN"
      ],
-     "ans": 1,
-     "why": "样本覆盖一条街、一年，且当年旅游季异常平静——一年=至少跨了一个旅游季（FALSE）。时间推理题"
+     "ans": 2,
+     "why": "原文只说样本覆盖一年，但没说一个旅游季多长，也无法断定一年一定长于/短于一个旅游季——信息不足（NOT GIVEN）。判断技巧：别把常识当原文事实（TRUE=原文明确支持；FALSE=原文明确矛盾；NOT GIVEN=原文没给足信息）"
     }
    ]
 },
@@ -1147,23 +1190,32 @@ function answerQuiz(day,qn){
   render();
   const why=document.getElementById('why-'+qn);if(why)why.classList.add('show')}// ===== 训练页侧栏生词本（用户 11-18：训练页也要能看到生词本）=====
 function escT(x){return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
-function renderVocabSide(){ // 训练页独立生词库 vocab-train（与阅读分开）
+function renderVocabSide(){ // 训练页独立生词库 vocab-train：按天分组（当前天在前，昨天以上收起为摘要行）
   const el=document.getElementById('vocaside-list');if(!el)return;
-  const marks=store.get(TVKEY);const ks=Object.keys(marks);
-  const tc=store.get('translations-train');
+  const marks=store.get(TVKEY);const tc=store.get('translations-train');
   const tday=curDay||TRAIN[0].day;
   const fdb=store.get('trainfrags');
+  // 按点击日期分桶（e.day），当前训练日优先显示
+  const byDay={};Object.keys(marks).forEach(k=>{const e=marks[k]||{};const d=e.day||'更早';(byDay[d]=byDay[d]||[]).push(k)});
   const fragHtml=(fdb[tday]||[]).map((f,fi)=>'<li style="display:block;border-top:1px dashed #eee;padding:4px 0 2px"><span class="del" onclick="delTrainFrag('+fi+')" title="移除" style="float:right;cursor:pointer;margin-left:8px">×</span><span style="color:#c77b2f;font-size:.78rem;word-break:break-word">'+escT(f.sent)+'</span><span class="tr" data-tftr="'+fi+'" style="display:block;color:#555;font-size:.76rem;clear:both">查译…</span></li>').join('');
-  if(!ks.length&&!fragHtml){el.innerHTML='<li style="color:var(--dim);font-size:.8rem">还没有生词——点文章/训练里的生词即可加入</li>';return}
-  if(!ks.length&&fragHtml){el.innerHTML=fragHtml;return}
-  // 片段在线翻译（trainfrags 英文 → translations-train 缓存）
+  const dayKeys=Object.keys(byDay).sort((a,b)=>b.localeCompare(a)); // 新日期在前
+  const curHtml=(byDay[tday]||[]).slice(-60).reverse().map(k=>sideWordHtml(k,tc)).join('');
+  const otherHtml=dayKeys.filter(d=>d!==tday).map(d=>
+    '<li style="display:block;color:var(--dim);font-size:.75rem;margin-top:6px;border-top:1px solid #eee;padding-top:4px">'+escT(d==='更早'?'更早':d.slice(5))+'（'+byDay[d].length+'）</li>'
+    +byDay[d].slice(-60).reverse().map(k=>sideWordHtml(k,tc)).join('')).join('');
+  if(!dayKeys.length&&!fragHtml){el.innerHTML='<li style="color:var(--dim);font-size:.8rem">还没有生词——点文章/训练里的生词即可加入</li>';return}
+  el.innerHTML=fragHtml+curHtml+otherHtml;
+  // 片段在线翻译（innerHTML 之后再跑，querySelector 才能命中）
   (fdb[tday]||[]).forEach((f,fi)=>{const sp=el.querySelector('[data-tftr="'+fi+'"]');if(!sp||!f)return;
     const tcF=store.get('translations-train');
     if(tcF[f.sent]){sp.textContent=tcF[f.sent];return}
     trTranslateFrag(f.sent).then(function(t){sp.textContent=t||'';sp.style.display=t?'block':'none'})});
-  el.innerHTML=fragHtml+ks.slice(-40).reverse().map(k=>{const q=k.replace(/'/g,"\'").replace(/"/g,'&quot;');
-    return `<li><span class="w" onclick="speak('${q}',0.9)">${escT(k)}</span><span class="del" onclick="delVocabSide('${q}')" title="移除">×</span><span class="tr">${tc[k]?escT(tc[k]):'<span style="color:var(--dim)">查译…</span>'}</span></li>`}).join('');
+  // 词行翻译补齐（含旧词：无译文就走 trainTranslate 原型链）
+  el.querySelectorAll('li[data-tw]').forEach(li=>{const k=li.dataset.tw;
+    if(tc[k])return;trainTranslate(k).then(function(t){if(t){const sp2=li.querySelector('.tr');if(sp2&&document.body.contains(sp2))sp2.textContent=t}})})
 }
+function sideWordHtml(k,tc){const q=k.replace(/'/g,"\'").replace(/"/g,'&quot;');
+  return '<li data-tw="'+escT(k)+'"><span class="w" onclick="speak(\''+q+'\',0.9)">'+escT(k)+'</span><span class="del" onclick="delVocabSide(\''+q+'\')" title="移除">×</span><span class="tr">'+(tc[k]?escT(tc[k]):'<span style="color:var(--dim)">查译…</span>')+'</span></li>'}
 async function trTranslateFrag(frag){ // 片段在线翻译（gtx→MyMemory），translations-train 缓存
   const c=store.get('translations-train');
   if(c[frag])return c[frag];

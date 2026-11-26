@@ -1211,4 +1211,53 @@ window.ARTICLES = [
   }
 
   
+,{
+    title: "The Job Interview That Went Sideways (B1+)",
+    date: "2026-11-27",
+    level: "B1+ · 职场/诚实的价值",
+    sentences: [
+      "The interview was going exactly as I had feared: I answered everything perfectly, and I could feel the whole conversation forgetting me before it had even finished.",
+      "Every candidate before me would say the same — that they were hard-working, that they loved teamwork, that failure had secretly made them stronger — and the interviewer was nodding the way you nod at weather.",
+      "Then she asked what I was worst at, and I put my coffee down and told her the truth: I avoid phone calls, I rewrite emails four times, and once I hid a scheduling mistake for three days until it fixed itself.",
+      "The room changed; she leaned forward for the first time and asked who else knew about the hidden mistake.",
+      "My manager, I said, found out on day two, and we built a system together so it could not happen again — and I still use that system, five years later, at jobs she has never heard of.",
+      "I did not get that position, but the interviewer wrote to me a month later about a different role, saying they needed someone who could name problems early instead of naming them beautifully.",
+      "Since then I have sat on the other side of the desk, and I can tell you the perfectly prepared answers all blur together, while the honest ones wake the room like a window opened in winter."
+    ],
+    notes: [
+      "went sideways = 出岔子、偏离预期（口语）：side 本义旁边， sideways 引申为偏离正轨",
+      "as I had feared = 如我所担心的一样：had feared 过去完成时，发生在 was 之前",
+      "the way you nod at weather = 像你对天气那样点头（比喻心不在焉的敷衍）",
+      "leaned forward = 前倾（身体语言表示兴趣）：lean 倾斜，leaned/leant 两种过去式都对",
+      "hid a mistake = 把错误藏起来：hide 的过去式 hid，不是 hided",
+      "it fixed itself = 它自己好了（问题自行消失）：fix 及物用法，这里反身",
+      "blur together = 混成一片、分不清：blur 模糊，现在式原形",
+      "like a window opened in winter = 像冬天开窗（比喻让人清醒）"
+    ]
+  },{
+    title: "The Village That Turned Off Its Streetlights (B1+)",
+    date: "2026-11-27",
+    level: "B1+ · 社区/改变的代价",
+    sentences: [
+      "When the village switched off half its streetlights to save money, the council expected complaints and got letters instead — half thanking them, half demanding the lights back.",
+      "The dark streets, some residents wrote, felt unsafe; others said they had not seen stars from their garden in twenty years.",
+      "A retired teacher started walking the same route every night with a torch, and within a month she had counted eleven neighbours she had never spoken to, because darkness made everyone slower and more curious.",
+      "The pub put candles on its tables, and the owner noticed people stayed longer and talked more quietly, as if the evening had been returned to them from somewhere it had been borrowed.",
+      "Not everything improved: two elderly residents fell on the unlit lane by the church, and the council had to relight that stretch within weeks, which taught everyone a lesson about the difference between a decision and its exceptions.",
+      "A year later the village kept the dimmed grid but added reflective paint to every kerb, and the compromise held because both sides could point to something they had won.",
+      "The teacher still walks at night, and she says the best part was never the stars; it was learning how many people had been waiting for permission to slow down."
+    ],
+    notes: [
+      "switched off = 关掉（switch off 的过去式，可分开用 switch the lights off）",
+      "expected complaints and got letters instead = 预期抱怨却收到（两种）信：instead 取而代之",
+      "residents = 居民（resident 单数；-ent 后缀常表人）",
+      "torch = 手电筒（英式；美式叫 flashlight）",
+      "within a month = 一个月之内（within + 时间段 = 在……以内）",
+      "unlit = 没点灯的（un- 否定前缀 + lit，light 的过去分词）",
+      "relight = 重新点亮（re- 再一次）",
+      "stretch = 一段（路）；也能作动词拉长",
+      "kerb = 路缘石（英式拼写；美式 curb）",
+      "compromise = 折中、妥协；hold 在这里= 维持住、站得住"
+    ]
+  }
 ];

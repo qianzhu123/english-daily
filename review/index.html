@@ -79,7 +79,7 @@ padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:no
 <div id="main"></div>
 </div>
 <div id="toast"></div>
-<script src="../articles.js?v=1125a"></script>
+<script src="../articles.js?v=1127a"></script>
 <script>
 
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return{}}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -1936,7 +1936,52 @@ const MANUAL={article:'名词：冠词（a/an/the）；文章；物品',
 "unprompted":"形容词：无人要求的；主动的",
 "dawn":"名词：黎明；破晓",
 "unrecorded":"形容词：未记录的",
-"currency":"名词：货币；通货"
+"currency":"名词：货币；通货",
+"interview":"名词：面试；访谈；动词：面试、采访",
+"nodding":"动词：点头（nod 的现在分词）",
+"rewrite":"动词：重写（re- 再一次 + write）",
+"scheduling":"名词：排期、日程安排；动词：安排（schedule 现在分词）",
+"leaned":"动词：倾斜、倚靠（lean 的过去式）",
+"position":"名词：职位；位置；姿势",
+"role":"名词：角色；职责",
+"naming":"动词：说出、命名（name 的现在分词）",
+"beautifully":"副词：漂亮地、美好地",
+"blur":"动词：使模糊；名词：模糊不清的事物",
+"wake":"动词：唤醒、醒来",
+"village":"名词：村庄",
+"streetlights":"名词：路灯（street+light 复数）",
+"thanking":"动词：感谢（thank 的现在分词）",
+"residents":"名词：居民（resident 复数）",
+"unsafe":"形容词：不安全的（un- 否定前缀）",
+"stars":"名词：星星；明星（star 复数）",
+"garden":"名词：花园；菜园",
+"retired":"形容词：退休的；动词：退休（retire 过去式）",
+"torch":"名词：手电筒（英式）；火把",
+"counted":"动词：数、清点（count 过去式）",
+"neighbours":"名词：邻居（neighbour 英式复数；美式 neighbor）",
+"spoken":"动词：说话（speak 的过去分词）",
+"darkness":"名词：黑暗（dark+ness 名词后缀）",
+"curious":"形容词：好奇的；奇怪的",
+"pub":"名词：酒馆（public house 缩写）",
+"candles":"名词：蜡烛（candle 复数）",
+"tables":"名词：桌子；表格（table 复数）",
+"borrowed":"动词：借入（borrow 过去分词）",
+"improved":"动词：改善、提高（improve 过去式）",
+"fell":"动词：摔倒、跌落（fall 的过去式）",
+"unlit":"形容词：未点灯的（un- + lit）",
+"lane":"名词：小巷；车道",
+"church":"名词：教堂",
+"relight":"动词：重新点亮（re- + light）",
+"dimmed":"动词：调暗（dim 过去式）",
+"grid":"名词：网格；电网",
+"reflective":"形容词：反光的；深思的",
+"paint":"名词：油漆；动词：刷漆、绘画",
+"kerb":"名词：路缘石（英式；美式 curb）",
+"compromise":"名词：折中、妥协；动词：妥协",
+"sides":"名词：边；一方（side 复数）",
+"won":"动词：赢得（win 的过去式）",
+"permission":"名词：许可、允许",
+
 };
 function validTrans(t,k){if(!t)return false;if(!/[一-鿿A-Za-z0-9]/.test(t))return false;
 if(/^[：:，,。;；\s]/.test(t))return false; // 残缺符号开头的碎片（hundred→"：一百"事故）
