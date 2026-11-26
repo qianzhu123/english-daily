@@ -68,7 +68,7 @@ a.back{color:var(--accent);text-decoration:none;font-size:.9rem}
 <div style="margin:6px 0"><button onclick="toggleTrainCal()" id="oldBtn" style="padding:2px 8px;font-size:.78rem">📅 看往期</button></div>
 <div id="traincal" style="display:none"></div>
 <div id="content"></div>
-<div class="vocabside" id="vocabside"><h3>生词本</h3><ul id="vocaside-list"></ul></div>
+<div class="vocabside" id="vocabside"><h3>生词本</h3><div style="display:flex;gap:6px;margin:0 0 8px"><button id="optmode-btn" onclick="toggleOptMode()" style="flex:1;padding:3px 4px;font-size:.72rem;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer">标选项生词</button><button id="phrase-btn" onclick="togglePhraseMode()" style="flex:1;padding:3px 4px;font-size:.72rem;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer">画短语</button></div><ul id="vocaside-list"></ul></div>
 </div>
 <div id="toast"></div>
 <script>
@@ -1003,6 +1003,7 @@ function render(){
     <div class="answer" id="ans-${n}"><b>参考（一种写法，不是标准答案）</b> <button class="speak" onclick="speak(this.dataset.s)" data-s="${esc(it.refEn||it.ref)}">🔊</button>
 ${esc(it.ref)}</div></div>`}).join('');
   markTrainWords();
+  if(optMode)markOptWords();else unmarkOptWords();
 renderVocabSide();}
 function pick(day){curDay=day;render()}
 // 看往期（用户 11-20）：仅训练日历——点日期看当天训练，不含任何其他内容
@@ -1068,8 +1069,36 @@ async function trainTranslate(k){
 // 词组/句子片段选词（用户 11-21：与阅读页同流程）——已标词再点=开始选词，
 // 连续词=词组，不连续词=句子片段（首词→末词，可跨句）。
 // 训练页没有按句包裹（无 .sent），按 DOM 顺序收集词元素即可。
+// ===== 侧栏两模式（用户 11-27）：标选项生词 / 画短语 =====
+let optMode=false,phraseMode=false;
+function setBtn(id,on,txt){const b=document.getElementById(id);if(!b)return;
+  b.textContent=txt;b.style.background=on?'#ffe08a':'#fff';b.style.borderColor=on?'#e0a800':'#ddd'}
+function toggleOptMode(){optMode=!optMode;
+  if(optMode&&phraseMode){phraseMode=false;setBtn('phrase-btn',false,'画短语')}
+  setBtn('optmode-btn',optMode,optMode?'选项标记中…':'标选项生词');
+  if(optMode)markOptWords();else unmarkOptWords();
+  toast(optMode?'选项生词标记模式：选项里的词可点了（再点词=移除）；再点按钮退出':'已退出选项标记模式')}
+function togglePhraseMode(){phraseMode=!phraseMode;
+  if(phraseMode&&optMode){optMode=false;setBtn('optmode-btn',false,'标选项生词');unmarkOptWords()}
+  setBtn('phrase-btn',phraseMode,phraseMode?'选词中…':'画短语');
+  if(phraseMode){toast('画短语模式：点第一个词开始，点相邻词=词组，点不相邻词=片段；再点本词收词组')}
+  else tselClear()}
+// 选项生词标记：把 quiz 选项文本换成可点 token（optMode 开时渲染为 w 元素）
+function optW2tok(t){const m=t.match(/^([^A-Za-z0-9À-ɏ]*)([A-Za-z0-9À-ɏ'’-]+)([\s\S]*)$/);
+  if(!m)return escT(t);
+  const w=m[2].toLowerCase();
+  if(TR_STOP.has(w)||w.length<3)return escT(t);
+  return escT(m[1])+'<w data-w="'+escT(w)+'" style="cursor:pointer" onclick="optWordClick(\''+escT(w).replace(/'/g,"\\'")+'\',this),event.stopPropagation()">'+escT(m[2])+'</w>'+escT(m[3])}
+function markOptWords(){document.querySelectorAll('button.opt').forEach(b=>{
+    if(b.dataset.orig===undefined)b.dataset.orig=b.innerHTML;
+    const m=b.innerHTML.match(/^([A-D]\.\s*)([\s\S]*)$/);
+    if(m)b.innerHTML=m[1]+m[2].split(/\s+/).map(t=>optW2tok(t)).join(' ')})}
+function unmarkOptWords(){document.querySelectorAll('button.opt').forEach(b=>{
+  if(b.dataset.orig!==undefined){b.innerHTML=b.dataset.orig;delete b.dataset.orig}})}
+function optWordClick(k,el){addTrainWord(k,el)}
 let tsel=null; // {key, words:[], wEl, w1El}
-function tselClear(){tsel=null;document.querySelectorAll('w.sel').forEach(x=>x.classList.remove('sel'))}
+function tselClear(){tsel=null;document.querySelectorAll('w.sel').forEach(x=>x.classList.remove('sel'));
+  if(phraseMode){phraseMode=false;setBtn('phrase-btn',false,'画短语')}}
 function tselAdd(k,el){
   if(!tsel){tsel={key:k,words:[k],wEl:el,w1El:el};el.classList.add('sel');
     toast('选词中：点相邻词=词组，点不相邻词=句子片段，再点本词=取消');return}
@@ -1171,7 +1200,8 @@ function quizHtml(day,qn,qz,saved,noPassage){
   <p style="font-weight:700;margin:6px 0">${esc(qz.q)}</p>${opts}${submit}${res}
   <div class="qwhy ${done?'show':''}" id="why-${qn}">💡 ${esc(qz.why)}</div></div>`}
 const quizPick={}; // 未提交的临时选择 {day#qn: idx}
-function pickOpt(day,qn,i,ev){quizPick[day+'#q'+qn]=i;
+function pickOpt(day,qn,i,ev){if(optMode)return; // 选项标记模式：点选项=点词，不选答案
+  quizPick[day+'#q'+qn]=i;
   // 只更新本题按钮样式，不整页重渲染（用户 11-23：点击无反馈的根因是 render 重建丢状态）
   if(!ev)return;
   const card=ev.target.closest('div');
